@@ -157,7 +157,7 @@ void Buffer::copyTo(
 
 void *Buffer::map()
 {
-    if (!m_mapped && isHostVisible())
+    if (!m_mapped)
         m_mapped = m_device->mapMemory(deviceMemory(), 0, memorySize());
 
     return m_mapped;
