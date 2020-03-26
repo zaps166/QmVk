@@ -15,6 +15,10 @@ if(NOT QMVK_GLSLC_COMMAND)
     set(QMVK_GLSLC_COMMAND "glslc" CACHE INTERNAL "")
 endif()
 
+if(NOT QMVK_LIBRARY_TYPE)
+    set(QMVK_LIBRARY_TYPE OBJECT)
+endif()
+
 macro(qmvk_add_shader SHADER_SOURCE_FILE)
     get_filename_component(SHADER_SOURCE_FILE_NAME ${SHADER_SOURCE_FILE} NAME)
 
@@ -45,7 +49,7 @@ file(GLOB QMVK_VULKAN_SRC
     "*.cpp"
 )
 
-add_library(${PROJECT_NAME} OBJECT
+add_library(${PROJECT_NAME} ${QMVK_LIBRARY_TYPE}
     ${QMVK_VULKAN_HDR}
     ${QMVK_VULKAN_SRC}
 )
