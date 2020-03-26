@@ -141,7 +141,7 @@ const auto &PhysicalDevice::limits() const
     return properties().limits;
 }
 
-const auto&PhysicalDevice::pciBusInfo() const
+const auto &PhysicalDevice::pciBusInfo() const
 {
     return m_pciBusInfo;
 }
