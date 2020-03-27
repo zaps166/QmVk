@@ -24,27 +24,24 @@ vk::DispatchLoaderDynamic vk::defaultDispatchLoaderDynamic;
 namespace QmVk {
 
 static unique_ptr<vk::DynamicLoader> g_dyld;
-static bool s_dldInitialized = false;
-static mutex s_dldMutex;
 
 void AbstractInstance::init(PFN_vkGetInstanceProcAddr vkGetInstanceProcAddr)
 {
-    lock_guard<mutex> locker(s_dldMutex);
-    if (s_dldInitialized)
-        return;
-
-    if (!vkGetInstanceProcAddr)
+    if (vkGetInstanceProcAddr)
     {
-        g_dyld = make_unique<vk::DynamicLoader>();
-        if (!g_dyld->success())
-            throw vk::InitializationFailedError("Unable to load Vulkan library");
-        vkGetInstanceProcAddr = g_dyld->getProcAddress<PFN_vkGetInstanceProcAddr>("vkGetInstanceProcAddr");
-        if (!vkGetInstanceProcAddr)
-            throw vk::InitializationFailedError("Unable to get \"vkGetInstanceProcAddr\"");
+        vk::defaultDispatchLoaderDynamic.init(*this, vkGetInstanceProcAddr);
+        return;
     }
 
-    vk::defaultDispatchLoaderDynamic.init(*this, vkGetInstanceProcAddr);
-    s_dldInitialized = true;
+    g_dyld = make_unique<vk::DynamicLoader>();
+    if (!g_dyld->success())
+        throw vk::InitializationFailedError("Unable to load Vulkan library");
+
+    vkGetInstanceProcAddr = g_dyld->getProcAddress<PFN_vkGetInstanceProcAddr>("vkGetInstanceProcAddr");
+    if (!vkGetInstanceProcAddr)
+        throw vk::InitializationFailedError("Unable to get \"vkGetInstanceProcAddr\"");
+
+    vk::defaultDispatchLoaderDynamic.init(vkGetInstanceProcAddr);
 }
 
 vector<shared_ptr<PhysicalDevice>> AbstractInstance::enumeratePhysicalDevices(bool compatibleOnly)
