@@ -73,6 +73,14 @@ target_compile_definitions(${PROJECT_NAME}
     -DVULKAN_HPP_TYPESAFE_CONVERSION
     -DNOMINMAX
 )
+
+if(QMVK_NO_EXPORT)
+    target_compile_definitions(${PROJECT_NAME}
+        PUBLIC
+        -DQMVK_NO_EXPORT
+    )
+endif()
+
 if(WIN32)
     target_compile_definitions(${PROJECT_NAME}
         PUBLIC

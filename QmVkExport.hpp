@@ -16,7 +16,9 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifdef VK_USE_PLATFORM_WIN32_KHR
+#if defined(QMVK_NO_EXPORT)
+#   define QMVK_EXPORT
+#elif defined(VK_USE_PLATFORM_WIN32_KHR)
 #   ifdef QMVK_LIBRARY
 #       define QMVK_EXPORT __declspec(dllexport)
 #   else
