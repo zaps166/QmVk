@@ -71,6 +71,7 @@ target_compile_definitions(${PROJECT_NAME}
     PUBLIC
     -DVK_NO_PROTOTYPES
     -DVULKAN_HPP_TYPESAFE_CONVERSION
+    -DNOMINMAX
 )
 if(WIN32)
     target_compile_definitions(${PROJECT_NAME}
