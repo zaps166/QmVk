@@ -65,12 +65,12 @@ protected:
         void *allocateInfoPNext = nullptr
     );
 
-    inline vk::DeviceMemory deviceMemory(uint32_t idx = 0) const;
-
 protected:
     shared_ptr<CommandBuffer> internalCommandBuffer();
 
 public:
+    inline vk::DeviceMemory deviceMemory(uint32_t idx = 0) const;
+
     inline vk::DeviceSize memorySize() const;
 
     inline bool isDeviceLocal() const;
