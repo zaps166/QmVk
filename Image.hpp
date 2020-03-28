@@ -119,7 +119,7 @@ public:
 
     using MemoryObject::memorySize;
     inline vk::DeviceSize memorySize(uint32_t plane) const;
-    inline vk::DeviceSize planeOffset(uint32_t plane) const;
+    inline vk::DeviceSize planeOffset(uint32_t plane = 0) const;
     inline vk::DeviceSize linesize(uint32_t plane = 0) const;
 
     bool setMipLevelsLimitForSize(const vk::Extent2D &size);
