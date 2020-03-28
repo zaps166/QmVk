@@ -45,17 +45,18 @@ public:
         BufferView,
         Image,
     };
-    enum class ImageAccess
+    enum class Access
     {
         Undefined = -1,
-        ReadSampler,
+
         Read,
         Write,
     };
 
 public:
     MemoryObjectDescr(
-        const shared_ptr<Buffer> &buffer
+        const shared_ptr<Buffer> &buffer,
+        Access access = Access::Undefined
     );
     MemoryObjectDescr(
         const shared_ptr<Image> &image,
@@ -64,11 +65,12 @@ public:
     );
     MemoryObjectDescr(
         const shared_ptr<Image> &image,
-        ImageAccess imageAccess,
+        Access access,
         uint32_t plane = ~0u
     );
     MemoryObjectDescr(
-        const shared_ptr<BufferView> &bufferView
+        const shared_ptr<BufferView> &bufferView,
+        Access access = Access::Read
     );
 
 public:
@@ -94,10 +96,10 @@ public:
 
 private:
     Type m_type;
+    Access m_access = Access::Undefined;
     shared_ptr<MemoryObjectBase> m_object;
 
     // Image
-    ImageAccess m_imageAccess = ImageAccess::Undefined;
     shared_ptr<Sampler> m_sampler;
     uint32_t m_plane = ~0u;
 

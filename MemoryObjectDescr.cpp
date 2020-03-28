@@ -25,8 +25,10 @@
 namespace QmVk {
 
 MemoryObjectDescr::MemoryObjectDescr(
-    const shared_ptr<Buffer> &buffer)
+    const shared_ptr<Buffer> &buffer,
+    Access access)
     : m_type(Type::Buffer)
+    , m_access(access)
     , m_object(buffer)
     , m_descriptorTypeInfos(getBufferDescriptorTypeInfos())
 {}
@@ -36,30 +38,34 @@ MemoryObjectDescr::MemoryObjectDescr(
     uint32_t plane)
     : m_type(Type::Image)
     , m_object(image)
-    , m_imageAccess(ImageAccess::ReadSampler)
     , m_sampler(sampler)
     , m_plane(plane)
     , m_descriptorTypeInfos(getImageDescriptorTypeInfos())
 {}
 MemoryObjectDescr::MemoryObjectDescr(
     const shared_ptr<Image> &image,
-    ImageAccess imageAccess,
+    Access access,
     uint32_t plane)
     : m_type(Type::Image)
+    , m_access(access)
     , m_object(image)
-    , m_imageAccess(imageAccess)
     , m_plane(plane)
     , m_descriptorTypeInfos(getImageDescriptorTypeInfos())
 {
-    if (imageAccess != ImageAccess::Read && imageAccess != ImageAccess::Write)
+    if (m_access == Access::Undefined)
         throw vk::LogicError("Bad image access");
 }
 MemoryObjectDescr::MemoryObjectDescr(
-    const shared_ptr<BufferView> &bufferView)
+    const shared_ptr<BufferView> &bufferView,
+    Access access)
     : m_type(Type::BufferView)
+    , m_access(access)
     , m_object(bufferView)
     , m_descriptorTypeInfos(getBufferViewDescriptorTypeInfos())
-{}
+{
+    if (m_access == Access::Undefined)
+        throw vk::LogicError("Bad buffer view access");
+}
 
 void MemoryObjectDescr::prepareImage(
     vk::CommandBuffer commandBuffer,
@@ -72,7 +78,7 @@ void MemoryObjectDescr::prepareImage(
         commandBuffer,
         descriptorInfos()[0].descrImgInfo.imageLayout,
         pipelineStageFlags,
-        (m_imageAccess == ImageAccess::Write)
+        (m_access == Access::Write)
             ? vk::AccessFlagBits::eShaderWrite
             : vk::AccessFlagBits::eShaderRead
     );
@@ -80,7 +86,7 @@ void MemoryObjectDescr::prepareImage(
 void MemoryObjectDescr::finalizeImage(
     vk::CommandBuffer commandBuffer) const
 {
-    if (m_type != Type::Image || m_imageAccess != ImageAccess::Write)
+    if (m_type != Type::Image || m_access != Access::Write)
         return;
 
     static_pointer_cast<Image>(m_object)->maybeGenerateMipmaps(commandBuffer);
@@ -89,7 +95,7 @@ void MemoryObjectDescr::finalizeImage(
 MemoryObjectDescr::DescriptorTypeInfos MemoryObjectDescr::getBufferDescriptorTypeInfos() const
 {
     auto buffer = static_pointer_cast<Buffer>(m_object);
-    auto type = buffer->isUniform()
+    auto type = (m_access == Access::Read || (m_access == Access::Undefined && (buffer->usage() & vk::BufferUsageFlagBits::eUniformBuffer)))
         ? vk::DescriptorType::eUniformBuffer
         : vk::DescriptorType::eStorageBuffer
     ;
@@ -100,7 +106,7 @@ MemoryObjectDescr::DescriptorTypeInfos MemoryObjectDescr::getBufferDescriptorTyp
 }
 MemoryObjectDescr::DescriptorTypeInfos MemoryObjectDescr::getImageDescriptorTypeInfos() const
 {
-    auto type = (m_imageAccess == ImageAccess::ReadSampler)
+    auto type = m_sampler
         ? vk::DescriptorType::eCombinedImageSampler
         : vk::DescriptorType::eStorageImage
     ;
@@ -117,11 +123,11 @@ MemoryObjectDescr::DescriptorTypeInfos MemoryObjectDescr::getImageDescriptorType
         : 0
     ;
 
-    vk::Sampler sampler = (m_imageAccess == ImageAccess::ReadSampler && m_sampler)
+    auto sampler = m_sampler
         ? *m_sampler
         : vk::Sampler()
     ;
-    vk::ImageLayout imageLayout = (m_imageAccess == ImageAccess::ReadSampler)
+    auto imageLayout = m_sampler
         ? vk::ImageLayout::eShaderReadOnlyOptimal
         : vk::ImageLayout::eGeneral
     ;
@@ -144,8 +150,12 @@ MemoryObjectDescr::DescriptorTypeInfos MemoryObjectDescr::getImageDescriptorType
 }
 MemoryObjectDescr::DescriptorTypeInfos MemoryObjectDescr::getBufferViewDescriptorTypeInfos() const
 {
+    auto descriptorType = (m_access == Access::Read)
+        ? vk::DescriptorType::eUniformTexelBuffer
+        : vk::DescriptorType::eStorageTexelBuffer
+    ;
     return {
-        {vk::DescriptorType::eUniformTexelBuffer, 1},
+        {descriptorType, 1},
         {{*static_pointer_cast<BufferView>(m_object)}},
     };
 }
@@ -155,7 +165,8 @@ bool MemoryObjectDescr::operator ==(const MemoryObjectDescr &other) const
     return (
         m_type == other.m_type &&
         m_object == other.m_object &&
-        m_imageAccess == other.m_imageAccess && m_sampler == other.m_sampler && m_plane == other.m_plane
+        m_access == other.m_access &&
+        m_sampler == other.m_sampler && m_plane == other.m_plane
     );
 }
 

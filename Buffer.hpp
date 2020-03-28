@@ -77,8 +77,7 @@ private:
 
 public:
     inline vk::DeviceSize size() const;
-
-    inline bool isUniform() const;
+    inline vk::BufferUsageFlags usage() const;
 
     void copyTo(
         const shared_ptr<Buffer> &dstBuffer,
@@ -110,10 +109,9 @@ vk::DeviceSize Buffer::size() const
 {
     return m_size;
 }
-
-bool Buffer::isUniform() const
+vk::BufferUsageFlags Buffer::usage() const
 {
-    return bool(m_usage & vk::BufferUsageFlagBits::eUniformBuffer);
+    return m_usage;
 }
 
 template<typename T>
