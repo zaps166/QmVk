@@ -36,7 +36,7 @@ shared_ptr<Buffer> Buffer::create(
         usage,
         Buffer::Priv()
     );
-    buffer->init(memoryPropertyFlags);
+    buffer->init(&memoryPropertyFlags);
     return buffer;
 }
 shared_ptr<Buffer> Buffer::createVerticesWrite(
@@ -103,6 +103,24 @@ shared_ptr<Buffer> Buffer::createUniformTexelBuffer(
     );
 }
 
+shared_ptr<Buffer> Buffer::createFromDeviceMemory(
+    const shared_ptr<Device> &device,
+    vk::DeviceSize size,
+    vk::BufferUsageFlags usage,
+    vk::DeviceMemory deviceMemory)
+{
+    auto buffer = make_shared<Buffer>(
+        device,
+        size,
+        usage,
+        Buffer::Priv()
+    );
+    buffer->m_deviceMemory.push_back(deviceMemory);
+    buffer->m_dontFreeMemory = true;
+    buffer->init(nullptr);
+    return buffer;
+}
+
 Buffer::Buffer(
     const shared_ptr<Device> &device,
     vk::DeviceSize size,
@@ -115,17 +133,22 @@ Buffer::Buffer(
 Buffer::~Buffer()
 {
     unmap();
+    if (m_dontFreeMemory)
+        m_deviceMemory.clear();
 }
 
-void Buffer::init(const MemoryPropertyFlags &userMemoryPropertyFlags)
+void Buffer::init(const MemoryPropertyFlags *userMemoryPropertyFlags)
 {
     vk::BufferCreateInfo bufferCreateInfo;
     bufferCreateInfo.size = m_size;
     bufferCreateInfo.usage = m_usage;
     m_buffer = m_device->createBufferUnique(bufferCreateInfo);
 
-    m_memoryRequirements = m_device->getBufferMemoryRequirements(*this);
-    allocateMemory(userMemoryPropertyFlags);
+    if (userMemoryPropertyFlags && m_deviceMemory.empty())
+    {
+        m_memoryRequirements = m_device->getBufferMemoryRequirements(*this);
+        allocateMemory(*userMemoryPropertyFlags);
+    }
 
     m_device->bindBufferMemory(*this, deviceMemory(), 0);
 }

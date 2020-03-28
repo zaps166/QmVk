@@ -56,6 +56,13 @@ public:
         uint32_t heap = ~0u
     );
 
+    static shared_ptr<Buffer> createFromDeviceMemory(
+        const shared_ptr<Device> &device,
+        vk::DeviceSize size,
+        vk::BufferUsageFlags usage,
+        vk::DeviceMemory deviceMemory
+    );
+
 public:
     Buffer(
         const shared_ptr<Device> &device,
@@ -66,7 +73,7 @@ public:
     ~Buffer();
 
 private:
-    void init(const MemoryPropertyFlags &userMemoryPropertyFlags);
+    void init(const MemoryPropertyFlags *userMemoryPropertyFlags);
 
 public:
     inline vk::DeviceSize size() const;
@@ -93,6 +100,8 @@ private:
     vk::UniqueBuffer m_buffer;
 
     void *m_mapped = nullptr;
+
+    bool m_dontFreeMemory = false;
 };
 
 /* Inline implementation */
