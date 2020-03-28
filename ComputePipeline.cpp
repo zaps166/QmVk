@@ -110,9 +110,13 @@ bool ComputePipeline::setLocalWorkgroupSize(const vk::Extent2D &localWorkgroupSi
     m_mustRecreate = true;
     return true;
 }
-void ComputePipeline::setSize(const vk::Extent2D &size)
+
+vk::Extent2D ComputePipeline::groupCount(const vk::Extent2D &size) const
 {
-    m_size = size;
+    return vk::Extent2D(
+        ceil(static_cast<double>(size.width)  / static_cast<double>(m_localWorkgroupSize.width)),
+        ceil(static_cast<double>(size.height) / static_cast<double>(m_localWorkgroupSize.height))
+    );
 }
 
 void ComputePipeline::recordCommandsInit(const shared_ptr<CommandBuffer> &commandBuffer)
@@ -120,28 +124,27 @@ void ComputePipeline::recordCommandsInit(const shared_ptr<CommandBuffer> &comman
     prepareImages(commandBuffer);
     bindObjects(commandBuffer, vk::PipelineBindPoint::eCompute);
 }
-void ComputePipeline::recordCommandsCompute(const shared_ptr<CommandBuffer> &commandBuffer)
+void ComputePipeline::recordCommandsCompute(
+    const shared_ptr<CommandBuffer> &commandBuffer,
+    const vk::Extent2D &groupCount)
 {
     pushConstants(commandBuffer);
     commandBuffer->dispatch(
-        ceil(static_cast<double>(m_size.width)  / static_cast<double>(m_localWorkgroupSize.width)),
-        ceil(static_cast<double>(m_size.height) / static_cast<double>(m_localWorkgroupSize.height)),
+        groupCount.width,
+        groupCount.height,
         1
     );
-}
-void ComputePipeline::recordCommandsFinalize(const shared_ptr<CommandBuffer> &commandBuffer)
-{
-    finalizeImages(commandBuffer);
 }
 
 void ComputePipeline::recordCommands(
     const shared_ptr<CommandBuffer> &commandBuffer,
-    bool finalizeImages)
+    const vk::Extent2D groupCount,
+    bool doFinalizeImages)
 {
     recordCommandsInit(commandBuffer);
-    recordCommandsCompute(commandBuffer);
-    if (finalizeImages)
-        recordCommandsFinalize(commandBuffer);
+    recordCommandsCompute(commandBuffer, groupCount);
+    if (doFinalizeImages)
+        finalizeImages(commandBuffer);
 }
 
 }

@@ -55,23 +55,33 @@ public:
     void setCustomSpecializationData(const vector<uint32_t> &data);
 
     bool setLocalWorkgroupSize(const vk::Extent2D &localWorkgroupSize);
-    void setSize(const vk::Extent2D &size);
+
+    inline vk::Extent2D localWorkGroupSize() const;
+    vk::Extent2D groupCount(const vk::Extent2D &size) const;
 
     void recordCommandsInit(const shared_ptr<CommandBuffer> &commandBuffer);
-    void recordCommandsCompute(const shared_ptr<CommandBuffer> &commandBuffer);
-    void recordCommandsFinalize(const shared_ptr<CommandBuffer> &commandBuffer);
+    void recordCommandsCompute(
+        const shared_ptr<CommandBuffer> &commandBuffer,
+        const vk::Extent2D &groupCount
+    );
 
     void recordCommands(
         const shared_ptr<CommandBuffer> &commandBuffer,
-        bool finalizeImages
+        const vk::Extent2D groupCount,
+        bool doFinalizeImages = false
     );
 
 private:
     const shared_ptr<ShaderModule> m_shaderModule;
 
-    vk::Extent2D m_size;
     vk::Extent2D m_localWorkgroupSize;
-    vk::Extent2D m_groupCount;
 };
+
+/* Inline implementation */
+
+vk::Extent2D ComputePipeline::localWorkGroupSize() const
+{
+    return m_localWorkgroupSize;
+}
 
 }
