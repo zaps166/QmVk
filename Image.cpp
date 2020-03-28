@@ -157,9 +157,9 @@ void Image::init(bool deviceLocal, uint32_t heap)
     m_sizes.resize(m_numPlanes);
     m_paddingHeights.resize(m_numPlanes);
     m_formats.resize(m_numPlanes);
+    m_subresourceLayouts.resize(m_numPlanes);
     m_images.resize(m_numPlanes);
     m_imageViews.resize(m_numPlanes);
-    m_subresourceLayouts.resize(m_numPlanes);
 
     function<vk::Extent2D(const vk::Extent2D &)> getChromaPlaneSizeFn;
     switch (m_wantedFormat)
