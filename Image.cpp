@@ -21,6 +21,8 @@
 #include "MemoryPropertyFlags.hpp"
 #include "DescriptorInfo.hpp"
 #include "CommandBuffer.hpp"
+#include "Buffer.hpp"
+#include "BufferView.hpp"
 
 #include <functional>
 #include <cmath>
@@ -338,6 +340,30 @@ void Image::createImageViews()
         imageViewCreateInfo.subresourceRange = getImageSubresourceRange();
         m_imageViews[i] = m_device->createImageViewUnique(imageViewCreateInfo);
     }
+}
+
+shared_ptr<BufferView> Image::bufferView(uint32_t plane)
+{
+    if (m_bufferViews.empty())
+    {
+        m_bufferViews.reserve(m_numPlanes);
+        for (uint32_t i = 0; i < m_numPlanes; ++i)
+        {
+            auto buffer = Buffer::createFromDeviceMemory(
+                m_device,
+                memorySize(i),
+                vk::BufferUsageFlagBits::eUniformTexelBuffer | vk::BufferUsageFlagBits::eStorageTexelBuffer,
+                deviceMemory(i)
+            );
+            m_bufferViews.push_back(BufferView::create(
+                buffer,
+                format(i),
+                planeOffset(i),
+                memorySize(i)
+            ));
+        }
+    }
+    return m_bufferViews[plane];
 }
 
 void Image::importFD(

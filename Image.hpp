@@ -26,6 +26,8 @@ namespace QmVk {
 
 using namespace std;
 
+class BufferView;
+
 class QMVK_EXPORT Image : public MemoryObject, public enable_shared_from_this<Image>
 {
     friend class MemoryObjectDescr;
@@ -81,6 +83,9 @@ private:
     void allocateAndBindMemory(bool deviceLocal, uint32_t heap);
 
     void createImageViews();
+
+public:
+    shared_ptr<BufferView> bufferView(uint32_t plane = 0);
 
 public:
     void importFD(
@@ -187,6 +192,8 @@ private:
 
     vector<vk::UniqueImage> m_images;
     vector<vk::UniqueImageView> m_imageViews;
+
+    vector<shared_ptr<BufferView>> m_bufferViews;
 
     void *m_mapped = nullptr;
 
