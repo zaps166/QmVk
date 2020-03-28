@@ -71,8 +71,6 @@ private:
 public:
     inline vk::DeviceSize size() const;
 
-    inline bool isTransferSource() const;
-    inline bool isTransferDestination() const;
     inline bool isUniform() const;
 
     void copyTo(
@@ -104,14 +102,6 @@ vk::DeviceSize Buffer::size() const
     return m_size;
 }
 
-bool Buffer::isTransferSource() const
-{
-    return bool(m_usage & vk::BufferUsageFlagBits::eTransferSrc);
-}
-bool Buffer::isTransferDestination() const
-{
-    return bool(m_usage & vk::BufferUsageFlagBits::eTransferDst);
-}
 bool Buffer::isUniform() const
 {
     return bool(m_usage & vk::BufferUsageFlagBits::eUniformBuffer);

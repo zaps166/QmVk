@@ -134,9 +134,9 @@ void Buffer::copyTo(
     const shared_ptr<Buffer> &dstBuffer,
     vk::CommandBuffer externalCommandBuffer)
 {
-    if (!isTransferSource())
+    if (!(m_usage & vk::BufferUsageFlagBits::eTransferSrc))
         throw vk::LogicError("Source buffer is not flagged as transfer source");
-    if (!dstBuffer->isTransferDestination())
+    if (!(dstBuffer->m_usage & vk::BufferUsageFlagBits::eTransferDst))
         throw vk::LogicError("Destination buffer is not flagged as transfer destination");
 
     auto copyCommands = [&](vk::CommandBuffer commandBuffer) {
