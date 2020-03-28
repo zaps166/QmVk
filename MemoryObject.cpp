@@ -34,6 +34,8 @@ MemoryObject::MemoryObject(
 MemoryObject::~MemoryObject()
 {
     m_customData.reset();
+    for (auto &&deviceMemory : m_deviceMemory)
+        m_device->freeMemory(deviceMemory);
 }
 
 void MemoryObject::importFD(
@@ -61,7 +63,7 @@ void MemoryObject::importFD(
             ).memoryTypeBits
         );
 
-        m_deviceMemory.push_back(m_device->allocateMemoryUnique(alloc));
+        m_deviceMemory.push_back(m_device->allocateMemory(alloc));
     }
 }
 
@@ -91,7 +93,7 @@ void MemoryObject::importWin32Handle(
             ).memoryTypeBits
         );
 
-        m_deviceMemory.push_back(m_device->allocateMemoryUnique(alloc));
+        m_deviceMemory.push_back(m_device->allocateMemory(alloc));
     }
 }
 #endif
@@ -117,7 +119,7 @@ void MemoryObject::allocateMemory(
         userMemoryPropertyFlags.heap
     );
 
-    m_deviceMemory.push_back(m_device->allocateMemoryUnique(allocateInfo));
+    m_deviceMemory.push_back(m_device->allocateMemory(allocateInfo));
 }
 
 shared_ptr<CommandBuffer> MemoryObject::internalCommandBuffer()

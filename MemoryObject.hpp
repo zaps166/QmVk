@@ -94,7 +94,7 @@ protected:
     vk::MemoryRequirements m_memoryRequirements;
     vk::MemoryPropertyFlags m_memoryPropertyFlags;
 
-    vector<vk::UniqueDeviceMemory> m_deviceMemory;
+    vector<vk::DeviceMemory> m_deviceMemory;
 
 private:
     shared_ptr<CommandBuffer> m_internalCommandBuffer;
@@ -104,7 +104,7 @@ private:
 
 vk::DeviceMemory MemoryObject::deviceMemory(uint32_t idx) const
 {
-    return *m_deviceMemory[idx];
+    return m_deviceMemory[idx];
 }
 
 vk::DeviceSize MemoryObject::memorySize() const
