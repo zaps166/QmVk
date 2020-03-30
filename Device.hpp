@@ -48,7 +48,7 @@ public:
 
 private:
     void init(
-        const vk::PhysicalDeviceFeatures &features,
+        const vk::PhysicalDeviceFeatures2 &features,
         const vector<const char *> &extensions,
         uint32_t maxQueueCount
     );

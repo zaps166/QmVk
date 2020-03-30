@@ -72,7 +72,7 @@ vector<shared_ptr<PhysicalDevice>> AbstractInstance::enumeratePhysicalDevices(bo
 shared_ptr<Device> AbstractInstance::createDevice(
     const shared_ptr<PhysicalDevice> &physicalDevice,
     vk::QueueFlags queueFlags,
-    const vk::PhysicalDeviceFeatures &physicalDeviceFeatures,
+    const vk::PhysicalDeviceFeatures2 &physicalDeviceFeatures,
     const vector<const char *> &physicalDeviceExtensions,
     uint32_t maxQueueCount)
 {

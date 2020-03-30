@@ -100,7 +100,7 @@ bool PhysicalDevice::checkExtensions(
 
 shared_ptr<Device> PhysicalDevice::createDevice(
     uint32_t queueFamilyIndex,
-    const vk::PhysicalDeviceFeatures &features,
+    const vk::PhysicalDeviceFeatures2 &features,
     const vector<const char *> &extensions,
     uint32_t maxQueueCount)
 {

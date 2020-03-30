@@ -17,6 +17,7 @@
 */
 
 #include "Device.hpp"
+#include "AbstractInstance.hpp"
 #include "PhysicalDevice.hpp"
 #include "MemoryPropertyFlags.hpp"
 #include "Queue.hpp"
@@ -39,7 +40,7 @@ Device::~Device()
 }
 
 void Device::init(
-    const vk::PhysicalDeviceFeatures &features,
+    const vk::PhysicalDeviceFeatures2 &features,
     const vector<const char *> &extensions,
     uint32_t maxQueueCount)
 {
@@ -66,7 +67,10 @@ void Device::init(
     deviceCreateInfo.pQueueCreateInfos = &queueCreateInfo;
     deviceCreateInfo.enabledExtensionCount = extensions.size();
     deviceCreateInfo.ppEnabledExtensionNames = extensions.data();
-    deviceCreateInfo.pEnabledFeatures = &features;
+    if (m_physicalDevice->instance()->checkExtension(VK_KHR_GET_PHYSICAL_DEVICE_PROPERTIES_2_EXTENSION_NAME))
+        deviceCreateInfo.pNext = &features;
+    else
+        deviceCreateInfo.pEnabledFeatures = &features.features;
     static_cast<vk::Device &>(*this) = m_physicalDevice->createDevice(deviceCreateInfo, nullptr);
 }
 
