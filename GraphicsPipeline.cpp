@@ -40,15 +40,47 @@ GraphicsPipeline::GraphicsPipeline(CreateInfo &createInfo, Priv)
     , m_size(createInfo.size)
     , m_vertexBindingDescrs(move(createInfo.vertexBindingDescrs))
     , m_vertexAttrDescrs(move(createInfo.vertexAttrDescrs))
-{}
+{
+    if (createInfo.colorBlendAttachment)
+    {
+        m_colorBlendAttachment = *createInfo.colorBlendAttachment;
+    }
+    else
+    {
+        m_colorBlendAttachment.blendEnable = true;
+        m_colorBlendAttachment.srcColorBlendFactor = vk::BlendFactor::eSrcAlpha;
+        m_colorBlendAttachment.dstColorBlendFactor = vk::BlendFactor::eOneMinusSrcAlpha;
+        m_colorBlendAttachment.colorBlendOp = vk::BlendOp::eAdd;
+        m_colorBlendAttachment.srcAlphaBlendFactor = vk::BlendFactor::eOne;
+        m_colorBlendAttachment.dstAlphaBlendFactor = vk::BlendFactor::eZero;
+        m_colorBlendAttachment.alphaBlendOp = vk::BlendOp::eAdd;
+        m_colorBlendAttachment.colorWriteMask = vk::ColorComponentFlagBits::eR | vk::ColorComponentFlagBits::eG | vk::ColorComponentFlagBits::eB | vk::ColorComponentFlagBits::eA;
+    }
+
+    if (createInfo.inputAssembly)
+    {
+        m_inputAssembly = *createInfo.inputAssembly;
+    }
+    else
+    {
+        m_inputAssembly.topology = vk::PrimitiveTopology::eTriangleStrip;
+    }
+
+    if (createInfo.rasterizer)
+    {
+        m_rasterizer = *createInfo.rasterizer;
+    }
+    else
+    {
+        m_rasterizer.cullMode = vk::CullModeFlagBits::eFront;
+        m_rasterizer.lineWidth = 1.0f;
+    }
+}
 GraphicsPipeline::~GraphicsPipeline()
 {}
 
 void GraphicsPipeline::createPipeline()
 {
-    vk::PipelineInputAssemblyStateCreateInfo inputAssembly;
-    inputAssembly.topology = vk::PrimitiveTopology::eTriangleStrip;
-
     vk::Viewport viewport;
     viewport.width = m_size.width;
     viewport.height = m_size.height;
@@ -62,26 +94,12 @@ void GraphicsPipeline::createPipeline()
     viewportState.scissorCount = 1;
     viewportState.pScissors = &scissor;
 
-    vk::PipelineRasterizationStateCreateInfo rasterizer;
-    rasterizer.cullMode = vk::CullModeFlagBits::eFront;
-    rasterizer.lineWidth = 1.0f;
-
     vk::PipelineMultisampleStateCreateInfo multisampling;
     multisampling.rasterizationSamples = vk::SampleCountFlagBits::e1;
 
-    vk::PipelineColorBlendAttachmentState colorBlendAttachment;
-    colorBlendAttachment.blendEnable = true;
-    colorBlendAttachment.srcColorBlendFactor = vk::BlendFactor::eSrcAlpha;
-    colorBlendAttachment.dstColorBlendFactor = vk::BlendFactor::eOneMinusSrcAlpha;
-    colorBlendAttachment.colorBlendOp = vk::BlendOp::eAdd;
-    colorBlendAttachment.srcAlphaBlendFactor = vk::BlendFactor::eOne;
-    colorBlendAttachment.dstAlphaBlendFactor = vk::BlendFactor::eZero;
-    colorBlendAttachment.alphaBlendOp = vk::BlendOp::eAdd;
-    colorBlendAttachment.colorWriteMask = (vk::ColorComponentFlagBits::eR | vk::ColorComponentFlagBits::eG | vk::ColorComponentFlagBits::eB | vk::ColorComponentFlagBits::eA);
-
     vk::PipelineColorBlendStateCreateInfo colorBlending;
     colorBlending.attachmentCount = 1;
-    colorBlending.pAttachments = &colorBlendAttachment;
+    colorBlending.pAttachments = &m_colorBlendAttachment;
 
     const vk::ShaderStageFlagBits specializationShaderStageFlagBits[2] {
         vk::ShaderStageFlagBits::eVertex,
@@ -114,9 +132,9 @@ void GraphicsPipeline::createPipeline()
     pipelineInfo.stageCount = 2;
     pipelineInfo.pStages = shaderStages;
     pipelineInfo.pVertexInputState = &vertexInputInfo;
-    pipelineInfo.pInputAssemblyState = &inputAssembly;
+    pipelineInfo.pInputAssemblyState = &m_inputAssembly;
     pipelineInfo.pViewportState = &viewportState;
-    pipelineInfo.pRasterizationState = &rasterizer;
+    pipelineInfo.pRasterizationState = &m_rasterizer;
     pipelineInfo.pMultisampleState = &multisampling;
     pipelineInfo.pColorBlendState = &colorBlending;
     pipelineInfo.layout = *m_pipelineLayout;

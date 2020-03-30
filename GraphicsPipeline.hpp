@@ -37,14 +37,19 @@ class QMVK_EXPORT GraphicsPipeline final : public Pipeline
 public:
     struct CreateInfo
     {
+        // Required
         shared_ptr<Device> device;
         shared_ptr<ShaderModule> vertexShaderModule;
         shared_ptr<ShaderModule> fragmentShaderModule;
         shared_ptr<RenderPass> renderPass;
         vk::Extent2D size;
+        // Optional
         uint32_t pushConstantsSize = 0;
         vector<vk::VertexInputBindingDescription> vertexBindingDescrs;
         vector<vk::VertexInputAttributeDescription> vertexAttrDescrs;
+        vk::PipelineColorBlendAttachmentState *colorBlendAttachment = nullptr;
+        vk::PipelineInputAssemblyStateCreateInfo *inputAssembly = nullptr;
+        vk::PipelineRasterizationStateCreateInfo *rasterizer = nullptr;
     };
 
 public:
@@ -72,6 +77,9 @@ private:
     const vk::Extent2D m_size;
     const vector<vk::VertexInputBindingDescription> m_vertexBindingDescrs;
     const vector<vk::VertexInputAttributeDescription> m_vertexAttrDescrs;
+    vk::PipelineColorBlendAttachmentState m_colorBlendAttachment;
+    vk::PipelineInputAssemblyStateCreateInfo m_inputAssembly;
+    vk::PipelineRasterizationStateCreateInfo m_rasterizer;
 };
 
 /* Inline implementation */
