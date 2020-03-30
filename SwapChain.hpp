@@ -51,6 +51,13 @@ public:
     };
 
 public:
+    static vk::Format getSurfaceFormat(
+        const vector<vk::SurfaceFormatKHR> &surfaceFormats,
+        const vector<vk::Format> &wantedFormats,
+        vk::ColorSpaceKHR colorSpace = vk::ColorSpaceKHR::eSrgbNonlinear
+    );
+
+public:
     static shared_ptr<SwapChain> create(CreateInfo &createInfo);
 
 public:

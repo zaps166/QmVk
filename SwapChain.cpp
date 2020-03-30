@@ -26,6 +26,29 @@ namespace QmVk {
 
 static constexpr vk::PipelineStageFlags g_waitStage = vk::PipelineStageFlagBits::eColorAttachmentOutput;
 
+vk::Format SwapChain::getSurfaceFormat(
+    const vector<vk::SurfaceFormatKHR> &surfaceFormats,
+    const vector<vk::Format> &wantedFormats,
+    vk::ColorSpaceKHR colorSpace)
+{
+    if (surfaceFormats.empty())
+        return vk::Format::eUndefined;
+
+    auto isFormatSupported = [&](vk::Format format) {
+        return find_if(surfaceFormats.begin(), surfaceFormats.end(), [&](const vk::SurfaceFormatKHR &surfaceFormat) {
+            return (surfaceFormat.colorSpace == colorSpace && surfaceFormat.format == format);
+        }) != surfaceFormats.end();
+    };
+
+    for (auto &&wantedFormat : wantedFormats)
+    {
+        if (isFormatSupported(wantedFormat))
+            return wantedFormat;
+    }
+
+    return surfaceFormats[0].format;
+}
+
 shared_ptr<SwapChain> SwapChain::create(CreateInfo &createInfo)
 {
     auto swapChain = make_shared<SwapChain>(createInfo, Priv());
