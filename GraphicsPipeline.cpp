@@ -54,7 +54,12 @@ GraphicsPipeline::GraphicsPipeline(CreateInfo &createInfo, Priv)
         m_colorBlendAttachment.srcAlphaBlendFactor = vk::BlendFactor::eOne;
         m_colorBlendAttachment.dstAlphaBlendFactor = vk::BlendFactor::eZero;
         m_colorBlendAttachment.alphaBlendOp = vk::BlendOp::eAdd;
-        m_colorBlendAttachment.colorWriteMask = vk::ColorComponentFlagBits::eR | vk::ColorComponentFlagBits::eG | vk::ColorComponentFlagBits::eB | vk::ColorComponentFlagBits::eA;
+        m_colorBlendAttachment.colorWriteMask =
+            vk::ColorComponentFlagBits::eR |
+            vk::ColorComponentFlagBits::eG |
+            vk::ColorComponentFlagBits::eB |
+            vk::ColorComponentFlagBits::eA
+        ;
     }
 
     if (createInfo.inputAssembly)
