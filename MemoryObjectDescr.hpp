@@ -55,6 +55,25 @@ public:
 
 public:
     MemoryObjectDescr(
+        const vector<shared_ptr<Buffer>> &buffers,
+        Access access = Access::Undefined
+    );
+    MemoryObjectDescr(
+        const vector<shared_ptr<Image>> &images,
+        const shared_ptr<Sampler> &sampler,
+        uint32_t plane = ~0u
+    );
+    MemoryObjectDescr(
+        const vector<shared_ptr<Image>> &images,
+        Access access,
+        uint32_t plane = ~0u
+    );
+    MemoryObjectDescr(
+        const vector<shared_ptr<BufferView>> &bufferViews,
+        Access access = Access::Read
+    );
+
+    MemoryObjectDescr(
         const shared_ptr<Buffer> &buffer,
         Access access = Access::Undefined
     );
@@ -97,7 +116,7 @@ public:
 private:
     Type m_type;
     Access m_access = Access::Undefined;
-    shared_ptr<MemoryObjectBase> m_object;
+    vector<shared_ptr<MemoryObjectBase>> m_objects;
 
     // Image
     shared_ptr<Sampler> m_sampler;
