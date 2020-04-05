@@ -272,8 +272,7 @@ void Image::init(bool deviceLocal, uint32_t heap)
         m_images[i] = m_device->createImageUnique(imageCreateInfo);
     }
 
-    if (!m_externalImport)
-        allocateAndBindMemory(deviceLocal, heap);
+    allocateAndBindMemory(deviceLocal, heap);
 }
 void Image::allocateAndBindMemory(bool deviceLocal, uint32_t heap)
 {
@@ -301,6 +300,9 @@ void Image::allocateAndBindMemory(bool deviceLocal, uint32_t heap)
         m_memoryRequirements.alignment = max(m_memoryRequirements.alignment, memoryRequirements.alignment);
         m_memoryRequirements.memoryTypeBits |= memoryRequirements.memoryTypeBits;
     }
+
+    if (m_externalImport)
+        return;
 
     MemoryPropertyFlags memoryPropertyFlags;
     if (deviceLocal)
