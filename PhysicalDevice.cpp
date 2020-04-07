@@ -38,7 +38,7 @@ PhysicalDevice::~PhysicalDevice()
 void PhysicalDevice::init()
 {
     for (auto &&extensionProperty : enumerateDeviceExtensionProperties())
-        m_extensionProperties.insert(extensionProperty.extensionName);
+        m_extensionProperties.insert(static_cast<string>(extensionProperty.extensionName));
 
     if (m_instance->checkExtension(VK_KHR_GET_PHYSICAL_DEVICE_PROPERTIES_2_EXTENSION_NAME))
     {
