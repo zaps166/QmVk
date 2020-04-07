@@ -36,7 +36,7 @@ public:
     static shared_ptr<ComputePipeline> create(
         const shared_ptr<Device> &device,
         const shared_ptr<ShaderModule> &shaderModule,
-        uint32_t pushConstantsSize
+        uint32_t pushConstantsSize = 0
     );
 
 public:
