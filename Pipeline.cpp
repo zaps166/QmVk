@@ -17,6 +17,7 @@
 */
 
 #include "Pipeline.hpp"
+#include "PhysicalDevice.hpp"
 #include "Device.hpp"
 #include "MemoryObjectDescr.hpp"
 #include "DescriptorPool.hpp"
@@ -180,12 +181,14 @@ void Pipeline::prepare()
 
     if (m_mustRecreate)
     {
-        m_mustRecreate = false;
-
         vk::PushConstantRange pushConstantRange;
         pushConstantRange.stageFlags = vk::ShaderStageFlagBits::eAll;
         pushConstantRange.offset = 0;
         pushConstantRange.size = m_pushConstants.size();
+
+        const auto maxPushConstantsSize = m_device->physicalDevice()->limits().maxPushConstantsSize;
+        if (m_pushConstants.size() > m_device->physicalDevice()->limits().maxPushConstantsSize)
+            throw vk::LogicError("Push constants size exceeded: " + to_string(m_pushConstants.size()) + " > " + to_string(maxPushConstantsSize));
 
         vk::PipelineLayoutCreateInfo pipelineLayoutInfo;
         if (!m_descriptorSetLayout->isEmpty())
@@ -201,6 +204,7 @@ void Pipeline::prepare()
         m_pipelineLayout = m_device->createPipelineLayoutUnique(pipelineLayoutInfo);
 
         createPipeline();
+        m_mustRecreate = false;
     }
 }
 
