@@ -93,6 +93,11 @@ void CommandBuffer::resetAndBegin()
     m_resetNeeded = true;
 }
 void CommandBuffer::endSubmitAndWait(
+    vk::SubmitInfo &&submitInfo)
+{
+    endSubmitAndWait(true, nullptr, move(submitInfo));
+}
+void CommandBuffer::endSubmitAndWait(
     bool lock,
     const Callback &callback,
     vk::SubmitInfo &&submitInfo)

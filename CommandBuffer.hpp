@@ -65,9 +65,12 @@ public:
 
     void resetAndBegin();
     void endSubmitAndWait(
-        bool lock = true,
-        const Callback &callback = nullptr,
         vk::SubmitInfo &&submitInfo = vk::SubmitInfo()
+    );
+    void endSubmitAndWait(
+        bool lock,
+        const Callback &callback,
+        vk::SubmitInfo &&submitInfo
     );
 
     void execute(const CommandCallback &callback);
