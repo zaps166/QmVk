@@ -290,15 +290,18 @@ void Image::allocateAndBindMemory(bool deviceLocal, uint32_t heap)
                 *m_images[i],
                 vk::ImageSubresource(vk::ImageAspectFlagBits::eColor)
             );
-            m_subresourceLayouts[i].offset = memoryOffsets[i];
-
             paddingBytes = m_subresourceLayouts[i].rowPitch * m_paddingHeights[i];
         }
 
         const auto memoryRequirements = m_device->getImageMemoryRequirements(*m_images[i]);
-        m_memoryRequirements.size += aligned(memoryRequirements.size + paddingBytes, memoryRequirements.alignment);
+        const auto memoryRequirementsSize = aligned(memoryRequirements.size + paddingBytes, memoryRequirements.alignment);
+        m_memoryRequirements.size += memoryRequirementsSize;
         m_memoryRequirements.alignment = max(m_memoryRequirements.alignment, memoryRequirements.alignment);
         m_memoryRequirements.memoryTypeBits |= memoryRequirements.memoryTypeBits;
+
+        m_subresourceLayouts[i].offset = memoryOffsets[i];
+        if (!m_linear)
+            m_subresourceLayouts[i].size = memoryRequirementsSize;
     }
 
     if (m_externalImport)
