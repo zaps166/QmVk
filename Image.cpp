@@ -334,6 +334,19 @@ void Image::allocateAndBindMemory(bool deviceLocal, uint32_t heap)
     createImageViews();
 }
 
+void Image::finishImport(const vector<vk::DeviceSize> &offsets)
+{
+    for (uint32_t i = 0; i < m_numPlanes; ++i)
+    {
+        m_device->bindImageMemory(
+            *m_images[i],
+            deviceMemory(min<uint32_t>(i, m_deviceMemory.size() - 1)),
+            offsets[i]
+        );
+    }
+    createImageViews();
+}
+
 void Image::createImageViews()
 {
     for (uint32_t i = 0; i < m_numPlanes; ++i)
@@ -373,7 +386,7 @@ shared_ptr<BufferView> Image::bufferView(uint32_t plane)
 
 void Image::importFD(
     const FdDescriptors &descriptors,
-    const vector<ptrdiff_t> &offsets,
+    const vector<vk::DeviceSize> &offsets,
     vk::ExternalMemoryHandleTypeFlagBits handleType)
 {
     if (m_numPlanes != offsets.size())
@@ -381,47 +394,41 @@ void Image::importFD(
 
     MemoryObject::importFD(descriptors, handleType);
 
-    for (uint32_t i = 0; i < m_numPlanes; ++i)
-    {
-        m_device->bindImageMemory(
-            *m_images[i],
-            deviceMemory(min<uint32_t>(i, m_deviceMemory.size() - 1)),
-            offsets[i]
-        );
-    }
-
-    createImageViews();
+    finishImport(offsets);
 }
 
 #ifdef VK_USE_PLATFORM_WIN32_KHR
 void Image::importWin32Handle(
     const vector<HANDLE> &rawHandles,
+    const vector<vk::DeviceSize> &offsets,
     vk::ExternalMemoryHandleTypeFlagBits handleType)
 {
-    if (m_numPlanes != rawHandles.size())
-        throw vk::LogicError("Handles count and planes count missmatch");
+    if (m_numPlanes != offsets.size())
+        throw vk::LogicError("Offsets count and planes count missmatch");
+
+    vector<vk::DeviceSize> imageRequirements;
+    imageRequirements.resize(rawHandles.size());
+    for (uint32_t i = 0; i < m_numPlanes; ++i)
+    {
+        auto size = m_device->getImageMemoryRequirements(*m_images[i]).size;
+        if (i < imageRequirements.size())
+            imageRequirements[i] = size;
+        else
+            imageRequirements.back() += size;
+    }
 
     Win32Handles handles;
-    handles.reserve(m_numPlanes);
-    for (uint32_t i = 0; i < m_numPlanes; ++i)
+    handles.reserve(rawHandles.size());
+    for (size_t i = 0; i < rawHandles.size(); ++i)
     {
         handles.emplace_back(
             rawHandles[i],
-            m_device->getImageMemoryRequirements(*m_images[i]).size
+            imageRequirements[i]
         );
     }
     MemoryObject::importWin32Handle(handles, handleType);
 
-    for (uint32_t i = 0; i < m_numPlanes; ++i)
-    {
-        m_device->bindImageMemory(
-            *m_images[i],
-            deviceMemory(i),
-            0
-        );
-    }
-
-    createImageViews();
+    finishImport(offsets);
 }
 #endif
 

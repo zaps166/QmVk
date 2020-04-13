@@ -82,6 +82,8 @@ private:
     void init(bool deviceLocal = false, uint32_t heap = ~0u);
     void allocateAndBindMemory(bool deviceLocal, uint32_t heap);
 
+    void finishImport(const vector<vk::DeviceSize> &offsets);
+
     void createImageViews();
 
 public:
@@ -90,13 +92,14 @@ public:
 public:
     void importFD(
         const FdDescriptors &descriptors,
-        const vector<ptrdiff_t> &offsets,
+        const vector<vk::DeviceSize> &offsets,
         vk::ExternalMemoryHandleTypeFlagBits handleType
     );
 
 #ifdef VK_USE_PLATFORM_WIN32_KHR
     void importWin32Handle(
         const vector<HANDLE> &rawHandles,
+        const vector<vk::DeviceSize> &offsets,
         vk::ExternalMemoryHandleTypeFlagBits handleType
     );
 #endif
