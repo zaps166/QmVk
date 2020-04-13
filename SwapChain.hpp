@@ -29,6 +29,7 @@ using namespace std;
 class Device;
 class Queue;
 class RenderPass;
+class Semaphore;
 
 class QMVK_EXPORT SwapChain
 {
@@ -97,8 +98,8 @@ private:
     vector<vk::UniqueImageView> m_swapChainImageViews;
     vector<vk::UniqueFramebuffer> m_frameBuffers;
 
-    vk::UniqueSemaphore m_imageAvailableSem;
-    vk::UniqueSemaphore m_renderFinishedSem;
+    shared_ptr<Semaphore> m_imageAvailableSem;
+    shared_ptr<Semaphore> m_renderFinishedSem;
 };
 
 /* Inline implementation */

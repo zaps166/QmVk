@@ -21,6 +21,7 @@
 #include "Device.hpp"
 #include "Queue.hpp"
 #include "RenderPass.hpp"
+#include "Semaphore.hpp"
 
 namespace QmVk {
 
@@ -160,18 +161,18 @@ void SwapChain::init(CreateInfo &createInfo)
         m_frameBuffers.push_back(m_device->createFramebufferUnique(framebufferCreateInfo));
     }
 
-    m_imageAvailableSem = m_device->createSemaphoreUnique(vk::SemaphoreCreateInfo());
-    m_renderFinishedSem = m_device->createSemaphoreUnique(vk::SemaphoreCreateInfo());
+    m_imageAvailableSem = Semaphore::create(m_device);
+    m_renderFinishedSem = Semaphore::create(m_device);
 }
 
 vk::SubmitInfo SwapChain::getSubmitInfo() const
 {
     vk::SubmitInfo submitInfo;
     submitInfo.waitSemaphoreCount = 1;
-    submitInfo.pWaitSemaphores = &*m_imageAvailableSem;
+    submitInfo.pWaitSemaphores = *m_imageAvailableSem;
     submitInfo.pWaitDstStageMask = &g_waitStage;
     submitInfo.signalSemaphoreCount = 1;
-    submitInfo.pSignalSemaphores = &*m_renderFinishedSem;
+    submitInfo.pSignalSemaphores = *m_renderFinishedSem;
     return submitInfo;
 }
 
@@ -192,9 +193,10 @@ uint32_t SwapChain::acquireNextImage(bool *suboptimal)
 }
 void SwapChain::present(uint32_t imageIdx, bool *suboptimal)
 {
+
     vk::PresentInfoKHR presentInfo;
     presentInfo.waitSemaphoreCount = 1;
-    presentInfo.pWaitSemaphores = &*m_renderFinishedSem;
+    presentInfo.pWaitSemaphores = *m_renderFinishedSem;
     presentInfo.swapchainCount = 1;
     presentInfo.pSwapchains = &*m_swapChain;
     presentInfo.pImageIndices = &imageIdx;
