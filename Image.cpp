@@ -406,15 +406,15 @@ void Image::importWin32Handle(
     if (m_numPlanes != offsets.size())
         throw vk::LogicError("Offsets count and planes count missmatch");
 
-    vector<vk::DeviceSize> imageRequirements;
-    imageRequirements.resize(rawHandles.size());
+    vector<vk::DeviceSize> imageSizes;
+    imageSizes.resize(rawHandles.size());
     for (uint32_t i = 0; i < m_numPlanes; ++i)
     {
         auto size = m_device->getImageMemoryRequirements(*m_images[i]).size;
-        if (i < imageRequirements.size())
-            imageRequirements[i] = size;
+        if (i < imageSizes.size())
+            imageSizes[i] = size;
         else
-            imageRequirements.back() += size;
+            imageSizes.back() += size;
     }
 
     Win32Handles handles;
@@ -423,7 +423,7 @@ void Image::importWin32Handle(
     {
         handles.emplace_back(
             rawHandles[i],
-            imageRequirements[i]
+            imageSizes[i]
         );
     }
     MemoryObject::importWin32Handle(handles, handleType);
