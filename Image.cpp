@@ -17,6 +17,7 @@
 */
 
 #include "Image.hpp"
+#include "PhysicalDevice.hpp"
 #include "Device.hpp"
 #include "MemoryPropertyFlags.hpp"
 #include "DescriptorInfo.hpp"
@@ -49,6 +50,36 @@ uint32_t Image::getNumPlanes(vk::Format format)
             break;
     }
     return 1;
+}
+
+vk::ExternalMemoryProperties Image::getExternalMemoryProperties(
+    const shared_ptr<PhysicalDevice> &physicalDevice,
+    vk::ExternalMemoryHandleTypeFlagBits externalMemoryType,
+    vk::Format realFmt,
+    bool linear)
+{
+    vk::PhysicalDeviceExternalImageFormatInfo externalImageFormatInfo;
+    externalImageFormatInfo.handleType = externalMemoryType;
+
+    vk::PhysicalDeviceImageFormatInfo2 imageFormatInfo;
+    imageFormatInfo.type = vk::ImageType::e2D;
+    imageFormatInfo.format = realFmt;
+    imageFormatInfo.tiling = linear
+        ? vk::ImageTiling::eLinear
+        : vk::ImageTiling::eOptimal
+    ;
+    imageFormatInfo.usage =
+        vk::ImageUsageFlagBits::eTransferSrc |
+        vk::ImageUsageFlagBits::eSampled
+    ;
+    imageFormatInfo.pNext = &externalImageFormatInfo;
+
+    return physicalDevice->getImageFormatProperties2KHR<
+        vk::ImageFormatProperties2,
+        vk::ExternalImageFormatProperties
+    >(imageFormatInfo).get<
+        vk::ExternalImageFormatProperties
+    >().externalMemoryProperties;
 }
 
 shared_ptr<Image> Image::createOptimal(

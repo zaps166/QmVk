@@ -36,6 +36,13 @@ class QMVK_EXPORT Image : public MemoryObject, public enable_shared_from_this<Im
 public:
     static uint32_t getNumPlanes(vk::Format format);
 
+    static vk::ExternalMemoryProperties getExternalMemoryProperties(
+        const shared_ptr<PhysicalDevice> &physicalDevice,
+        vk::ExternalMemoryHandleTypeFlagBits externalMemoryType,
+        vk::Format realFmt,
+        bool linear
+    );
+
 public:
     static shared_ptr<Image> createOptimal(
         const shared_ptr<Device> &device,
