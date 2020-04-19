@@ -69,6 +69,7 @@ protected:
     shared_ptr<CommandBuffer> internalCommandBuffer();
 
 public:
+    inline uint32_t deviceMemoryCount() const;
     inline vk::DeviceMemory deviceMemory(uint32_t idx = 0) const;
 
     inline vk::DeviceSize memorySize() const;
@@ -102,6 +103,10 @@ private:
 
 /* Inline implementation */
 
+uint32_t MemoryObject::deviceMemoryCount() const
+{
+    return m_deviceMemory.size();
+}
 vk::DeviceMemory MemoryObject::deviceMemory(uint32_t idx) const
 {
     return m_deviceMemory[idx];
