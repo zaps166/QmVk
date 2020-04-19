@@ -57,6 +57,7 @@ public:
     inline shared_ptr<Device> device() const;
 
     inline uint32_t queueFamilyIndex() const;
+    inline uint32_t queueIndex() const;
 
     unique_lock<mutex> lock();
 
@@ -86,6 +87,10 @@ shared_ptr<Device> Queue::device() const
 uint32_t Queue::queueFamilyIndex() const
 {
     return m_queueFamilyIndex;
+}
+uint32_t Queue::queueIndex() const
+{
+    return m_queueIndex;
 }
 
 }
