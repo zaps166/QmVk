@@ -42,7 +42,7 @@ void PhysicalDevice::init()
 
     if (m_instance->checkExtension(VK_KHR_GET_PHYSICAL_DEVICE_PROPERTIES_2_EXTENSION_NAME))
     {
-        tie(m_properties, m_pciBusInfo) = getProperties2<
+        tie(m_properties, m_pciBusInfo) = getProperties2KHR<
             decltype(m_properties),
             decltype(m_pciBusInfo)
         >().get<
