@@ -29,9 +29,11 @@ namespace QmVk {
 
 Pipeline::Pipeline(
     const shared_ptr<Device> &device,
+    const vk::ShaderStageFlags pushConstantsShaderStageFlags,
     const vk::PipelineStageFlags &imagePipelineStageFlags,
     uint32_t pushConstantsSize)
     : m_device(device)
+    , m_pushConstantsShaderStageFlags(pushConstantsShaderStageFlags)
     , m_imagePipelineStageFlags(imagePipelineStageFlags)
     , m_pushConstants(pushConstantsSize)
 {}
@@ -88,7 +90,7 @@ void Pipeline::pushConstants(
 
     commandBuffer->pushConstants(
         *m_pipelineLayout,
-        vk::ShaderStageFlagBits::eAll,
+        m_pushConstantsShaderStageFlags,
         0,
         m_pushConstants.size(),
         m_pushConstants.data()
@@ -182,7 +184,7 @@ void Pipeline::prepare()
     if (m_mustRecreate)
     {
         vk::PushConstantRange pushConstantRange;
-        pushConstantRange.stageFlags = vk::ShaderStageFlagBits::eAll;
+        pushConstantRange.stageFlags = m_pushConstantsShaderStageFlags;
         pushConstantRange.offset = 0;
         pushConstantRange.size = m_pushConstants.size();
 

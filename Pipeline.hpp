@@ -40,6 +40,7 @@ class QMVK_EXPORT Pipeline
 protected:
     Pipeline(
         const shared_ptr<Device> &device,
+        const vk::ShaderStageFlags pushConstantsShaderStageFlags,
         const vk::PipelineStageFlags &imagePipelineStageFlags,
         uint32_t pushConstantsSize
     );
@@ -94,10 +95,12 @@ public:
 
 protected:
     const shared_ptr<Device> m_device;
+    const vk::ShaderStageFlags m_pushConstantsShaderStageFlags;
     const vk::PipelineStageFlags m_imagePipelineStageFlags;
-    vector<uint8_t> m_pushConstants;
 
     map<vk::ShaderStageFlagBits, vector<uint32_t>> m_customSpecializationData;
+
+    vector<uint8_t> m_pushConstants;
     MemoryObjectDescrs m_memoryObjects;
 
     bool m_mustUpdateDescriptorInfos = false;

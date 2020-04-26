@@ -33,7 +33,7 @@ shared_ptr<GraphicsPipeline> GraphicsPipeline::create(CreateInfo &createInfo)
 }
 
 GraphicsPipeline::GraphicsPipeline(CreateInfo &createInfo, Priv)
-    : Pipeline(createInfo.device, vk::PipelineStageFlagBits::eFragmentShader, createInfo.pushConstantsSize)
+    : Pipeline(createInfo.device, vk::ShaderStageFlagBits::eAllGraphics, vk::PipelineStageFlagBits::eFragmentShader, createInfo.pushConstantsSize)
     , m_vertexShaderModule(move(createInfo.vertexShaderModule))
     , m_fragmentShaderModule(move(createInfo.fragmentShaderModule))
     , m_renderPass(move(createInfo.renderPass))

@@ -46,7 +46,7 @@ ComputePipeline::ComputePipeline(
     const shared_ptr<ShaderModule> &shaderModule,
     uint32_t pushConstantsSize,
     Priv)
-    : Pipeline(device, vk::PipelineStageFlagBits::eComputeShader, pushConstantsSize)
+    : Pipeline(device, vk::ShaderStageFlagBits::eCompute, vk::PipelineStageFlagBits::eComputeShader, pushConstantsSize)
     , m_shaderModule(shaderModule)
 {}
 ComputePipeline::~ComputePipeline()
