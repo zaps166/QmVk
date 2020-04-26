@@ -58,6 +58,7 @@ public:
 
 protected:
     virtual bool isCompatibleDevice(const shared_ptr<PhysicalDevice> &physicalDevice) const = 0;
+    virtual void sortPhysicalDevices(vector<shared_ptr<PhysicalDevice>> &physicalDeivecs) const;
 
 protected:
     set<string> m_extensions;

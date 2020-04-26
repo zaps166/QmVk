@@ -66,6 +66,9 @@ vector<shared_ptr<PhysicalDevice>> AbstractInstance::enumeratePhysicalDevices(bo
     if (physicalDeviceInstances.empty())
         throw vk::InitializationFailedError("No compatible devices found");
 
+    if (physicalDeviceInstances.size() > 1)
+        sortPhysicalDevices(physicalDeviceInstances);
+
     return physicalDeviceInstances;
 }
 
@@ -100,6 +103,11 @@ shared_ptr<Device> AbstractInstance::device() const
 {
     lock_guard<mutex> locker(m_deviceMutex);
     return m_deviceWeak.lock();
+}
+
+void AbstractInstance::sortPhysicalDevices(vector<shared_ptr<PhysicalDevice>> &physicalDeivecs) const
+{
+    (void)physicalDeivecs;
 }
 
 }
