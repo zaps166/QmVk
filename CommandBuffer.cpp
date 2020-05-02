@@ -88,7 +88,12 @@ void CommandBuffer::storeData(
 }
 void CommandBuffer::resetStoredData()
 {
-    m_storedData.reset();
+    if (!m_storedData)
+        return;
+
+    m_storedData->memoryObjects.clear();
+    m_storedData->descriptorSets.clear();
+    m_storedData->memoryObjectsBase.clear();
 }
 
 void CommandBuffer::resetAndBegin()
