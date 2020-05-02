@@ -45,7 +45,7 @@ public:
         vk::Extent2D fallbackSize;
         vector<vk::PresentModeKHR> presentModes;
         vk::UniqueSwapchainKHR oldSwapChain;
-        uint32_t maxImages = 0;
+        uint32_t imageCount = 0;
 #ifdef VK_USE_PLATFORM_WIN32_KHR
         vk::FullScreenExclusiveEXT exclusiveFullScreen = vk::FullScreenExclusiveEXT::eDefault;
 #endif

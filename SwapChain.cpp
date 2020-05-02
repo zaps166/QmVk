@@ -74,16 +74,12 @@ void SwapChain::init(CreateInfo &createInfo)
     const auto surfaceCapabilities = physicalDevice->getSurfaceCapabilitiesKHR(m_surface);
     const auto availPresentModes = physicalDevice->getSurfacePresentModesKHR(m_surface);
 
-    createInfo.maxImages = max(createInfo.maxImages, surfaceCapabilities.minImageCount);
-    if (surfaceCapabilities.maxImageCount > 0)
-        createInfo.maxImages = min(createInfo.maxImages, surfaceCapabilities.maxImageCount);
-
     m_size = (surfaceCapabilities.currentExtent.width == numeric_limits<uint32_t>::max())
         ? createInfo.fallbackSize
         : surfaceCapabilities.currentExtent
     ;
 
-    vk::PresentModeKHR presentMode = vk::PresentModeKHR::eFifo;
+    auto presentMode = vk::PresentModeKHR::eFifo;
     for (auto &&presentModeIt : createInfo.presentModes)
     {
         if (find(availPresentModes.begin(), availPresentModes.end(), presentModeIt) != availPresentModes.end())
@@ -92,6 +88,12 @@ void SwapChain::init(CreateInfo &createInfo)
             break;
         }
     }
+
+    if (createInfo.imageCount == 0 && presentMode == vk::PresentModeKHR::eMailbox)
+        createInfo.imageCount = 3;
+    createInfo.imageCount = max(createInfo.imageCount, surfaceCapabilities.minImageCount);
+    if (surfaceCapabilities.maxImageCount > 0)
+        createInfo.imageCount = min(createInfo.imageCount, surfaceCapabilities.maxImageCount);
 
     vk::CompositeAlphaFlagBitsKHR compositeAlpha = vk::CompositeAlphaFlagBitsKHR::eOpaque;
     if (!(surfaceCapabilities.supportedCompositeAlpha & vk::CompositeAlphaFlagBitsKHR::eOpaque))
@@ -112,7 +114,7 @@ void SwapChain::init(CreateInfo &createInfo)
 
     vk::SwapchainCreateInfoKHR vkCreateInfo;
     vkCreateInfo.surface = m_surface;
-    vkCreateInfo.minImageCount = createInfo.maxImages;
+    vkCreateInfo.minImageCount = createInfo.imageCount;
     vkCreateInfo.imageFormat = m_renderPass->format();
     vkCreateInfo.imageColorSpace = vk::ColorSpaceKHR::eSrgbNonlinear;
     vkCreateInfo.imageExtent = m_size;
