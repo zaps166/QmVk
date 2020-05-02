@@ -33,9 +33,14 @@ void AbstractInstance::init(PFN_vkGetInstanceProcAddr vkGetInstanceProcAddr)
         return;
     }
 
-    g_dyld = make_unique<vk::DynamicLoader>();
-    if (!g_dyld->success())
-        throw vk::InitializationFailedError("Unable to load Vulkan library");
+    try
+    {
+        g_dyld = make_unique<vk::DynamicLoader>();
+    }
+    catch (const runtime_error &e)
+    {
+        throw vk::InitializationFailedError(e.what());
+    }
 
     vkGetInstanceProcAddr = g_dyld->getProcAddress<PFN_vkGetInstanceProcAddr>("vkGetInstanceProcAddr");
     if (!vkGetInstanceProcAddr)
