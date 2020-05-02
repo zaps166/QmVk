@@ -29,6 +29,7 @@ namespace QmVk {
 using namespace std;
 
 class MemoryObjectDescrs;
+class MemoryObjectBase;
 class DescriptorSet;
 class Queue;
 
@@ -60,6 +61,9 @@ public:
     void storeData(
         const MemoryObjectDescrs &memoryObjects,
         const shared_ptr<DescriptorSet> &descriptorSet
+    );
+    void storeData(
+        const shared_ptr<MemoryObjectBase> &memoryObjectBase
     );
     void resetStoredData();
 

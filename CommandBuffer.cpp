@@ -30,6 +30,7 @@ struct CommandBuffer::StoredData
 {
     unordered_set<MemoryObjectDescrs> memoryObjects;
     unordered_set<shared_ptr<DescriptorSet>> descriptorSets;
+    unordered_set<shared_ptr<MemoryObjectBase>> memoryObjectsBase;
 };
 
 shared_ptr<CommandBuffer> CommandBuffer::create(
@@ -76,6 +77,14 @@ void CommandBuffer::storeData(
 
     m_storedData->memoryObjects.insert(memoryObjects);
     m_storedData->descriptorSets.insert(descriptorSet);
+}
+void CommandBuffer::storeData(
+    const shared_ptr<MemoryObjectBase> &memoryObjectBase)
+{
+    if (!m_storedData)
+        m_storedData = make_unique<StoredData>();
+
+    m_storedData->memoryObjectsBase.insert(memoryObjectBase);
 }
 void CommandBuffer::resetStoredData()
 {
