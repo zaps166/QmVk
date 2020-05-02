@@ -567,10 +567,16 @@ void Image::copyTo(
     }
 }
 
-void Image::maybeGenerateMipmaps(vk::CommandBuffer commandBuffer)
+void Image::maybeGenerateMipmaps(const shared_ptr<CommandBuffer> &commandBuffer)
+{
+    if (maybeGenerateMipmaps(*commandBuffer))
+        commandBuffer->storeData(shared_from_this());
+}
+
+bool Image::maybeGenerateMipmaps(vk::CommandBuffer commandBuffer)
 {
     if (m_mipLevels <= 1)
-        return;
+        return false;
 
     vk::ImageSubresourceRange imageSubresourceRange = getImageSubresourceRange(1);
 
@@ -666,6 +672,8 @@ void Image::maybeGenerateMipmaps(vk::CommandBuffer commandBuffer)
         imageSubresourceRange,
         true
     );
+
+    return true;
 }
 
 uint32_t Image::getMipLevels(const vk::Extent2D &inSize) const

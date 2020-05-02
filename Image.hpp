@@ -150,9 +150,11 @@ public:
         const shared_ptr<CommandBuffer> &externalCommandBuffer = nullptr
     );
 
-    void maybeGenerateMipmaps(vk::CommandBuffer commandBuffer);
+    void maybeGenerateMipmaps(const shared_ptr<CommandBuffer> &commandBuffer);
 
 private:
+    bool maybeGenerateMipmaps(vk::CommandBuffer commandBuffer);
+
     uint32_t getMipLevels(const vk::Extent2D &inSize) const;
 
     vk::ImageSubresourceRange getImageSubresourceRange(uint32_t mipLevels = ~0u) const;
