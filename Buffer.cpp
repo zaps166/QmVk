@@ -155,7 +155,7 @@ void Buffer::init(const MemoryPropertyFlags *userMemoryPropertyFlags)
 
 void Buffer::copyTo(
     const shared_ptr<Buffer> &dstBuffer,
-    vk::CommandBuffer externalCommandBuffer)
+    const shared_ptr<CommandBuffer> &externalCommandBuffer)
 {
     if (!(m_usage & vk::BufferUsageFlagBits::eTransferSrc))
         throw vk::LogicError("Source buffer is not flagged as transfer source");
@@ -173,9 +173,15 @@ void Buffer::copyTo(
     };
 
     if (externalCommandBuffer)
-        copyCommands(externalCommandBuffer);
+    {
+        externalCommandBuffer->storeData(shared_from_this());
+        externalCommandBuffer->storeData(dstBuffer);
+        copyCommands(*externalCommandBuffer);
+    }
     else
+    {
         internalCommandBuffer()->execute(copyCommands);
+    }
 }
 
 void *Buffer::map()

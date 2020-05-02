@@ -147,7 +147,7 @@ public:
 
     void copyTo(
         const shared_ptr<Image> &dstImage,
-        vk::CommandBuffer externalCommandBuffer = nullptr
+        const shared_ptr<CommandBuffer> &externalCommandBuffer = nullptr
     );
 
     void maybeGenerateMipmaps(vk::CommandBuffer commandBuffer);

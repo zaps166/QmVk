@@ -26,7 +26,7 @@ namespace QmVk {
 
 using namespace std;
 
-class QMVK_EXPORT Buffer : public MemoryObject
+class QMVK_EXPORT Buffer : public MemoryObject, public enable_shared_from_this<Buffer>
 {
     Buffer(const Buffer &) = delete;
 
@@ -81,7 +81,7 @@ public:
 
     void copyTo(
         const shared_ptr<Buffer> &dstBuffer,
-        vk::CommandBuffer externalCommandBuffer
+        const shared_ptr<CommandBuffer> &externalCommandBuffer = nullptr
     );
 
     void *map();

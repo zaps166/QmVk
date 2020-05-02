@@ -495,7 +495,7 @@ void Image::unmap()
 
 void Image::copyTo(
     const shared_ptr<Image> &dstImage,
-    vk::CommandBuffer externalCommandBuffer)
+    const shared_ptr<CommandBuffer> &externalCommandBuffer)
 {
     if (dstImage->m_externalImport)
         throw vk::LogicError("Can't copy to externally imported memory");
@@ -556,9 +556,15 @@ void Image::copyTo(
     };
 
     if (externalCommandBuffer)
-        copyCommands(externalCommandBuffer);
+    {
+        externalCommandBuffer->storeData(shared_from_this());
+        externalCommandBuffer->storeData(dstImage);
+        copyCommands(*externalCommandBuffer);
+    }
     else
+    {
         internalCommandBuffer()->execute(copyCommands);
+    }
 }
 
 void Image::maybeGenerateMipmaps(vk::CommandBuffer commandBuffer)
