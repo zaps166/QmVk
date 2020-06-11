@@ -56,11 +56,18 @@ void MemoryObject::importFD(
         alloc.allocationSize = descriptor.second;
         alloc.pNext = &import;
 
+        auto memoryTypeBits = m_device->getMemoryFdPropertiesKHR(
+            handleType,
+            import.fd
+        ).memoryTypeBits;
+        if (memoryTypeBits == 0 && m_device->physicalDevice()->properties().vendorID == 0x1002)
+        {
+            // Workaround for AMD GPUs on Mesa 20.1
+            memoryTypeBits = 1;
+        }
+
         tie(alloc.memoryTypeIndex, m_memoryPropertyFlags) = m_physicalDevice->findMemoryType(
-            m_device->getMemoryFdPropertiesKHR(
-                handleType,
-                import.fd
-            ).memoryTypeBits
+            memoryTypeBits
         );
 
         m_deviceMemory.push_back(m_device->allocateMemory(alloc));
