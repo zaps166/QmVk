@@ -135,7 +135,8 @@ shared_ptr<Image> Image::createExternalImport(
     const shared_ptr<Device> &device,
     const vk::Extent2D &size,
     vk::Format fmt,
-    bool linear)
+    bool linear,
+    vk::ExternalMemoryHandleTypeFlags exportMemoryTypes)
 {
     auto image = make_shared<Image>(
         device,
@@ -146,7 +147,7 @@ shared_ptr<Image> Image::createExternalImport(
         false,
         false,
         true,
-        vk::ExternalMemoryHandleTypeFlags(),
+        exportMemoryTypes,
         Priv()
     );
     image->init();

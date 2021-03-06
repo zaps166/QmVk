@@ -67,7 +67,8 @@ public:
         const shared_ptr<Device> &device,
         const vk::Extent2D &size,
         vk::Format fmt,
-        bool linear
+        bool linear,
+        vk::ExternalMemoryHandleTypeFlags exportMemoryTypes
     );
 
 public:
