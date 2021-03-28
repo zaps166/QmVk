@@ -372,7 +372,7 @@ void Image::finishImport(const vector<vk::DeviceSize> &offsets, vk::DeviceSize g
     {
         m_device->bindImageMemory(
             *m_images[i],
-            deviceMemory(min<uint32_t>(i, m_deviceMemory.size() - 1)),
+            deviceMemory(min<uint32_t>(i, deviceMemoryCount() - 1)),
             offsets[i] + globalOffset
         );
     }
