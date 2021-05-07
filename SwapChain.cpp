@@ -195,7 +195,6 @@ uint32_t SwapChain::acquireNextImage(bool *suboptimal)
 }
 void SwapChain::present(uint32_t imageIdx, bool *suboptimal)
 {
-
     vk::PresentInfoKHR presentInfo;
     presentInfo.waitSemaphoreCount = 1;
     presentInfo.pWaitSemaphores = *m_renderFinishedSem;
