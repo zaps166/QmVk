@@ -92,6 +92,22 @@ if(QMVK_NO_EXPORT)
     )
 endif()
 
+if(QMVK_WAIT_TIMEOUT_MS)
+    target_compile_definitions(${PROJECT_NAME}
+        PUBLIC
+        -DQMVK_WAIT_TIMEOUT_MS=${QMVK_WAIT_TIMEOUT_MS}
+    )
+endif()
+if(NOT WIN32 AND NOT ANDROID AND QMVK_NVIDIA_LINUX_WORKAROUND)
+    if(NOT QMVK_WAIT_TIMEOUT_MS)
+        message(SEND_ERROR "QMVK_NVIDIA_LINUX_WORKAROUND requires QMVK_WAIT_TIMEOUT_MS")
+    endif()
+    target_compile_definitions(${PROJECT_NAME}
+        PUBLIC
+        -DQMVK_NVIDIA_LINUX_WORKAROUND
+    )
+endif()
+
 if(WIN32)
     target_compile_definitions(${PROJECT_NAME}
         PUBLIC

@@ -53,9 +53,12 @@ void Queue::init()
 {
     static_cast<vk::Queue &>(*this) = m_device->getQueue(m_queueFamilyIndex, m_queueIndex);
 
-#ifndef VK_USE_PLATFORM_WIN32_KHR
+#ifdef QMVK_NVIDIA_LINUX_WORKAROUND
     // Workaround NVIDIA driver freeze when restoring from suspend or switching VT
     m_fakeDeviceLost = (m_device->physicalDevice()->properties().vendorID == 0x10de);
+#   ifndef QMVK_WAIT_TIMEOUT_MS
+#       error "QMVK_WAIT_TIMEOUT_MS is not defined"
+#   endif
 #endif
 
     m_fence = m_device->createFenceUnique(vk::FenceCreateInfo());
@@ -81,11 +84,18 @@ void Queue::waitForCommandsFinished()
     auto result = m_device->waitForFences(
         *m_fence,
         true,
-        m_fakeDeviceLost ? static_cast<uint64_t>(2e9) : numeric_limits<uint64_t>::max()
+#ifdef QMVK_WAIT_TIMEOUT_MS
+        QMVK_WAIT_TIMEOUT_MS * static_cast<uint64_t>(1e6)
+#else
+        numeric_limits<uint64_t>::max()
+#endif
     );
-    if (m_fakeDeviceLost && result == vk::Result::eTimeout)
+    if (result == vk::Result::eTimeout)
     {
-        throw vk::DeviceLostError("Fence timeout");
+        if (m_fakeDeviceLost)
+            throw vk::DeviceLostError("vkWaitForFences timeout");
+        else
+            throw vk::SystemError(vk::make_error_code(result), "vkWaitForFences");
     }
 }
 

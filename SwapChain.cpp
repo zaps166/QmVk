@@ -182,7 +182,11 @@ uint32_t SwapChain::acquireNextImage(bool *suboptimal)
 {
     const auto nextImageResult = m_device->acquireNextImageKHR(
         *m_swapChain,
+#ifdef QMVK_WAIT_TIMEOUT_MS
+        QMVK_WAIT_TIMEOUT_MS * static_cast<uint64_t>(1e6),
+#else
         numeric_limits<uint64_t>::max(),
+#endif
         *m_imageAvailableSem,
         vk::Fence()
     );
@@ -190,6 +194,10 @@ uint32_t SwapChain::acquireNextImage(bool *suboptimal)
     {
         if (suboptimal)
             *suboptimal = true;
+    }
+    else if (nextImageResult.result == vk::Result::eTimeout)
+    {
+        throw vk::SystemError(vk::make_error_code(nextImageResult.result), "vkAcquireNextImageKHR");
     }
     return nextImageResult.value;
 }
