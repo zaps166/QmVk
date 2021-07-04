@@ -120,13 +120,39 @@ void MemoryObject::allocateMemory(
     allocateInfo.allocationSize = m_memoryRequirements.size;
     allocateInfo.pNext = allocateInfoPNext;
 
-    tie(allocateInfo.memoryTypeIndex, m_memoryPropertyFlags) = m_physicalDevice->findMemoryType(
-        userMemoryPropertyFlags,
-        m_memoryRequirements.memoryTypeBits,
-        userMemoryPropertyFlags.heap
-    );
+    auto allocateMemoryInternal = [this, &allocateInfo](const MemoryPropertyFlags &userMemoryPropertyFlags) {
+        tie(allocateInfo.memoryTypeIndex, m_memoryPropertyFlags) = m_physicalDevice->findMemoryType(
+            userMemoryPropertyFlags,
+            m_memoryRequirements.memoryTypeBits,
+            userMemoryPropertyFlags.heap
+        );
 
-    m_deviceMemory.push_back(m_device->allocateMemory(allocateInfo));
+        m_deviceMemory.push_back(m_device->allocateMemory(allocateInfo));
+    };
+
+    const auto isRequiredHostVisible = userMemoryPropertyFlags.required & vk::MemoryPropertyFlagBits::eHostVisible;
+    const auto isOptionalDeviceLocal = userMemoryPropertyFlags.optional & vk::MemoryPropertyFlagBits::eDeviceLocal;
+    if (!isRequiredHostVisible || !isOptionalDeviceLocal)
+    {
+        allocateMemoryInternal(userMemoryPropertyFlags);
+        return;
+    }
+
+    try
+    {
+        allocateMemoryInternal(userMemoryPropertyFlags);
+    }
+    catch (const vk::OutOfDeviceMemoryError &e)
+    {
+        const auto isHostVisible = m_memoryPropertyFlags & vk::MemoryPropertyFlagBits::eHostVisible;
+        const auto isDeviceLocal = m_memoryPropertyFlags & vk::MemoryPropertyFlagBits::eDeviceLocal;
+        if (!isHostVisible || !isDeviceLocal)
+            throw e;
+
+        auto userMemoryPropertyFlagsNoDeviceLocal = userMemoryPropertyFlags;
+        userMemoryPropertyFlagsNoDeviceLocal.optional &= ~vk::MemoryPropertyFlagBits::eDeviceLocal;
+        allocateMemoryInternal(userMemoryPropertyFlagsNoDeviceLocal);
+    }
 }
 
 shared_ptr<CommandBuffer> MemoryObject::internalCommandBuffer()
