@@ -69,8 +69,6 @@ private:
     const uint32_t m_queueFamilyIndex;
     const uint32_t m_queueIndex;
 
-    bool m_fakeDeviceLost = false;
-
     bool m_fenceResetNeeded = false;
     vk::UniqueFence m_fence;
 
