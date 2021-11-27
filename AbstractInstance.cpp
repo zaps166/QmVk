@@ -23,30 +23,34 @@ vk::DispatchLoaderDynamic vk::defaultDispatchLoaderDynamic;
 
 namespace QmVk {
 
-static unique_ptr<vk::DynamicLoader> g_dyld;
-
 void AbstractInstance::init(PFN_vkGetInstanceProcAddr vkGetInstanceProcAddr)
 {
-    if (vkGetInstanceProcAddr)
-    {
-        vk::defaultDispatchLoaderDynamic.init(*this, vkGetInstanceProcAddr);
-        return;
-    }
-
-    try
-    {
-        g_dyld = make_unique<vk::DynamicLoader>();
-    }
-    catch (const runtime_error &e)
-    {
-        throw vk::InitializationFailedError(e.what());
-    }
-
-    vkGetInstanceProcAddr = g_dyld->getProcAddress<PFN_vkGetInstanceProcAddr>("vkGetInstanceProcAddr");
     if (!vkGetInstanceProcAddr)
-        throw vk::InitializationFailedError("Unable to get \"vkGetInstanceProcAddr\"");
+    {
+        static unique_ptr<vk::DynamicLoader> dyld;
+        static mutex dyldMutex;
 
-    vk::defaultDispatchLoaderDynamic.init(vkGetInstanceProcAddr);
+        lock_guard<mutex> locker(dyldMutex);
+        if (!dyld)
+        {
+            try
+            {
+                dyld = make_unique<vk::DynamicLoader>();
+            }
+            catch (const runtime_error &e)
+            {
+                throw vk::InitializationFailedError(e.what());
+            }
+        }
+
+        vkGetInstanceProcAddr = dyld->getProcAddress<PFN_vkGetInstanceProcAddr>("vkGetInstanceProcAddr");
+        if (!vkGetInstanceProcAddr)
+            throw vk::InitializationFailedError("Unable to get \"vkGetInstanceProcAddr\"");
+    }
+    if (*this)
+        vk::defaultDispatchLoaderDynamic.init(*this, vkGetInstanceProcAddr);
+    else
+        vk::defaultDispatchLoaderDynamic.init(vkGetInstanceProcAddr);
 }
 
 vector<shared_ptr<PhysicalDevice>> AbstractInstance::enumeratePhysicalDevices(bool compatibleOnly)
