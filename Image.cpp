@@ -289,10 +289,7 @@ void Image::init(bool deviceLocal, uint32_t heap)
             : vk::ImageTiling::eOptimal
         ;
         imageCreateInfo.usage = imageUsageFlags;
-        imageCreateInfo.initialLayout = m_externalImport
-            ? vk::ImageLayout::ePreinitialized
-            : vk::ImageLayout::eUndefined
-        ;
+        imageCreateInfo.initialLayout = vk::ImageLayout::eUndefined;
 
         vk::ExternalMemoryImageCreateInfo externalMemoryImageCreateInfo;
         if (m_exportMemoryTypes)
