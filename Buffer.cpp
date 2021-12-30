@@ -93,7 +93,8 @@ shared_ptr<Buffer> Buffer::createUniformTexelBuffer(
     uint32_t heap)
 {
     MemoryPropertyFlags memoryPropertyFlags;
-    memoryPropertyFlags.required = vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent | vk::MemoryPropertyFlagBits::eHostCached;
+    memoryPropertyFlags.required = vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent;
+    memoryPropertyFlags.optional = vk::MemoryPropertyFlagBits::eHostCached;
     memoryPropertyFlags.heap = heap;
     return create(
         device,
