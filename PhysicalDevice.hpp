@@ -22,6 +22,7 @@
 
 #include <vulkan/vulkan.hpp>
 
+#include <unordered_map>
 #include <unordered_set>
 
 namespace QmVk {
@@ -111,6 +112,8 @@ public:
 
     string linuxPCIPath() const;
 
+    const vk::FormatProperties &getFormatPropertiesCached(vk::Format fmt);
+
 private:
     const shared_ptr<AbstractInstance> m_instance;
 
@@ -123,6 +126,8 @@ private:
     bool m_hasPciBusInfo = false;
 
     vk::Extent2D m_localWorkgroupSize;
+
+    unordered_map<vk::Format, vk::FormatProperties> m_formatProperties;
 };
 
 /* Inline implementation */

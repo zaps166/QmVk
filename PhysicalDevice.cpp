@@ -247,4 +247,15 @@ string PhysicalDevice::linuxPCIPath() const
     return out;
 }
 
+const vk::FormatProperties &PhysicalDevice::getFormatPropertiesCached(vk::Format fmt)
+{
+    auto it = m_formatProperties.find(fmt);
+    if (it == m_formatProperties.end())
+    {
+        m_formatProperties[fmt] = getFormatProperties(fmt);
+        it = m_formatProperties.find(fmt);
+    }
+    return it->second;
+}
+
 }
