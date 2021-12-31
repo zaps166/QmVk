@@ -130,6 +130,8 @@ public:
 
     inline uint32_t numPlanes() const;
 
+    inline bool isSampled() const;
+
     inline vk::ImageView imageView(uint32_t plane = 0) const;
 
     inline uint32_t mipLevels() const;
@@ -193,6 +195,8 @@ private:
     const bool m_storage;
     const bool m_externalImport;
     const uint32_t m_numPlanes;
+
+    bool m_sampled = false;
 
     vector<vk::Extent2D> m_sizes;
     vector<uint32_t> m_paddingHeights;
@@ -265,6 +269,11 @@ bool Image::isExternalImport() const
 uint32_t Image::numPlanes() const
 {
     return m_numPlanes;
+}
+
+inline bool Image::isSampled() const
+{
+    return m_sampled;
 }
 
 vk::ImageView Image::imageView(uint32_t plane) const

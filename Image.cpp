@@ -69,9 +69,10 @@ vk::ExternalMemoryProperties Image::getExternalMemoryProperties(
         : vk::ImageTiling::eOptimal
     ;
     imageFormatInfo.usage =
-        vk::ImageUsageFlagBits::eTransferSrc |
-        vk::ImageUsageFlagBits::eSampled
+        vk::ImageUsageFlagBits::eTransferSrc
     ;
+    if (!linear || (physicalDevice->getFormatPropertiesCached(realFmt).linearTilingFeatures & vk::FormatFeatureFlagBits::eSampledImage))
+        imageFormatInfo.usage |= vk::ImageUsageFlagBits::eSampled;
     imageFormatInfo.pNext = &externalImageFormatInfo;
 
     return physicalDevice->getImageFormatProperties2KHR<
@@ -266,10 +267,23 @@ void Image::init(bool deviceLocal, uint32_t heap)
             break;
     }
 
+    auto checkLinearTilingSampledImage = [this] {
+        for (uint32_t i = 0; i < m_numPlanes; ++i)
+        {
+            if (!(m_physicalDevice->getFormatPropertiesCached(m_formats[i]).linearTilingFeatures & vk::FormatFeatureFlagBits::eSampledImage))
+                return false;
+        }
+        return true;
+    };
+
     vk::ImageUsageFlags imageUsageFlags =
-        vk::ImageUsageFlagBits::eTransferSrc |
-        vk::ImageUsageFlagBits::eSampled
+        vk::ImageUsageFlagBits::eTransferSrc
     ;
+    if (!m_linear || checkLinearTilingSampledImage())
+    {
+        imageUsageFlags |= vk::ImageUsageFlagBits::eSampled;
+        m_sampled = true;
+    }
     if (!m_externalImport)
         imageUsageFlags |= vk::ImageUsageFlagBits::eTransferDst;
     if (m_storage)
