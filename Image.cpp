@@ -392,6 +392,9 @@ void Image::finishImport(const vector<vk::DeviceSize> &offsets, vk::DeviceSize g
 
 void Image::createImageViews()
 {
+    if (!m_storage && !m_sampled)
+        return;
+
     for (uint32_t i = 0; i < m_numPlanes; ++i)
     {
         vk::ImageViewCreateInfo imageViewCreateInfo;
