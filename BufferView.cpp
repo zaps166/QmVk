@@ -67,4 +67,19 @@ void BufferView::init()
     m_bufferView = m_device->createBufferViewUnique(bufferViewCreateInfo);
 }
 
+void BufferView::copyTo(
+    const shared_ptr<BufferView> &dstBufferView,
+    const shared_ptr<CommandBuffer> &externalCommandBuffer)
+{
+    vk::BufferCopy bufferCopy;
+    bufferCopy.srcOffset = m_offset;
+    bufferCopy.dstOffset = dstBufferView->offset();
+    bufferCopy.size = min(m_range, dstBufferView->m_range);
+    m_buffer->copyTo(
+        dstBufferView->buffer(),
+        externalCommandBuffer,
+        &bufferCopy
+    );
+}
+
 }

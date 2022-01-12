@@ -156,21 +156,41 @@ void Buffer::init(const MemoryPropertyFlags *userMemoryPropertyFlags)
 
 void Buffer::copyTo(
     const shared_ptr<Buffer> &dstBuffer,
-    const shared_ptr<CommandBuffer> &externalCommandBuffer)
+    const shared_ptr<CommandBuffer> &externalCommandBuffer,
+    const vk::BufferCopy *bufferCopyIn)
 {
     if (!(m_usage & vk::BufferUsageFlagBits::eTransferSrc))
         throw vk::LogicError("Source buffer is not flagged as transfer source");
     if (!(dstBuffer->m_usage & vk::BufferUsageFlagBits::eTransferDst))
         throw vk::LogicError("Destination buffer is not flagged as transfer destination");
 
+    if (bufferCopyIn)
+    {
+        if (bufferCopyIn->srcOffset + bufferCopyIn->size > size())
+            throw vk::LogicError("Source buffer overflow");
+        if (bufferCopyIn->dstOffset + bufferCopyIn->size > dstBuffer->size())
+            throw vk::LogicError("Destination buffer overflow");
+    }
+
     auto copyCommands = [&](vk::CommandBuffer commandBuffer) {
-        vk::BufferCopy bufferCopy;
-        bufferCopy.size = min(size(), dstBuffer->size());
-        commandBuffer.copyBuffer(
-            *this,
-            *dstBuffer,
-            bufferCopy
-        );
+        if (bufferCopyIn)
+        {
+            commandBuffer.copyBuffer(
+                *this,
+                *dstBuffer,
+                *bufferCopyIn
+            );
+        }
+        else
+        {
+            vk::BufferCopy bufferCopy;
+            bufferCopy.size = min(size(), dstBuffer->size());
+            commandBuffer.copyBuffer(
+                *this,
+                *dstBuffer,
+                bufferCopy
+            );
+        }
     };
 
     if (externalCommandBuffer)

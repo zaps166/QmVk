@@ -26,6 +26,7 @@ namespace QmVk {
 
 using namespace std;
 
+class CommandBuffer;
 class Buffer;
 
 class QMVK_EXPORT BufferView : public MemoryObjectBase
@@ -59,6 +60,11 @@ public:
     inline vk::Format format() const;
     inline vk::DeviceSize offset() const;
     inline vk::DeviceSize size() const;
+
+    void copyTo(
+        const shared_ptr<BufferView> &dstBufferView,
+        const shared_ptr<CommandBuffer> &externalCommandBuffer = nullptr
+    );
 
 public:
     inline operator vk::BufferView() const;

@@ -81,7 +81,8 @@ public:
 
     void copyTo(
         const shared_ptr<Buffer> &dstBuffer,
-        const shared_ptr<CommandBuffer> &externalCommandBuffer = nullptr
+        const shared_ptr<CommandBuffer> &externalCommandBuffer = nullptr,
+        const vk::BufferCopy *bufferCopyIn = nullptr
     );
 
     void *map();
