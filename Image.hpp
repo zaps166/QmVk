@@ -26,7 +26,9 @@ namespace QmVk {
 
 using namespace std;
 
+#ifdef QMVK_USE_IMAGE_BUFFER_VIEW
 class BufferView;
+#endif
 
 class QMVK_EXPORT Image : public MemoryObject, public enable_shared_from_this<Image>
 {
@@ -94,8 +96,10 @@ private:
 
     void createImageViews();
 
+#ifdef QMVK_USE_IMAGE_BUFFER_VIEW
 public:
     shared_ptr<BufferView> bufferView(uint32_t plane = 0);
+#endif
 
 public:
     void importFD(
@@ -211,7 +215,9 @@ private:
     vector<vk::UniqueImage> m_images;
     vector<vk::UniqueImageView> m_imageViews;
 
+#ifdef QMVK_USE_IMAGE_BUFFER_VIEW
     vector<shared_ptr<BufferView>> m_bufferViews;
+#endif
 
     void *m_mapped = nullptr;
 

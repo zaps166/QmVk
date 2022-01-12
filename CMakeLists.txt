@@ -84,6 +84,12 @@ target_compile_definitions(${PROJECT_NAME}
     -DVULKAN_HPP_TYPESAFE_CONVERSION
     -DNOMINMAX
 )
+if(QMVK_USE_IMAGE_BUFFER_VIEW)
+    target_compile_definitions(${PROJECT_NAME}
+        PUBLIC
+        -DQMVK_USE_IMAGE_BUFFER_VIEW
+    )
+endif()
 
 if(QMVK_NO_EXPORT)
     target_compile_definitions(${PROJECT_NAME}

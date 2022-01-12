@@ -23,7 +23,9 @@
 #include "DescriptorInfo.hpp"
 #include "CommandBuffer.hpp"
 #include "Buffer.hpp"
-#include "BufferView.hpp"
+#ifdef QMVK_USE_IMAGE_BUFFER_VIEW
+#   include "BufferView.hpp"
+#endif
 
 #include <functional>
 #include <cmath>
@@ -321,6 +323,12 @@ void Image::allocateAndBindMemory(bool deviceLocal, uint32_t heap)
 {
     vector<vk::DeviceSize> memoryOffsets(m_numPlanes);
 
+#ifdef QMVK_USE_IMAGE_BUFFER_VIEW
+    // We need to set buffer alignment for buffer view from this image
+    const auto &limits = m_physicalDevice->limits();
+    const auto bufferAlignment = max(limits.minUniformBufferOffsetAlignment, limits.minStorageBufferOffsetAlignment);
+#endif
+
     for (uint32_t i = 0; i < m_numPlanes; ++i)
     {
         vk::DeviceSize paddingBytes = 0;
@@ -337,9 +345,14 @@ void Image::allocateAndBindMemory(bool deviceLocal, uint32_t heap)
         }
 
         const auto memoryRequirements = m_device->getImageMemoryRequirements(*m_images[i]);
-        const auto memoryRequirementsSize = aligned(memoryRequirements.size + paddingBytes, memoryRequirements.alignment);
+#ifdef QMVK_USE_IMAGE_BUFFER_VIEW
+        const auto alignment = max(memoryRequirements.alignment, bufferAlignment);
+#else
+        const auto alignment = memoryRequirements.alignment;
+#endif
+        const auto memoryRequirementsSize = aligned(memoryRequirements.size + paddingBytes, alignment);
         m_memoryRequirements.size += memoryRequirementsSize;
-        m_memoryRequirements.alignment = max(m_memoryRequirements.alignment, memoryRequirements.alignment);
+        m_memoryRequirements.alignment = max(m_memoryRequirements.alignment, alignment);
         m_memoryRequirements.memoryTypeBits |= memoryRequirements.memoryTypeBits;
 
         m_subresourceLayouts[i].offset = memoryOffsets[i];
@@ -406,6 +419,7 @@ void Image::createImageViews()
     }
 }
 
+#ifdef QMVK_USE_IMAGE_BUFFER_VIEW
 shared_ptr<BufferView> Image::bufferView(uint32_t plane)
 {
     if (m_bufferViews.empty())
@@ -429,6 +443,7 @@ shared_ptr<BufferView> Image::bufferView(uint32_t plane)
     }
     return m_bufferViews[plane];
 }
+#endif
 
 void Image::importFD(
     const FdDescriptors &descriptors,
