@@ -48,8 +48,8 @@ public:
         const shared_ptr<Device> &device,
         const vk::Extent2D &size,
         vk::Format fmt,
-        bool useMipMaps,
-        bool storage,
+        bool useMipMaps = false,
+        bool storage = false,
         vk::ExternalMemoryHandleTypeFlags exportMemoryTypes = {},
         uint32_t heap = ~0u
     );
