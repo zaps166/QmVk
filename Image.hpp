@@ -61,6 +61,8 @@ public:
         vk::Format fmt,
         uint32_t paddingHeight = 0,
         bool deviceLocal = false,
+        bool useMipMaps = false,
+        bool storage = false,
         vk::ExternalMemoryHandleTypeFlags exportMemoryTypes = {},
         uint32_t heap = ~0u
     );

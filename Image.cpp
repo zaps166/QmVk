@@ -115,6 +115,8 @@ shared_ptr<Image> Image::createLinear(
     vk::Format fmt,
     uint32_t paddingHeight,
     bool deviceLocal,
+    bool useMipMaps,
+    bool storage,
     vk::ExternalMemoryHandleTypeFlags exportMemoryTypes,
     uint32_t heap)
 {
@@ -124,8 +126,8 @@ shared_ptr<Image> Image::createLinear(
         fmt,
         paddingHeight,
         true,
-        false,
-        false,
+        useMipMaps,
+        storage,
         false,
         exportMemoryTypes,
         Priv()
