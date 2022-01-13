@@ -53,6 +53,13 @@ public:
         const vector<const char *> &physicalDeviceExtensions,
         uint32_t maxQueueCount
     );
+    shared_ptr<Device> createDevice(
+        const shared_ptr<PhysicalDevice> &physicalDevice,
+        uint32_t queueFamilyIndex,
+        const vk::PhysicalDeviceFeatures2 &physicalDeviceFeatures,
+        const vector<const char *> &physicalDeviceExtensions,
+        uint32_t maxQueueCount
+    );
     void resetDevice(const shared_ptr<Device> &deviceToReset);
     shared_ptr<Device> device() const;
 

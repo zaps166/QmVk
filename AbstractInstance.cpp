@@ -88,8 +88,23 @@ shared_ptr<Device> AbstractInstance::createDevice(
     const vector<const char *> &physicalDeviceExtensions,
     uint32_t maxQueueCount)
 {
-    auto device = physicalDevice->createDevice(
+    return createDevice(
+        physicalDevice,
         physicalDevice->getQueueFamilyIndex(queueFlags),
+        physicalDeviceFeatures,
+        physicalDeviceExtensions,
+        maxQueueCount
+    );
+}
+shared_ptr<Device> AbstractInstance::createDevice(
+    const shared_ptr<PhysicalDevice> &physicalDevice,
+    uint32_t queueFamilyIndex,
+    const vk::PhysicalDeviceFeatures2 &physicalDeviceFeatures,
+    const vector<const char *> &physicalDeviceExtensions,
+    uint32_t maxQueueCount)
+{
+    auto device = physicalDevice->createDevice(
+        queueFamilyIndex,
         physicalDeviceFeatures,
         physicalDevice->filterAvailableExtensions(physicalDeviceExtensions),
         maxQueueCount
