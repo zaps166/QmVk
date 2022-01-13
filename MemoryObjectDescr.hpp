@@ -51,6 +51,7 @@ public:
 
         Read,
         Write,
+        ReadWrite,
     };
 
 public:

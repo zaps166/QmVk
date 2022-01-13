@@ -148,6 +148,9 @@ void MemoryObjectDescr::finalizeImage(
 
 MemoryObjectDescr::DescriptorTypeInfos MemoryObjectDescr::getBufferDescriptorTypeInfos() const
 {
+    if (m_access == Access::Write)
+        throw vk::LogicError("Bad buffer access");
+
     DescriptorTypeInfos descriptorTypeInfos;
 
     auto &descriptorType = descriptorTypeInfos.first;
@@ -226,7 +229,7 @@ MemoryObjectDescr::DescriptorTypeInfos MemoryObjectDescr::getImageDescriptorType
 }
 MemoryObjectDescr::DescriptorTypeInfos MemoryObjectDescr::getBufferViewDescriptorTypeInfos() const
 {
-    if (m_access == Access::Undefined)
+    if (m_access == Access::Undefined || m_access == Access::Write)
         throw vk::LogicError("Bad buffer view access");
 
     DescriptorTypeInfos descriptorTypeInfos;
