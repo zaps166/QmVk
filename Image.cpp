@@ -375,10 +375,21 @@ void Image::allocateAndBindMemory(bool deviceLocal, uint32_t heap)
         memoryPropertyFlags.required =
             vk::MemoryPropertyFlagBits::eDeviceLocal
         ;
-        memoryPropertyFlags.notWanted =
-            vk::MemoryPropertyFlagBits::eHostVisible |
-            vk::MemoryPropertyFlagBits::eHostCached
-        ;
+        if (m_linear)
+        {
+            memoryPropertyFlags.optional =
+                vk::MemoryPropertyFlagBits::eHostVisible |
+                vk::MemoryPropertyFlagBits::eHostCoherent |
+                vk::MemoryPropertyFlagBits::eHostCached
+            ;
+        }
+        else
+        {
+            memoryPropertyFlags.notWanted =
+                vk::MemoryPropertyFlagBits::eHostVisible |
+                vk::MemoryPropertyFlagBits::eHostCached
+            ;
+        }
     }
     else
     {
