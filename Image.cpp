@@ -325,12 +325,6 @@ void Image::allocateAndBindMemory(bool deviceLocal, uint32_t heap)
 {
     vector<vk::DeviceSize> memoryOffsets(m_numPlanes);
 
-#ifdef QMVK_USE_IMAGE_BUFFER_VIEW
-    // We need to set buffer alignment for buffer view from this image
-    const auto &limits = m_physicalDevice->limits();
-    const auto bufferAlignment = max(limits.minUniformBufferOffsetAlignment, limits.minStorageBufferOffsetAlignment);
-#endif
-
     for (uint32_t i = 0; i < m_numPlanes; ++i)
     {
         vk::DeviceSize paddingBytes = 0;
@@ -347,14 +341,24 @@ void Image::allocateAndBindMemory(bool deviceLocal, uint32_t heap)
         }
 
         const auto memoryRequirements = m_device->getImageMemoryRequirements(*m_images[i]);
+        auto memoryRequirementsAlignment = memoryRequirements.alignment;
+        auto memoryRequirementsSize = aligned(memoryRequirements.size + paddingBytes, memoryRequirementsAlignment);
 #ifdef QMVK_USE_IMAGE_BUFFER_VIEW
-        const auto alignment = max(memoryRequirements.alignment, bufferAlignment);
-#else
-        const auto alignment = memoryRequirements.alignment;
+        vk::BufferCreateInfo bufferCreateInfo;
+        bufferCreateInfo.usage = vk::BufferUsageFlagBits::eUniformTexelBuffer | vk::BufferUsageFlagBits::eStorageTexelBuffer;
+        bufferCreateInfo.size = memoryRequirementsSize;
+        if (m_uniqueBuffers.empty())
+            m_uniqueBuffers.resize(m_numPlanes);
+        m_uniqueBuffers[i] = m_device->createBufferUnique(bufferCreateInfo);
+
+        memoryRequirementsAlignment = max(
+            memoryRequirements.alignment,
+            m_device->getBufferMemoryRequirements(*m_uniqueBuffers[i]).alignment
+        );
+        memoryRequirementsSize = aligned(memoryRequirementsSize, memoryRequirementsAlignment);
 #endif
-        const auto memoryRequirementsSize = aligned(memoryRequirements.size + paddingBytes, alignment);
         m_memoryRequirements.size += memoryRequirementsSize;
-        m_memoryRequirements.alignment = max(m_memoryRequirements.alignment, alignment);
+        m_memoryRequirements.alignment = max(m_memoryRequirements.alignment, memoryRequirementsAlignment);
         m_memoryRequirements.memoryTypeBits |= memoryRequirements.memoryTypeBits;
 
         m_subresourceLayouts[i].offset = memoryOffsets[i];
@@ -433,7 +437,9 @@ shared_ptr<BufferView> Image::bufferView(uint32_t plane)
                 m_device,
                 memorySize(i),
                 vk::BufferUsageFlagBits::eUniformTexelBuffer | vk::BufferUsageFlagBits::eStorageTexelBuffer,
-                deviceMemory(i)
+                deviceMemory(i),
+                m_memoryPropertyFlags,
+                m_uniqueBuffers.empty() ? nullptr : &m_uniqueBuffers[i]
             );
             m_bufferViews.push_back(BufferView::create(
                 buffer,
@@ -442,6 +448,7 @@ shared_ptr<BufferView> Image::bufferView(uint32_t plane)
                 memorySize(i)
             ));
         }
+        m_uniqueBuffers.clear();
     }
     return m_bufferViews[plane];
 }

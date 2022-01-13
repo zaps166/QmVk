@@ -218,6 +218,7 @@ private:
     vector<vk::UniqueImageView> m_imageViews;
 
 #ifdef QMVK_USE_IMAGE_BUFFER_VIEW
+    vector<vk::UniqueBuffer> m_uniqueBuffers;
     vector<shared_ptr<BufferView>> m_bufferViews;
 #endif
 
