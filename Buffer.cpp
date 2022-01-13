@@ -108,7 +108,9 @@ shared_ptr<Buffer> Buffer::createFromDeviceMemory(
     const shared_ptr<Device> &device,
     vk::DeviceSize size,
     vk::BufferUsageFlags usage,
-    vk::DeviceMemory deviceMemory)
+    vk::DeviceMemory deviceMemory,
+    vk::MemoryPropertyFlags memoryPropertyFlags,
+    vk::UniqueBuffer *bufferIn)
 {
     auto buffer = make_shared<Buffer>(
         device,
@@ -116,8 +118,11 @@ shared_ptr<Buffer> Buffer::createFromDeviceMemory(
         usage,
         Buffer::Priv()
     );
+    buffer->m_memoryPropertyFlags = memoryPropertyFlags;
     buffer->m_deviceMemory.push_back(deviceMemory);
     buffer->m_dontFreeMemory = true;
+    if (bufferIn)
+        buffer->m_buffer = move(*bufferIn);
     buffer->init(nullptr);
     return buffer;
 }
@@ -140,16 +145,17 @@ Buffer::~Buffer()
 
 void Buffer::init(const MemoryPropertyFlags *userMemoryPropertyFlags)
 {
-    vk::BufferCreateInfo bufferCreateInfo;
-    bufferCreateInfo.size = m_size;
-    bufferCreateInfo.usage = m_usage;
-    m_buffer = m_device->createBufferUnique(bufferCreateInfo);
-
-    if (userMemoryPropertyFlags && m_deviceMemory.empty())
+    if (!m_buffer)
     {
-        m_memoryRequirements = m_device->getBufferMemoryRequirements(*this);
-        allocateMemory(*userMemoryPropertyFlags);
+        vk::BufferCreateInfo bufferCreateInfo;
+        bufferCreateInfo.size = m_size;
+        bufferCreateInfo.usage = m_usage;
+        m_buffer = m_device->createBufferUnique(bufferCreateInfo);
     }
+
+    m_memoryRequirements = m_device->getBufferMemoryRequirements(*this);
+    if (userMemoryPropertyFlags && m_deviceMemory.empty())
+        allocateMemory(*userMemoryPropertyFlags);
 
     m_device->bindBufferMemory(*this, deviceMemory(), 0);
 }

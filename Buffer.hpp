@@ -60,7 +60,9 @@ public:
         const shared_ptr<Device> &device,
         vk::DeviceSize size,
         vk::BufferUsageFlags usage,
-        vk::DeviceMemory deviceMemory
+        vk::DeviceMemory deviceMemory,
+        vk::MemoryPropertyFlags memoryPropertyFlags,
+        vk::UniqueBuffer *bufferIn = nullptr
     );
 
 public:
