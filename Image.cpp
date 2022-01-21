@@ -106,15 +106,15 @@ shared_ptr<Image> Image::createOptimal(
         exportMemoryTypes,
         Priv()
     );
-    image->init(true, heap);
+    image->init(MemoryPropertyPreset::PreferNoHostAccess, heap);
     return image;
 }
 shared_ptr<Image> Image::createLinear(
     const shared_ptr<Device> &device,
     const vk::Extent2D &size,
     vk::Format fmt,
+    MemoryPropertyPreset memoryPropertyPreset,
     uint32_t paddingHeight,
-    bool deviceLocal,
     bool useMipMaps,
     bool storage,
     vk::ExternalMemoryHandleTypeFlags exportMemoryTypes,
@@ -132,7 +132,7 @@ shared_ptr<Image> Image::createLinear(
         exportMemoryTypes,
         Priv()
     );
-    image->init(deviceLocal, heap);
+    image->init(memoryPropertyPreset, heap);
     return image;
 }
 
@@ -155,7 +155,7 @@ shared_ptr<Image> Image::createExternalImport(
         exportMemoryTypes,
         Priv()
     );
-    image->init();
+    image->init(MemoryPropertyPreset::PreferNoHostAccess);
     return image;
 }
 
@@ -185,7 +185,7 @@ Image::~Image()
     unmap();
 }
 
-void Image::init(bool deviceLocal, uint32_t heap)
+void Image::init(MemoryPropertyPreset memoryPropertyPreset, uint32_t heap)
 {
     if (!m_externalImport && m_useMipMaps)
     {
@@ -319,9 +319,9 @@ void Image::init(bool deviceLocal, uint32_t heap)
         m_images[i] = m_device->createImageUnique(imageCreateInfo);
     }
 
-    allocateAndBindMemory(deviceLocal, heap);
+    allocateAndBindMemory(memoryPropertyPreset, heap);
 }
-void Image::allocateAndBindMemory(bool deviceLocal, uint32_t heap)
+void Image::allocateAndBindMemory(MemoryPropertyPreset memoryPropertyPreset, uint32_t heap)
 {
     vector<vk::DeviceSize> memoryOffsets(m_numPlanes);
 
@@ -370,34 +370,64 @@ void Image::allocateAndBindMemory(bool deviceLocal, uint32_t heap)
         return;
 
     MemoryPropertyFlags memoryPropertyFlags;
-    if (deviceLocal)
+    switch (memoryPropertyPreset)
     {
-        memoryPropertyFlags.required =
-            vk::MemoryPropertyFlagBits::eDeviceLocal
-        ;
-        if (m_linear)
-        {
+        case MemoryPropertyPreset::PreferNoHostAccess:
+            memoryPropertyFlags.required =
+                vk::MemoryPropertyFlagBits::eDeviceLocal
+            ;
+            memoryPropertyFlags.notWanted =
+                vk::MemoryPropertyFlagBits::eHostVisible
+            ;
+            break;
+        case MemoryPropertyPreset::PreferCachedOrNoHostAccess:
+            memoryPropertyFlags.required =
+                vk::MemoryPropertyFlagBits::eDeviceLocal
+            ;
             memoryPropertyFlags.optional =
                 vk::MemoryPropertyFlagBits::eHostVisible |
                 vk::MemoryPropertyFlagBits::eHostCoherent |
                 vk::MemoryPropertyFlagBits::eHostCached
             ;
-        }
-        else
-        {
-            memoryPropertyFlags.notWanted =
+            break;
+        case MemoryPropertyPreset::PreferHostAccess:
+            memoryPropertyFlags.required =
+                vk::MemoryPropertyFlagBits::eDeviceLocal
+            ;
+            memoryPropertyFlags.optional =
                 vk::MemoryPropertyFlagBits::eHostVisible |
+                vk::MemoryPropertyFlagBits::eHostCoherent |
                 vk::MemoryPropertyFlagBits::eHostCached
             ;
-        }
-    }
-    else
-    {
-        memoryPropertyFlags.required =
-            vk::MemoryPropertyFlagBits::eHostVisible |
-            vk::MemoryPropertyFlagBits::eHostCoherent
-        ;
-        memoryPropertyFlags.optional = vk::MemoryPropertyFlagBits::eHostCached;
+            memoryPropertyFlags.optionalFallback =
+                vk::MemoryPropertyFlagBits::eHostVisible |
+                vk::MemoryPropertyFlagBits::eHostCoherent
+            ;
+            break;
+        case MemoryPropertyPreset::PreferCachedHostOnly:
+            memoryPropertyFlags.required =
+                vk::MemoryPropertyFlagBits::eHostVisible |
+                vk::MemoryPropertyFlagBits::eHostCoherent
+            ;
+            memoryPropertyFlags.optional =
+                vk::MemoryPropertyFlagBits::eHostCached
+            ;
+            memoryPropertyFlags.optionalFallback =
+                vk::MemoryPropertyFlagBits::eDeviceLocal
+            ;
+            break;
+        case MemoryPropertyPreset::PreferHostOnly:
+            memoryPropertyFlags.required =
+                vk::MemoryPropertyFlagBits::eHostVisible |
+                vk::MemoryPropertyFlagBits::eHostCoherent
+            ;
+            memoryPropertyFlags.optional =
+                vk::MemoryPropertyFlagBits::eDeviceLocal
+            ;
+            memoryPropertyFlags.optionalFallback =
+                vk::MemoryPropertyFlagBits::eHostCached
+            ;
+            break;
     }
     memoryPropertyFlags.heap = heap;
     allocateMemory(memoryPropertyFlags);

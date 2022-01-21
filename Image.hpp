@@ -36,6 +36,16 @@ class QMVK_EXPORT Image : public MemoryObject, public enable_shared_from_this<Im
     struct Priv {};
 
 public:
+    enum class MemoryPropertyPreset
+    {
+        PreferNoHostAccess,
+        PreferCachedOrNoHostAccess,
+        PreferHostAccess,
+        PreferCachedHostOnly,
+        PreferHostOnly,
+    };
+
+public:
     static uint32_t getNumPlanes(vk::Format format);
 
     static vk::ExternalMemoryProperties getExternalMemoryProperties(
@@ -59,8 +69,8 @@ public:
         const shared_ptr<Device> &device,
         const vk::Extent2D &size,
         vk::Format fmt,
+        MemoryPropertyPreset memoryPropertyPreset = MemoryPropertyPreset::PreferCachedHostOnly,
         uint32_t paddingHeight = 0,
-        bool deviceLocal = false,
         bool useMipMaps = false,
         bool storage = false,
         vk::ExternalMemoryHandleTypeFlags exportMemoryTypes = {},
@@ -91,8 +101,8 @@ public:
     ~Image();
 
 private:
-    void init(bool deviceLocal = false, uint32_t heap = ~0u);
-    void allocateAndBindMemory(bool deviceLocal, uint32_t heap);
+    void init(MemoryPropertyPreset memoryPropertyPreset, uint32_t heap = ~0u);
+    void allocateAndBindMemory(MemoryPropertyPreset memoryPropertyPreset, uint32_t heap);
 
     void finishImport(const vector<vk::DeviceSize> &offsets, vk::DeviceSize globalOffset = 0u);
 
