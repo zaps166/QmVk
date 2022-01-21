@@ -156,6 +156,7 @@ PhysicalDevice::MemoryType PhysicalDevice::findMemoryType(
     MemoryType result;
 
     const auto memoryProperties = getMemoryProperties();
+    bool optionalFallbackFound = false;
     for (uint32_t i = 0; i < memoryProperties.memoryTypeCount; ++i)
     {
         if (heap != ~0u && memoryProperties.memoryTypes[i].heapIndex != heap)
@@ -172,18 +173,33 @@ PhysicalDevice::MemoryType PhysicalDevice::findMemoryType(
             bool doBreak = false;
 
             const auto optional = memoryPropertyFlags.optional;
+            const auto optionalFallback = memoryPropertyFlags.optionalFallback;
             const auto notWanted = memoryPropertyFlags.notWanted;
-            if (optional)
+
+            auto getFlagsWithoutNotWanted = [&] {
+                return (currMemoryPropertyFlags & ~notWanted);
+            };
+
+            if (optional || optionalFallback)
             {
-                if (((currMemoryPropertyFlags & ~notWanted) & optional) == optional)
+                auto testFlags = [&](vk::MemoryPropertyFlags flags) {
+                    return ((getFlagsWithoutNotWanted() & flags) == flags);
+                };
+
+                if (optional && testFlags(optional))
                 {
                     result = currResult;
                     break;
                 }
+                if (optionalFallback && !optionalFallbackFound && testFlags(optionalFallback))
+                {
+                    result = currResult;
+                    optionalFallbackFound = true;
+                }
             }
             else if (notWanted)
             {
-                if ((currMemoryPropertyFlags & ~notWanted) == currMemoryPropertyFlags)
+                if (getFlagsWithoutNotWanted() == currMemoryPropertyFlags)
                 {
                     result = currResult;
                     break;

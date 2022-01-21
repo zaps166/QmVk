@@ -130,28 +130,59 @@ void MemoryObject::allocateMemory(
         m_deviceMemory.push_back(m_device->allocateMemory(allocateInfo));
     };
 
-    const auto isRequiredHostVisible = userMemoryPropertyFlags.required & vk::MemoryPropertyFlagBits::eHostVisible;
-    const auto isOptionalDeviceLocal = userMemoryPropertyFlags.optional & vk::MemoryPropertyFlagBits::eDeviceLocal;
-    if (!isRequiredHostVisible || !isOptionalDeviceLocal)
-    {
-        allocateMemoryInternal(userMemoryPropertyFlags);
-        return;
-    }
-
     try
     {
         allocateMemoryInternal(userMemoryPropertyFlags);
     }
     catch (const vk::OutOfDeviceMemoryError &e)
     {
-        const auto isHostVisible = m_memoryPropertyFlags & vk::MemoryPropertyFlagBits::eHostVisible;
-        const auto isDeviceLocal = m_memoryPropertyFlags & vk::MemoryPropertyFlagBits::eDeviceLocal;
-        if (!isHostVisible || !isDeviceLocal)
-            throw e;
+        const auto isRequiredDeviceLocal =
+            userMemoryPropertyFlags.required & vk::MemoryPropertyFlagBits::eDeviceLocal
+        ;
+        const auto isRequiredHostVisible =
+            userMemoryPropertyFlags.required & vk::MemoryPropertyFlagBits::eHostVisible
+        ;
 
-        auto userMemoryPropertyFlagsNoDeviceLocal = userMemoryPropertyFlags;
-        userMemoryPropertyFlagsNoDeviceLocal.optional &= ~vk::MemoryPropertyFlagBits::eDeviceLocal;
-        allocateMemoryInternal(userMemoryPropertyFlagsNoDeviceLocal);
+        const auto isOptionalDeviceLocal =
+            (userMemoryPropertyFlags.optional & vk::MemoryPropertyFlagBits::eDeviceLocal) ||
+            (userMemoryPropertyFlags.optionalFallback & vk::MemoryPropertyFlagBits::eDeviceLocal)
+        ;
+        const auto isOptionalHostVisible =
+            (userMemoryPropertyFlags.optional & vk::MemoryPropertyFlagBits::eHostVisible) ||
+            (userMemoryPropertyFlags.optionalFallback & vk::MemoryPropertyFlagBits::eHostVisible)
+        ;
+
+        if ((isRequiredDeviceLocal && isRequiredHostVisible)
+                || (isRequiredDeviceLocal && !isOptionalHostVisible)
+                || (isRequiredHostVisible && !isOptionalDeviceLocal))
+        {
+            throw e;
+        }
+
+        auto userMemoryPropertyFlagsNew = userMemoryPropertyFlags;
+        if (isOptionalDeviceLocal)
+        {
+            userMemoryPropertyFlagsNew.optional &=
+                ~vk::MemoryPropertyFlagBits::eDeviceLocal
+            ;
+            userMemoryPropertyFlagsNew.optionalFallback &=
+                ~vk::MemoryPropertyFlagBits::eDeviceLocal
+            ;
+        }
+        if (isOptionalHostVisible)
+        {
+            userMemoryPropertyFlagsNew.optional &=
+                ~(vk::MemoryPropertyFlagBits::eHostVisible |
+                  vk::MemoryPropertyFlagBits::eHostCoherent |
+                  vk::MemoryPropertyFlagBits::eHostCached)
+            ;
+            userMemoryPropertyFlagsNew.optionalFallback &=
+                ~(vk::MemoryPropertyFlagBits::eHostVisible |
+                  vk::MemoryPropertyFlagBits::eHostCoherent |
+                  vk::MemoryPropertyFlagBits::eHostCached)
+            ;
+        }
+        allocateMemoryInternal(userMemoryPropertyFlagsNew);
     }
 }
 

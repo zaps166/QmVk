@@ -34,15 +34,14 @@ public:
         vk::MemoryPropertyFlagBits requiredFlag
     );
     inline MemoryPropertyFlags(
-        vk::MemoryPropertyFlags requiredFlags,
-        vk::MemoryPropertyFlags optionalFlags = {},
-        vk::MemoryPropertyFlags notWantedFlags = {}
+        vk::MemoryPropertyFlags requiredFlags
     );
     ~MemoryPropertyFlags() = default;
 
 public:
     vk::MemoryPropertyFlags required;
     vk::MemoryPropertyFlags optional;
+    vk::MemoryPropertyFlags optionalFallback;
     vk::MemoryPropertyFlags notWanted;
     uint32_t heap = ~0;
 };
@@ -55,12 +54,8 @@ MemoryPropertyFlags::MemoryPropertyFlags(
 {}
 
 MemoryPropertyFlags::MemoryPropertyFlags(
-        vk::MemoryPropertyFlags requiredFlags,
-        vk::MemoryPropertyFlags optionalFlags,
-        vk::MemoryPropertyFlags notWantedFlags)
+        vk::MemoryPropertyFlags requiredFlags)
     : required(requiredFlags)
-    , optional(optionalFlags)
-    , notWanted(notWantedFlags)
 {}
 
 }
