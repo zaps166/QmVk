@@ -77,7 +77,7 @@ public:
     inline bool isDeviceLocal() const;
     inline bool isHostVisible() const;
     inline bool isHostCoherent() const;
-    inline bool isCached() const;
+    inline bool isHostCached() const;
 
     inline auto exportMemoryTypes() const;
 
@@ -129,7 +129,7 @@ bool MemoryObject::isHostCoherent() const
 {
     return bool(m_memoryPropertyFlags & vk::MemoryPropertyFlagBits::eHostCoherent);
 }
-bool MemoryObject::isCached() const
+bool MemoryObject::isHostCached() const
 {
     return bool(m_memoryPropertyFlags & vk::MemoryPropertyFlagBits::eHostCached);
 }
