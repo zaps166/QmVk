@@ -36,7 +36,8 @@ public:
     static shared_ptr<ComputePipeline> create(
         const shared_ptr<Device> &device,
         const shared_ptr<ShaderModule> &shaderModule,
-        uint32_t pushConstantsSize = 0
+        uint32_t pushConstantsSize = 0,
+        bool dispatchBase = false
     );
 
 public:
@@ -44,6 +45,7 @@ public:
         const shared_ptr<Device> &device,
         const shared_ptr<ShaderModule> &shaderModule,
         uint32_t pushConstantsSize,
+        bool dispatchBase,
         Priv
     );
     ~ComputePipeline();
@@ -64,15 +66,27 @@ public:
         const shared_ptr<CommandBuffer> &commandBuffer,
         const vk::Extent2D &groupCount
     );
+    void recordCommandsCompute(
+        const shared_ptr<CommandBuffer> &commandBuffer,
+        const vk::Offset2D &baseGroup,
+        const vk::Extent2D &groupCount
+    );
 
     void recordCommands(
         const shared_ptr<CommandBuffer> &commandBuffer,
         const vk::Extent2D groupCount,
         bool doFinalizeImages = false
     );
+    void recordCommands(
+        const shared_ptr<CommandBuffer> &commandBuffer,
+        const vk::Offset2D &baseGroup,
+        const vk::Extent2D groupCount,
+        bool doFinalizeImages = false
+    );
 
 private:
     const shared_ptr<ShaderModule> m_shaderModule;
+    const bool m_dispatchBase = false;
 
     vk::Extent2D m_localWorkgroupSize;
 };

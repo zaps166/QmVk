@@ -30,12 +30,14 @@ namespace QmVk {
 shared_ptr<ComputePipeline> ComputePipeline::create(
     const shared_ptr<Device> &device,
     const shared_ptr<ShaderModule> &shaderModule,
-    uint32_t pushConstantsSize)
+    uint32_t pushConstantsSize,
+    bool dispatchBase)
 {
     auto computePipeline = make_shared<ComputePipeline>(
         device,
         shaderModule,
         pushConstantsSize,
+        dispatchBase,
         Priv()
     );
     return computePipeline;
@@ -45,9 +47,11 @@ ComputePipeline::ComputePipeline(
     const shared_ptr<Device> &device,
     const shared_ptr<ShaderModule> &shaderModule,
     uint32_t pushConstantsSize,
+    bool dispatchBase,
     Priv)
     : Pipeline(device, vk::ShaderStageFlagBits::eCompute, vk::PipelineStageFlagBits::eComputeShader, pushConstantsSize)
     , m_shaderModule(shaderModule)
+    , m_dispatchBase(dispatchBase)
 {}
 ComputePipeline::~ComputePipeline()
 {}
@@ -70,6 +74,8 @@ void ComputePipeline::createPipeline()
     );
 
     vk::ComputePipelineCreateInfo pipelineCreateInfo;
+    if (m_dispatchBase)
+        pipelineCreateInfo.flags = vk::PipelineCreateFlagBits::eDispatchBase;
     pipelineCreateInfo.stage = m_shaderModule->getPipelineShaderStageCreateInfo(specializationInfo);
     pipelineCreateInfo.layout = *m_pipelineLayout;
     m_pipeline = m_device->createComputePipelineUnique(nullptr, pipelineCreateInfo);
@@ -135,6 +141,25 @@ void ComputePipeline::recordCommandsCompute(
         1
     );
 }
+void ComputePipeline::recordCommandsCompute(
+    const shared_ptr<CommandBuffer> &commandBuffer,
+    const vk::Offset2D &baseGroup,
+    const vk::Extent2D &groupCount)
+{
+    pushConstants(commandBuffer);
+
+    if (!m_dispatchBase)
+        throw vk::LogicError("Dispatch base is not enabled in ComputePipeline");
+
+    commandBuffer->dispatchBase(
+        baseGroup.x,
+        baseGroup.y,
+        0,
+        groupCount.width,
+        groupCount.height,
+        1
+    );
+}
 
 void ComputePipeline::recordCommands(
     const shared_ptr<CommandBuffer> &commandBuffer,
@@ -143,6 +168,17 @@ void ComputePipeline::recordCommands(
 {
     recordCommandsInit(commandBuffer);
     recordCommandsCompute(commandBuffer, groupCount);
+    if (doFinalizeImages)
+        finalizeImages(commandBuffer);
+}
+void ComputePipeline::recordCommands(
+    const shared_ptr<CommandBuffer> &commandBuffer,
+    const vk::Offset2D &baseGroup,
+    const vk::Extent2D groupCount,
+    bool doFinalizeImages)
+{
+    recordCommandsInit(commandBuffer);
+    recordCommandsCompute(commandBuffer, baseGroup, groupCount);
     if (doFinalizeImages)
         finalizeImages(commandBuffer);
 }
