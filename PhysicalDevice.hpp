@@ -49,6 +49,7 @@ public:
         vk::DeviceSize usage;
         bool deviceLocal;
         bool multiInstance;
+        bool hostVisible;
     };
 
 public:
@@ -72,6 +73,8 @@ public:
 
     inline bool hasMemoryBudget() const;
     inline bool hasPciBusInfo() const;
+
+    inline bool hasFullHostVisibleDeviceLocal() const;
 
     inline vk::Extent2D localWorkgroupSize() const;
 
@@ -125,6 +128,8 @@ private:
     bool m_hasMemoryBudget = false;
     bool m_hasPciBusInfo = false;
 
+    bool m_hasFullHostVisibleDeviceLocal = false;
+
     vk::Extent2D m_localWorkgroupSize;
 
     unordered_map<vk::Format, vk::FormatProperties> m_formatProperties;
@@ -158,6 +163,11 @@ bool PhysicalDevice::hasMemoryBudget() const
 bool PhysicalDevice::hasPciBusInfo() const
 {
     return m_hasPciBusInfo;
+}
+
+bool PhysicalDevice::hasFullHostVisibleDeviceLocal() const
+{
+    return m_hasFullHostVisibleDeviceLocal;
 }
 
 vk::Extent2D PhysicalDevice::localWorkgroupSize() const

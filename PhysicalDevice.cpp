@@ -58,6 +58,26 @@ void PhysicalDevice::init()
         m_properties = getProperties();
     }
 
+    vk::DeviceSize deviceLocalAndHostVisibleSize = 0;
+    vk::DeviceSize deviceLocalSize = 0;
+    for (auto &&heapInfo : getMemoryHeapsInfo())
+    {
+        if (!heapInfo.deviceLocal)
+            continue;
+
+        if (heapInfo.hostVisible)
+        {
+            if (deviceLocalAndHostVisibleSize == 0)
+                deviceLocalAndHostVisibleSize = heapInfo.size;
+        }
+        else
+        {
+            if (deviceLocalSize == 0)
+                deviceLocalSize = heapInfo.size;
+        }
+    }
+    m_hasFullHostVisibleDeviceLocal = (deviceLocalAndHostVisibleSize >= deviceLocalSize);
+
     const uint32_t localWorkgroupSizeSqr = pow(2.0, floor(log2(sqrt(limits().maxComputeWorkGroupInvocations))));
     m_localWorkgroupSize = vk::Extent2D(
         min(localWorkgroupSizeSqr, limits().maxComputeWorkGroupSize[0]),
@@ -141,8 +161,13 @@ vector<PhysicalDevice::MemoryHeap> PhysicalDevice::getMemoryHeapsInfo() const
             memoryHeaps[i].budget = memoryHeaps[i].size;
             memoryHeaps[i].usage = 0;
         }
-        memoryHeaps[i].deviceLocal = bool(props.memoryProperties.memoryHeaps[i].flags & vk::MemoryHeapFlagBits::eDeviceLocal);
-        memoryHeaps[i].multiInstance = bool(props.memoryProperties.memoryHeaps[i].flags & vk::MemoryHeapFlagBits::eMultiInstance);
+        memoryHeaps[i].deviceLocal = static_cast<bool>(props.memoryProperties.memoryHeaps[i].flags & vk::MemoryHeapFlagBits::eDeviceLocal);
+        memoryHeaps[i].multiInstance = static_cast<bool>(props.memoryProperties.memoryHeaps[i].flags & vk::MemoryHeapFlagBits::eMultiInstance);
+    }
+    for (uint32_t i = 0; i < props.memoryProperties.memoryTypeCount; ++i)
+    {
+        if (props.memoryProperties.memoryTypes[i].propertyFlags & vk::MemoryPropertyFlagBits::eHostVisible)
+            memoryHeaps[props.memoryProperties.memoryTypes[i].heapIndex].hostVisible = true;
     }
 
     return memoryHeaps;

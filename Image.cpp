@@ -412,9 +412,12 @@ void Image::allocateAndBindMemory(MemoryPropertyPreset memoryPropertyPreset, uin
             memoryPropertyFlags.optional =
                 vk::MemoryPropertyFlagBits::eHostCached
             ;
-            memoryPropertyFlags.optionalFallback =
-                vk::MemoryPropertyFlagBits::eDeviceLocal
-            ;
+            if (m_physicalDevice->hasFullHostVisibleDeviceLocal())
+            {
+                memoryPropertyFlags.optionalFallback =
+                    vk::MemoryPropertyFlagBits::eDeviceLocal
+                ;
+            }
             break;
         case MemoryPropertyPreset::PreferHostOnly:
             memoryPropertyFlags.required =
