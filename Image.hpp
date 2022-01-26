@@ -46,6 +46,12 @@ public:
     };
 
 public:
+    static bool checkFormatSampledImage(
+        const shared_ptr<PhysicalDevice> &physicalDevice,
+        vk::Format fmt,
+        bool linear
+    );
+
     static uint32_t getNumPlanes(vk::Format format);
 
     static vk::ExternalMemoryProperties getExternalMemoryProperties(

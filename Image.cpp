@@ -32,6 +32,18 @@
 
 namespace QmVk {
 
+bool Image::checkFormatSampledImage(
+    const shared_ptr<PhysicalDevice> &physicalDevice,
+    vk::Format fmt,
+    bool linear)
+{
+    const auto &formatProperties = physicalDevice->getFormatPropertiesCached(fmt);
+    const auto flags = vk::FormatFeatureFlagBits::eSampledImage | vk::FormatFeatureFlagBits::eSampledImageFilterLinear;
+    if (linear)
+        return static_cast<bool>(formatProperties.linearTilingFeatures & flags);
+    return static_cast<bool>(formatProperties.optimalTilingFeatures & flags);
+}
+
 uint32_t Image::getNumPlanes(vk::Format format)
 {
     switch (format)
@@ -73,7 +85,7 @@ vk::ExternalMemoryProperties Image::getExternalMemoryProperties(
     imageFormatInfo.usage =
         vk::ImageUsageFlagBits::eTransferSrc
     ;
-    if (!linear || (physicalDevice->getFormatPropertiesCached(realFmt).linearTilingFeatures & vk::FormatFeatureFlagBits::eSampledImage))
+    if (checkFormatSampledImage(physicalDevice, realFmt, linear))
         imageFormatInfo.usage |= vk::ImageUsageFlagBits::eSampled;
     imageFormatInfo.pNext = &externalImageFormatInfo;
 
@@ -271,10 +283,10 @@ void Image::init(MemoryPropertyPreset memoryPropertyPreset, uint32_t heap)
             break;
     }
 
-    auto checkLinearTilingSampledImage = [this] {
+    auto checkSampledImage = [this] {
         for (uint32_t i = 0; i < m_numPlanes; ++i)
         {
-            if (!(m_physicalDevice->getFormatPropertiesCached(m_formats[i]).linearTilingFeatures & vk::FormatFeatureFlagBits::eSampledImage))
+            if (!checkFormatSampledImage(m_physicalDevice, m_formats[i], m_linear))
                 return false;
         }
         return true;
@@ -283,7 +295,7 @@ void Image::init(MemoryPropertyPreset memoryPropertyPreset, uint32_t heap)
     vk::ImageUsageFlags imageUsageFlags =
         vk::ImageUsageFlagBits::eTransferSrc
     ;
-    if (!m_linear || checkLinearTilingSampledImage())
+    if (checkSampledImage())
     {
         imageUsageFlags |= vk::ImageUsageFlagBits::eSampled;
         m_sampled = true;
