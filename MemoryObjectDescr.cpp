@@ -47,6 +47,7 @@ MemoryObjectDescr::MemoryObjectDescr(
     const shared_ptr<Sampler> &sampler,
     uint32_t plane)
     : m_type(Type::Image)
+    , m_access(Access::Read)
     , m_objects(toMemoryObjectBaseVector(images))
     , m_sampler(sampler)
     , m_plane(plane)
@@ -84,6 +85,7 @@ MemoryObjectDescr::MemoryObjectDescr(
     const shared_ptr<Sampler> &sampler,
     uint32_t plane)
     : m_type(Type::Image)
+    , m_access(Access::Read)
     , m_objects({image})
     , m_sampler(sampler)
     , m_plane(plane)
@@ -161,7 +163,7 @@ MemoryObjectDescr::DescriptorTypeInfos MemoryObjectDescr::getBufferDescriptorTyp
     for (auto &&object : m_objects)
     {
         auto buffer = static_pointer_cast<Buffer>(object);
-        auto type = (m_access == Access::Read || (m_access == Access::Undefined && (buffer->usage() & vk::BufferUsageFlagBits::eUniformBuffer)))
+        auto type = (m_access == Access::Read)
             ? vk::DescriptorType::eUniformBuffer
             : vk::DescriptorType::eStorageBuffer
         ;
@@ -179,7 +181,7 @@ MemoryObjectDescr::DescriptorTypeInfos MemoryObjectDescr::getBufferDescriptorTyp
 }
 MemoryObjectDescr::DescriptorTypeInfos MemoryObjectDescr::getImageDescriptorTypeInfos() const
 {
-    if ((m_access == Access::Undefined) == !m_sampler)
+    if (m_access == Access::ReadWrite || (m_sampler && m_access != Access::Read))
         throw vk::LogicError("Bad image access");
 
     DescriptorTypeInfos descriptorTypeInfos;
@@ -229,7 +231,7 @@ MemoryObjectDescr::DescriptorTypeInfos MemoryObjectDescr::getImageDescriptorType
 }
 MemoryObjectDescr::DescriptorTypeInfos MemoryObjectDescr::getBufferViewDescriptorTypeInfos() const
 {
-    if (m_access == Access::Undefined || m_access == Access::Write)
+    if (m_access == Access::Write)
         throw vk::LogicError("Bad buffer view access");
 
     DescriptorTypeInfos descriptorTypeInfos;

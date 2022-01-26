@@ -47,8 +47,6 @@ public:
     };
     enum class Access
     {
-        Undefined = -1,
-
         Read,
         Write,
         ReadWrite,
@@ -57,7 +55,7 @@ public:
 public:
     MemoryObjectDescr(
         const vector<shared_ptr<Buffer>> &buffers,
-        Access access = Access::Undefined
+        Access access = Access::Read
     );
     MemoryObjectDescr(
         const vector<shared_ptr<Image>> &images,
@@ -66,7 +64,7 @@ public:
     );
     MemoryObjectDescr(
         const vector<shared_ptr<Image>> &images,
-        Access access,
+        Access access = Access::Read,
         uint32_t plane = ~0u
     );
     MemoryObjectDescr(
@@ -76,7 +74,7 @@ public:
 
     MemoryObjectDescr(
         const shared_ptr<Buffer> &buffer,
-        Access access = Access::Undefined
+        Access access = Access::Read
     );
     MemoryObjectDescr(
         const shared_ptr<Image> &image,
@@ -85,7 +83,7 @@ public:
     );
     MemoryObjectDescr(
         const shared_ptr<Image> &image,
-        Access access,
+        Access access = Access::Read,
         uint32_t plane = ~0u
     );
     MemoryObjectDescr(
@@ -116,7 +114,7 @@ public:
 
 private:
     Type m_type;
-    Access m_access = Access::Undefined;
+    Access m_access;
     vector<shared_ptr<MemoryObjectBase>> m_objects;
 
     // Image
