@@ -604,25 +604,15 @@ void Image::copyTo(
     auto copyCommands = [&](vk::CommandBuffer commandBuffer) {
         pipelineBarrier(
             commandBuffer,
-            m_imageLayout,
             vk::ImageLayout::eTransferSrcOptimal,
-            m_stage,
             vk::PipelineStageFlagBits::eTransfer,
-            m_accessFlags,
-            vk::AccessFlagBits::eTransferRead,
-            getImageSubresourceRange(),
-            true
+            vk::AccessFlagBits::eTransferRead
         );
         dstImage->pipelineBarrier(
             commandBuffer,
-            dstImage->m_imageLayout,
             vk::ImageLayout::eTransferDstOptimal,
-            dstImage->m_stage,
             vk::PipelineStageFlagBits::eTransfer,
-            dstImage->m_accessFlags,
-            vk::AccessFlagBits::eTransferWrite,
-            dstImage->getImageSubresourceRange(),
-            true
+            vk::AccessFlagBits::eTransferWrite
         );
 
         for (uint32_t i = 0; i < m_numPlanes; ++i)
