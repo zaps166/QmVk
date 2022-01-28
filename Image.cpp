@@ -353,24 +353,10 @@ void Image::allocateAndBindMemory(MemoryPropertyPreset memoryPropertyPreset, uin
         }
 
         const auto memoryRequirements = m_device->getImageMemoryRequirements(*m_images[i]);
-        auto memoryRequirementsAlignment = memoryRequirements.alignment;
-        auto memoryRequirementsSize = aligned(memoryRequirements.size + paddingBytes, memoryRequirementsAlignment);
-#ifdef QMVK_USE_IMAGE_BUFFER_VIEW
-        vk::BufferCreateInfo bufferCreateInfo;
-        bufferCreateInfo.usage = vk::BufferUsageFlagBits::eUniformTexelBuffer | vk::BufferUsageFlagBits::eStorageTexelBuffer;
-        bufferCreateInfo.size = memoryRequirementsSize;
-        if (m_uniqueBuffers.empty())
-            m_uniqueBuffers.resize(m_numPlanes);
-        m_uniqueBuffers[i] = m_device->createBufferUnique(bufferCreateInfo);
+        const auto memoryRequirementsSize = aligned(memoryRequirements.size + paddingBytes, memoryRequirements.alignment);
 
-        memoryRequirementsAlignment = max(
-            memoryRequirements.alignment,
-            m_device->getBufferMemoryRequirements(*m_uniqueBuffers[i]).alignment
-        );
-        memoryRequirementsSize = aligned(memoryRequirementsSize, memoryRequirementsAlignment);
-#endif
         m_memoryRequirements.size += memoryRequirementsSize;
-        m_memoryRequirements.alignment = max(m_memoryRequirements.alignment, memoryRequirementsAlignment);
+        m_memoryRequirements.alignment = max(m_memoryRequirements.alignment, memoryRequirements.alignment);
         m_memoryRequirements.memoryTypeBits |= memoryRequirements.memoryTypeBits;
 
         m_subresourceLayouts[i].offset = memoryOffsets[i];
@@ -380,6 +366,19 @@ void Image::allocateAndBindMemory(MemoryPropertyPreset memoryPropertyPreset, uin
 
     if (m_externalImport)
         return;
+
+#ifdef QMVK_USE_IMAGE_BUFFER_VIEW
+        vk::BufferCreateInfo bufferCreateInfo;
+        bufferCreateInfo.usage = vk::BufferUsageFlagBits::eUniformTexelBuffer | vk::BufferUsageFlagBits::eStorageTexelBuffer;
+        bufferCreateInfo.size = m_memoryRequirements.size;
+        m_uniqueBuffer = m_device->createBufferUnique(bufferCreateInfo);
+
+        m_memoryRequirements.alignment = max(
+            m_memoryRequirements.alignment,
+            m_device->getBufferMemoryRequirements(*m_uniqueBuffer).alignment
+        );
+        m_memoryRequirements.size = aligned(m_memoryRequirements.size, m_memoryRequirements.alignment);
+#endif
 
     MemoryPropertyFlags memoryPropertyFlags;
     switch (memoryPropertyPreset)
@@ -486,17 +485,21 @@ shared_ptr<BufferView> Image::bufferView(uint32_t plane)
 {
     if (m_bufferViews.empty())
     {
+        if (!m_uniqueBuffer)
+            return nullptr;
+
+        auto buffer = Buffer::createFromDeviceMemory(
+            m_device,
+            memorySize(),
+            vk::BufferUsageFlagBits::eUniformTexelBuffer | vk::BufferUsageFlagBits::eStorageTexelBuffer,
+            deviceMemory(),
+            m_memoryPropertyFlags,
+            &m_uniqueBuffer
+        );
+
         m_bufferViews.reserve(m_numPlanes);
         for (uint32_t i = 0; i < m_numPlanes; ++i)
         {
-            auto buffer = Buffer::createFromDeviceMemory(
-                m_device,
-                memorySize(i),
-                vk::BufferUsageFlagBits::eUniformTexelBuffer | vk::BufferUsageFlagBits::eStorageTexelBuffer,
-                deviceMemory(i),
-                m_memoryPropertyFlags,
-                m_uniqueBuffers.empty() ? nullptr : &m_uniqueBuffers[i]
-            );
             m_bufferViews.push_back(BufferView::create(
                 buffer,
                 format(i),
@@ -504,7 +507,6 @@ shared_ptr<BufferView> Image::bufferView(uint32_t plane)
                 memorySize(i)
             ));
         }
-        m_uniqueBuffers.clear();
     }
     return m_bufferViews[plane];
 }
