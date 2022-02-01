@@ -36,11 +36,12 @@ static vector<shared_ptr<MemoryObjectBase>> toMemoryObjectBaseVector(const vecto
 
 MemoryObjectDescr::MemoryObjectDescr(
     const vector<shared_ptr<Buffer>> &buffers,
-    Access access)
+    Access access,
+    const vector<BufferRange> &ranges)
     : m_type(Type::Buffer)
     , m_access(access)
     , m_objects(toMemoryObjectBaseVector(buffers))
-    , m_descriptorTypeInfos(getBufferDescriptorTypeInfos())
+    , m_descriptorTypeInfos(getBufferDescriptorTypeInfos(ranges))
 {}
 MemoryObjectDescr::MemoryObjectDescr(
     const vector<shared_ptr<Image>> &images,
@@ -74,11 +75,12 @@ MemoryObjectDescr::MemoryObjectDescr(
 
 MemoryObjectDescr::MemoryObjectDescr(
     const shared_ptr<Buffer> &buffer,
-    Access access)
+    Access access,
+    const BufferRange &range)
     : m_type(Type::Buffer)
     , m_access(access)
     , m_objects({buffer})
-    , m_descriptorTypeInfos(getBufferDescriptorTypeInfos())
+    , m_descriptorTypeInfos(getBufferDescriptorTypeInfos({range}))
 {}
 MemoryObjectDescr::MemoryObjectDescr(
     const shared_ptr<Image> &image,
@@ -148,7 +150,7 @@ void MemoryObjectDescr::finalizeImage(
     }
 }
 
-MemoryObjectDescr::DescriptorTypeInfos MemoryObjectDescr::getBufferDescriptorTypeInfos() const
+MemoryObjectDescr::DescriptorTypeInfos MemoryObjectDescr::getBufferDescriptorTypeInfos(const vector<BufferRange> &ranges) const
 {
     if (m_access == Access::Write)
         throw vk::LogicError("Bad buffer access");
@@ -160,6 +162,7 @@ MemoryObjectDescr::DescriptorTypeInfos MemoryObjectDescr::getBufferDescriptorTyp
     auto &descriptorInfos = descriptorTypeInfos.second;
     descriptorInfos.reserve(m_objects.size());
 
+    size_t i = 0;
     for (auto &&object : m_objects)
     {
         auto buffer = static_pointer_cast<Buffer>(object);
@@ -173,7 +176,24 @@ MemoryObjectDescr::DescriptorTypeInfos MemoryObjectDescr::getBufferDescriptorTyp
         else if (descriptorType.type != type)
             throw vk::LogicError("Inconsistent buffer types");
 
-        descriptorInfos.push_back({{*buffer, 0, buffer->size()}});
+        vk::DeviceSize offset = 0;
+        vk::DeviceSize size = buffer->size();
+        if (ranges.size() > i && ranges[i].second > 0)
+        {
+            if (ranges[i].first + ranges[i].second > size)
+                throw vk::LogicError("Buffer range exceeds the buffer size");
+
+            offset = ranges[i].first;
+            size = ranges[i].second;
+        }
+
+        descriptorInfos.push_back({{
+            *buffer,
+            offset,
+            size,
+        }});
+
+        ++i;
     }
 
     descriptorType.descriptorCount = descriptorInfos.size();

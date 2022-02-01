@@ -52,10 +52,13 @@ public:
         ReadWrite,
     };
 
+    using BufferRange = pair<vk::DeviceSize, vk::DeviceSize>;
+
 public:
     MemoryObjectDescr(
         const vector<shared_ptr<Buffer>> &buffers,
-        Access access = Access::Read
+        Access access = Access::Read,
+        const vector<BufferRange> &ranges = {}
     );
     MemoryObjectDescr(
         const vector<shared_ptr<Image>> &images,
@@ -74,7 +77,8 @@ public:
 
     MemoryObjectDescr(
         const shared_ptr<Buffer> &buffer,
-        Access access = Access::Read
+        Access access = Access::Read,
+        const BufferRange &range = {}
     );
     MemoryObjectDescr(
         const shared_ptr<Image> &image,
@@ -105,7 +109,7 @@ private:
     ) const;
 
 private:
-    DescriptorTypeInfos getBufferDescriptorTypeInfos() const;
+    DescriptorTypeInfos getBufferDescriptorTypeInfos(const vector<BufferRange> &ranges) const;
     DescriptorTypeInfos getImageDescriptorTypeInfos() const;
     DescriptorTypeInfos getBufferViewDescriptorTypeInfos() const;
 
