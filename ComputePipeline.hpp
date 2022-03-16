@@ -75,13 +75,13 @@ public:
     void recordCommands(
         const shared_ptr<CommandBuffer> &commandBuffer,
         const vk::Extent2D groupCount,
-        bool doFinalizeImages = false
+        bool doFinalizeObjects = false
     );
     void recordCommands(
         const shared_ptr<CommandBuffer> &commandBuffer,
         const vk::Offset2D &baseGroup,
         const vk::Extent2D groupCount,
-        bool doFinalizeImages = false
+        bool doFinalizeObjects = false
     );
 
 private:

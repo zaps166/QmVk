@@ -112,32 +112,64 @@ MemoryObjectDescr::MemoryObjectDescr(
     , m_descriptorTypeInfos(getBufferViewDescriptorTypeInfos())
 {}
 
-void MemoryObjectDescr::prepareImage(
+void MemoryObjectDescr::prepareObject(
     vk::CommandBuffer commandBuffer,
     vk::PipelineStageFlags pipelineStageFlags) const
 {
-    if (m_type != Type::Image)
-        return;
+    vk::AccessFlags accessFlag = {};
+    switch (m_access)
+    {
+        case Access::Read:
+        case Access::StorageRead:
+            accessFlag = vk::AccessFlagBits::eShaderRead;
+            break;
+        case Access::Write:
+        case Access::StorageWrite:
+            accessFlag = vk::AccessFlagBits::eShaderWrite;
+            break;
+        case Access::Storage:
+            accessFlag = vk::AccessFlagBits::eShaderRead | vk::AccessFlagBits::eShaderWrite;
+            break;
+    }
 
     size_t descriptorInfosIdx = 0;
     for (auto &&object : m_objects)
     {
-        auto image = static_pointer_cast<Image>(object);
-        image->pipelineBarrier(
-            commandBuffer,
-            descriptorInfos()[descriptorInfosIdx].descrImgInfo.imageLayout,
-            pipelineStageFlags,
-            (m_access == Access::Write)
-                ? vk::AccessFlagBits::eShaderWrite
-                : vk::AccessFlagBits::eShaderRead
-        );
-        descriptorInfosIdx += (m_plane == ~0u)
-            ? image->numPlanes()
-            : 1
-        ;
+        switch (m_type)
+        {
+            case Type::Buffer:
+            case Type::BufferView:
+            {
+                auto buffer = (m_type == Type::BufferView)
+                    ? static_pointer_cast<BufferView>(object)->buffer()
+                    : static_pointer_cast<Buffer>(object)
+                ;
+                buffer->pipelineBarrier(
+                    commandBuffer,
+                    pipelineStageFlags,
+                    accessFlag
+                );
+                break;
+            }
+            case Type::Image:
+            {
+                auto image = static_pointer_cast<Image>(object);
+                image->pipelineBarrier(
+                    commandBuffer,
+                    descriptorInfos()[descriptorInfosIdx].descrImgInfo.imageLayout,
+                    pipelineStageFlags,
+                    accessFlag
+                );
+                descriptorInfosIdx += (m_plane == ~0u)
+                    ? image->numPlanes()
+                    : 1
+                ;
+                break;
+            }
+        }
     }
 }
-void MemoryObjectDescr::finalizeImage(
+void MemoryObjectDescr::finalizeObject(
     vk::CommandBuffer commandBuffer) const
 {
     if (m_type != Type::Image || m_access != Access::Write)
@@ -201,7 +233,7 @@ MemoryObjectDescr::DescriptorTypeInfos MemoryObjectDescr::getBufferDescriptorTyp
 }
 MemoryObjectDescr::DescriptorTypeInfos MemoryObjectDescr::getImageDescriptorTypeInfos() const
 {
-    if (m_access == Access::ReadWrite || (m_sampler && m_access != Access::Read))
+    if (m_access == Access::Storage || m_access == Access::StorageRead || m_access == Access::StorageWrite || (m_sampler && m_access != Access::Read))
         throw vk::LogicError("Bad image access");
 
     DescriptorTypeInfos descriptorTypeInfos;

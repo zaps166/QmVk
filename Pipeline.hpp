@@ -41,7 +41,7 @@ protected:
     Pipeline(
         const shared_ptr<Device> &device,
         const vk::ShaderStageFlags pushConstantsShaderStageFlags,
-        const vk::PipelineStageFlags &imagePipelineStageFlags,
+        const vk::PipelineStageFlags &objectsPipelineStageFlags,
         uint32_t pushConstantsSize
     );
     ~Pipeline();
@@ -77,26 +77,26 @@ public:
 
     void prepare();
 
-    void prepareImages(
+    void prepareObjects(
         const shared_ptr<CommandBuffer> &commandBuffer,
         const MemoryObjectDescrs &memoryObjects
     );
-    void prepareImages(
+    void prepareObjects(
         const shared_ptr<CommandBuffer> &commandBuffer
     );
 
-    void finalizeImages(
+    void finalizeObjects(
         const shared_ptr<CommandBuffer> &commandBuffer,
         const MemoryObjectDescrs &memoryObjects
     );
-    void finalizeImages(
+    void finalizeObjects(
         const shared_ptr<CommandBuffer> &commandBuffer
     );
 
 protected:
     const shared_ptr<Device> m_device;
     const vk::ShaderStageFlags m_pushConstantsShaderStageFlags;
-    const vk::PipelineStageFlags m_imagePipelineStageFlags;
+    const vk::PipelineStageFlags m_objectsPipelineStageFlags;
 
     map<vk::ShaderStageFlagBits, vector<uint32_t>> m_customSpecializationData;
 

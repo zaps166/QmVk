@@ -30,6 +30,7 @@ class QMVK_EXPORT Buffer : public MemoryObject, public enable_shared_from_this<B
 {
     Buffer(const Buffer &) = delete;
 
+    friend class MemoryObjectDescr;
     struct Priv {};
 
 public:
@@ -96,6 +97,18 @@ public:
     inline operator vk::Buffer() const;
 
 private:
+    inline bool mustExecPipelineBarrier(
+        vk::PipelineStageFlags dstStage,
+        vk::AccessFlags dstAccessFlags
+    );
+
+    void pipelineBarrier(
+        vk::CommandBuffer commandBuffer,
+        vk::PipelineStageFlags dstStage,
+        vk::AccessFlags dstAccessFlags
+    );
+
+private:
     const vk::DeviceSize m_size;
     const vk::BufferUsageFlags m_usage;
 
@@ -104,6 +117,9 @@ private:
     void *m_mapped = nullptr;
 
     bool m_dontFreeMemory = false;
+
+    vk::PipelineStageFlags m_stage = vk::PipelineStageFlagBits::eTopOfPipe;
+    vk::AccessFlags m_accessFlags;
 };
 
 /* Inline implementation */

@@ -49,7 +49,9 @@ public:
     {
         Read,
         Write,
-        ReadWrite,
+        Storage,
+        StorageRead,
+        StorageWrite,
     };
 
     using BufferRange = pair<vk::DeviceSize, vk::DeviceSize>;
@@ -100,11 +102,11 @@ public:
     inline const vector<DescriptorInfo> &descriptorInfos() const;
 
 private:
-    void prepareImage(
+    void prepareObject(
         vk::CommandBuffer commandBuffer,
         vk::PipelineStageFlags pipelineStageFlags
     ) const;
-    void finalizeImage(
+    void finalizeObject(
         vk::CommandBuffer commandBuffer
     ) const;
 

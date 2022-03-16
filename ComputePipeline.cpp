@@ -127,7 +127,7 @@ vk::Extent2D ComputePipeline::groupCount(const vk::Extent2D &size) const
 
 void ComputePipeline::recordCommandsInit(const shared_ptr<CommandBuffer> &commandBuffer)
 {
-    prepareImages(commandBuffer);
+    prepareObjects(commandBuffer);
     bindObjects(commandBuffer, vk::PipelineBindPoint::eCompute);
 }
 void ComputePipeline::recordCommandsCompute(
@@ -164,23 +164,23 @@ void ComputePipeline::recordCommandsCompute(
 void ComputePipeline::recordCommands(
     const shared_ptr<CommandBuffer> &commandBuffer,
     const vk::Extent2D groupCount,
-    bool doFinalizeImages)
+    bool doFinalizeObjects)
 {
     recordCommandsInit(commandBuffer);
     recordCommandsCompute(commandBuffer, groupCount);
-    if (doFinalizeImages)
-        finalizeImages(commandBuffer);
+    if (doFinalizeObjects)
+        finalizeObjects(commandBuffer);
 }
 void ComputePipeline::recordCommands(
     const shared_ptr<CommandBuffer> &commandBuffer,
     const vk::Offset2D &baseGroup,
     const vk::Extent2D groupCount,
-    bool doFinalizeImages)
+    bool doFinalizeObjects)
 {
     recordCommandsInit(commandBuffer);
     recordCommandsCompute(commandBuffer, baseGroup, groupCount);
-    if (doFinalizeImages)
-        finalizeImages(commandBuffer);
+    if (doFinalizeObjects)
+        finalizeObjects(commandBuffer);
 }
 
 }

@@ -30,11 +30,11 @@ namespace QmVk {
 Pipeline::Pipeline(
     const shared_ptr<Device> &device,
     const vk::ShaderStageFlags pushConstantsShaderStageFlags,
-    const vk::PipelineStageFlags &imagePipelineStageFlags,
+    const vk::PipelineStageFlags &objectsPipelineStageFlags,
     uint32_t pushConstantsSize)
     : m_device(device)
     , m_pushConstantsShaderStageFlags(pushConstantsShaderStageFlags)
-    , m_imagePipelineStageFlags(imagePipelineStageFlags)
+    , m_objectsPipelineStageFlags(objectsPipelineStageFlags)
     , m_pushConstants(pushConstantsSize)
 {}
 Pipeline::~Pipeline()
@@ -210,28 +210,28 @@ void Pipeline::prepare()
     }
 }
 
-void Pipeline::prepareImages(
+void Pipeline::prepareObjects(
     const shared_ptr<CommandBuffer> &commandBuffer,
     const MemoryObjectDescrs &memoryObjects)
 {
-    memoryObjects.prepareImages(*commandBuffer, m_imagePipelineStageFlags);
+    memoryObjects.prepareObjects(*commandBuffer, m_objectsPipelineStageFlags);
 }
-void Pipeline::prepareImages(
+void Pipeline::prepareObjects(
     const shared_ptr<CommandBuffer> &commandBuffer)
 {
-    prepareImages(commandBuffer, m_memoryObjects);
+    prepareObjects(commandBuffer, m_memoryObjects);
 }
 
-void Pipeline::finalizeImages(
+void Pipeline::finalizeObjects(
     const shared_ptr<CommandBuffer> &commandBuffer,
     const MemoryObjectDescrs &memoryObjects)
 {
-    memoryObjects.finalizeImages(*commandBuffer);
+    memoryObjects.finalizeObjects(*commandBuffer);
 }
-void Pipeline::finalizeImages(
+void Pipeline::finalizeObjects(
     const shared_ptr<CommandBuffer> &commandBuffer)
 {
-    finalizeImages(commandBuffer, m_memoryObjects);
+    finalizeObjects(commandBuffer, m_memoryObjects);
 }
 
 }

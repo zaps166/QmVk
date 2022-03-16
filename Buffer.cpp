@@ -179,6 +179,17 @@ void Buffer::copyTo(
     }
 
     auto copyCommands = [&](vk::CommandBuffer commandBuffer) {
+        pipelineBarrier(
+            commandBuffer,
+            vk::PipelineStageFlagBits::eTransfer,
+            vk::AccessFlagBits::eTransferRead
+        );
+        dstBuffer->pipelineBarrier(
+            commandBuffer,
+            vk::PipelineStageFlagBits::eTransfer,
+            vk::AccessFlagBits::eTransferWrite
+        );
+
         if (bufferCopyIn)
         {
             commandBuffer.copyBuffer(
@@ -225,6 +236,50 @@ void Buffer::unmap()
 
     m_device->unmapMemory(deviceMemory());
     m_mapped = nullptr;
+}
+
+inline bool Buffer::mustExecPipelineBarrier(
+    vk::PipelineStageFlags dstStage,
+    vk::AccessFlags dstAccessFlags)
+{
+    if (m_stage != dstStage || m_accessFlags != dstAccessFlags)
+        return true;
+    if ((m_accessFlags & vk::AccessFlagBits::eShaderRead) && (m_accessFlags & vk::AccessFlagBits::eShaderWrite))
+        return true;
+    return false;
+}
+
+void Buffer::pipelineBarrier(
+    vk::CommandBuffer commandBuffer,
+    vk::PipelineStageFlags dstStage,
+    vk::AccessFlags dstAccessFlags)
+{
+    if (!mustExecPipelineBarrier(dstStage, dstAccessFlags))
+        return;
+
+    vk::BufferMemoryBarrier barrier(
+        m_accessFlags,
+        dstAccessFlags,
+        VK_QUEUE_FAMILY_IGNORED,
+        VK_QUEUE_FAMILY_IGNORED,
+        *m_buffer,
+        0,
+        size()
+    );
+    commandBuffer.pipelineBarrier(
+        m_stage,
+        dstStage,
+        vk::DependencyFlags(),
+        0,
+        nullptr,
+        1,
+        &barrier,
+        0,
+        nullptr
+    );
+
+    m_stage = dstStage;
+    m_accessFlags = dstAccessFlags;
 }
 
 }

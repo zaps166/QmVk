@@ -44,11 +44,11 @@ public:
     vector<DescriptorInfo> fetchDescriptorInfos() const;
 
 private:
-    void prepareImages(
+    void prepareObjects(
         vk::CommandBuffer commandBuffer,
         vk::PipelineStageFlags pipelineStageFlags
     ) const;
-    void finalizeImages(
+    void finalizeObjects(
         vk::CommandBuffer commandBuffer
     ) const;
 

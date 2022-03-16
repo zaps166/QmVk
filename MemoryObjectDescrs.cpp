@@ -56,18 +56,18 @@ vector<DescriptorInfo> MemoryObjectDescrs::fetchDescriptorInfos() const
     return descriptorInfos;
 }
 
-void MemoryObjectDescrs::prepareImages(
+void MemoryObjectDescrs::prepareObjects(
     vk::CommandBuffer commandBuffer,
     vk::PipelineStageFlags pipelineStageFlags) const
 {
     for (auto &&memoryObject : *m_memoryObjects)
-        memoryObject.prepareImage(commandBuffer, pipelineStageFlags);
+        memoryObject.prepareObject(commandBuffer, pipelineStageFlags);
 }
-void MemoryObjectDescrs::finalizeImages(
+void MemoryObjectDescrs::finalizeObjects(
     vk::CommandBuffer commandBuffer) const
 {
     for (auto &&memoryObject : *m_memoryObjects)
-        memoryObject.finalizeImage(commandBuffer);
+        memoryObject.finalizeObject(commandBuffer);
 }
 
 bool MemoryObjectDescrs::operator ==(const MemoryObjectDescrs &other) const
