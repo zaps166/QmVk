@@ -222,6 +222,38 @@ void Buffer::copyTo(
     }
 }
 
+void Buffer::fill(
+    uint32_t value,
+    vk::DeviceSize offset,
+    vk::DeviceSize size,
+    const shared_ptr<CommandBuffer> &externalCommandBuffer)
+{
+    if (!(m_usage & vk::BufferUsageFlagBits::eTransferDst))
+        throw vk::LogicError("Buffer is not flagged as transfer destination");
+
+    if (offset + size > this->size())
+        throw vk::LogicError("Buffer overflow");
+
+    auto fillCommands = [&](vk::CommandBuffer commandBuffer) {
+        pipelineBarrier(
+            commandBuffer,
+            vk::PipelineStageFlagBits::eTransfer,
+            vk::AccessFlagBits::eTransferWrite
+        );
+        commandBuffer.fillBuffer(*m_buffer, offset, size, value);
+    };
+
+    if (externalCommandBuffer)
+    {
+        externalCommandBuffer->storeData(shared_from_this());
+        fillCommands(*externalCommandBuffer);
+    }
+    else
+    {
+        internalCommandBuffer()->execute(fillCommands);
+    }
+}
+
 void *Buffer::map()
 {
     if (!m_mapped)

@@ -88,6 +88,13 @@ public:
         const vk::BufferCopy *bufferCopyIn = nullptr
     );
 
+    void fill(
+        uint32_t value,
+        vk::DeviceSize offset,
+        vk::DeviceSize size,
+        const shared_ptr<CommandBuffer> &externalCommandBuffer = nullptr
+    );
+
     void *map();
     template<typename T>
     inline T *map();
