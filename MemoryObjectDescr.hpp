@@ -127,7 +127,7 @@ private:
     shared_ptr<Sampler> m_sampler;
     uint32_t m_plane = ~0u;
 
-    // Not used in comparison
+    // Not used in comparison except buffer ranges
     DescriptorTypeInfos m_descriptorTypeInfos;
 };
 

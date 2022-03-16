@@ -315,12 +315,32 @@ MemoryObjectDescr::DescriptorTypeInfos MemoryObjectDescr::getBufferViewDescripto
 
 bool MemoryObjectDescr::operator ==(const MemoryObjectDescr &other) const
 {
-    return (
+    bool ret =
         m_type == other.m_type &&
         m_objects == other.m_objects &&
         m_access == other.m_access &&
         m_sampler == other.m_sampler && m_plane == other.m_plane
-    );
+    ;
+    if (ret && m_type == Type::Buffer)
+    {
+        const auto size = m_descriptorTypeInfos.second.size();
+        for (size_t i = 0; i < size; ++i)
+        {
+            const auto &descriptorInfo = m_descriptorTypeInfos.second[i];
+            const auto &descriptorInfoOther = other.m_descriptorTypeInfos.second[i];
+            if (descriptorInfo.descrBuffInfo.offset != descriptorInfoOther.descrBuffInfo.offset)
+            {
+                ret = false;
+                break;
+            }
+            if (descriptorInfo.descrBuffInfo.range != descriptorInfoOther.descrBuffInfo.range)
+            {
+                ret = false;
+                break;
+            }
+        }
+    }
+    return ret;
 }
 
 }
