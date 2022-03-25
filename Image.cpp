@@ -153,7 +153,8 @@ shared_ptr<Image> Image::createExternalImport(
     const vk::Extent2D &size,
     vk::Format fmt,
     bool linear,
-    vk::ExternalMemoryHandleTypeFlags exportMemoryTypes)
+    vk::ExternalMemoryHandleTypeFlags exportMemoryTypes,
+    ImageCreateInfoCallback imageCreateInfoCallback)
 {
     auto image = make_shared<Image>(
         device,
@@ -167,7 +168,7 @@ shared_ptr<Image> Image::createExternalImport(
         exportMemoryTypes,
         Priv()
     );
-    image->init(MemoryPropertyPreset::PreferNoHostAccess);
+    image->init(MemoryPropertyPreset::PreferNoHostAccess, ~0u, imageCreateInfoCallback);
     return image;
 }
 
@@ -197,7 +198,10 @@ Image::~Image()
     unmap();
 }
 
-void Image::init(MemoryPropertyPreset memoryPropertyPreset, uint32_t heap)
+void Image::init(
+    MemoryPropertyPreset memoryPropertyPreset,
+    uint32_t heap,
+    ImageCreateInfoCallback imageCreateInfoCallback)
 {
     if (!m_externalImport && m_useMipMaps)
     {
@@ -327,6 +331,9 @@ void Image::init(MemoryPropertyPreset memoryPropertyPreset, uint32_t heap)
             externalMemoryImageCreateInfo.handleTypes = m_exportMemoryTypes;
             imageCreateInfo.pNext = &externalMemoryImageCreateInfo;
         }
+
+        if (imageCreateInfoCallback)
+            imageCreateInfoCallback(i, imageCreateInfo);
 
         m_images[i] = m_device->createImageUnique(imageCreateInfo);
     }

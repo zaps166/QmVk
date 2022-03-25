@@ -22,6 +22,8 @@
 
 #include "MemoryObject.hpp"
 
+#include <functional>
+
 namespace QmVk {
 
 using namespace std;
@@ -44,6 +46,8 @@ public:
         PreferCachedHostOnly,
         PreferHostOnly,
     };
+
+    using ImageCreateInfoCallback = function<void(uint32_t plane, vk::ImageCreateInfo &imageCreateInfo)>;
 
 public:
     static bool checkFormatSampledImage(
@@ -88,7 +92,8 @@ public:
         const vk::Extent2D &size,
         vk::Format fmt,
         bool linear,
-        vk::ExternalMemoryHandleTypeFlags exportMemoryTypes
+        vk::ExternalMemoryHandleTypeFlags exportMemoryTypes,
+        ImageCreateInfoCallback imageCreateInfoCallback = nullptr
     );
 
 public:
@@ -107,7 +112,11 @@ public:
     ~Image();
 
 private:
-    void init(MemoryPropertyPreset memoryPropertyPreset, uint32_t heap = ~0u);
+    void init(
+        MemoryPropertyPreset memoryPropertyPreset,
+        uint32_t heap = ~0u,
+        ImageCreateInfoCallback imageCreateInfoCallback = nullptr
+    );
     void allocateAndBindMemory(MemoryPropertyPreset memoryPropertyPreset, uint32_t heap);
 
     void finishImport(const vector<vk::DeviceSize> &offsets, vk::DeviceSize globalOffset = 0u);
