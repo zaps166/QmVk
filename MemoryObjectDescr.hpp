@@ -28,11 +28,13 @@ namespace QmVk {
 using namespace std;
 
 class Buffer;
-class Image;
 class BufferView;
+#ifndef QMVK_NO_GRAPHICS
+class Image;
 class Sampler;
+#endif
 
-class QMVK_EXPORT MemoryObjectDescr
+class MemoryObjectDescr
 {
     friend class MemoryObjectDescrs;
 
@@ -62,6 +64,7 @@ public:
         Access access = Access::Read,
         const vector<BufferRange> &ranges = {}
     );
+#ifndef QMVK_NO_GRAPHICS
     MemoryObjectDescr(
         const vector<shared_ptr<Image>> &images,
         const shared_ptr<Sampler> &sampler,
@@ -72,6 +75,7 @@ public:
         Access access = Access::Read,
         uint32_t plane = ~0u
     );
+#endif
     MemoryObjectDescr(
         const vector<shared_ptr<BufferView>> &bufferViews,
         Access access = Access::Read
@@ -82,6 +86,7 @@ public:
         Access access = Access::Read,
         const BufferRange &range = {}
     );
+#ifndef QMVK_NO_GRAPHICS
     MemoryObjectDescr(
         const shared_ptr<Image> &image,
         const shared_ptr<Sampler> &sampler,
@@ -92,6 +97,7 @@ public:
         Access access = Access::Read,
         uint32_t plane = ~0u
     );
+#endif
     MemoryObjectDescr(
         const shared_ptr<BufferView> &bufferView,
         Access access = Access::Read
@@ -112,7 +118,9 @@ private:
 
 private:
     DescriptorTypeInfos getBufferDescriptorTypeInfos(const vector<BufferRange> &ranges) const;
+#ifndef QMVK_NO_GRAPHICS
     DescriptorTypeInfos getImageDescriptorTypeInfos() const;
+#endif
     DescriptorTypeInfos getBufferViewDescriptorTypeInfos() const;
 
 public:
@@ -123,9 +131,11 @@ private:
     Access m_access;
     vector<shared_ptr<MemoryObjectBase>> m_objects;
 
+#ifndef QMVK_NO_GRAPHICS
     // Image
     shared_ptr<Sampler> m_sampler;
     uint32_t m_plane = ~0u;
+#endif
 
     // Not used in comparison except buffer ranges
     DescriptorTypeInfos m_descriptorTypeInfos;

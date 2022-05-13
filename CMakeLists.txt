@@ -67,6 +67,22 @@ file(GLOB QMVK_VULKAN_HDR
 file(GLOB QMVK_VULKAN_SRC
     "*.cpp"
 )
+if(QMVK_NO_GRAPHICS)
+    list(REMOVE_ITEM QMVK_VULKAN_HDR
+        "${CMAKE_CURRENT_SOURCE_DIR}/GraphicsPipeline.hpp"
+        "${CMAKE_CURRENT_SOURCE_DIR}/Image.hpp"
+        "${CMAKE_CURRENT_SOURCE_DIR}/RenderPass.hpp"
+        "${CMAKE_CURRENT_SOURCE_DIR}/Sampler.hpp"
+        "${CMAKE_CURRENT_SOURCE_DIR}/SwapChain.hpp"
+    )
+    list(REMOVE_ITEM QMVK_VULKAN_SRC
+        "${CMAKE_CURRENT_SOURCE_DIR}/GraphicsPipeline.cpp"
+        "${CMAKE_CURRENT_SOURCE_DIR}/Image.cpp"
+        "${CMAKE_CURRENT_SOURCE_DIR}/RenderPass.cpp"
+        "${CMAKE_CURRENT_SOURCE_DIR}/Sampler.cpp"
+        "${CMAKE_CURRENT_SOURCE_DIR}/SwapChain.cpp"
+    )
+endif()
 
 add_library(${PROJECT_NAME} ${QMVK_LIBRARY_TYPE}
     ${QMVK_VULKAN_HDR}
@@ -92,7 +108,12 @@ target_compile_definitions(${PROJECT_NAME}
     -DVULKAN_HPP_TYPESAFE_CONVERSION
     -DNOMINMAX
 )
-if(QMVK_USE_IMAGE_BUFFER_VIEW)
+if(QMVK_NO_GRAPHICS)
+    target_compile_definitions(${PROJECT_NAME}
+        PUBLIC
+        -DQMVK_NO_GRAPHICS
+    )
+elseif(QMVK_USE_IMAGE_BUFFER_VIEW)
     target_compile_definitions(${PROJECT_NAME}
         PUBLIC
         -DQMVK_USE_IMAGE_BUFFER_VIEW

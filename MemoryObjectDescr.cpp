@@ -18,9 +18,11 @@
 
 #include "MemoryObjectDescr.hpp"
 #include "Buffer.hpp"
-#include "Image.hpp"
 #include "BufferView.hpp"
-#include "Sampler.hpp"
+#ifndef QMVK_NO_GRAPHICS
+#   include "Image.hpp"
+#   include "Sampler.hpp"
+#endif
 
 namespace QmVk {
 
@@ -43,6 +45,7 @@ MemoryObjectDescr::MemoryObjectDescr(
     , m_objects(toMemoryObjectBaseVector(buffers))
     , m_descriptorTypeInfos(getBufferDescriptorTypeInfos(ranges))
 {}
+#ifndef QMVK_NO_GRAPHICS
 MemoryObjectDescr::MemoryObjectDescr(
     const vector<shared_ptr<Image>> &images,
     const shared_ptr<Sampler> &sampler,
@@ -64,6 +67,7 @@ MemoryObjectDescr::MemoryObjectDescr(
     , m_plane(plane)
     , m_descriptorTypeInfos(getImageDescriptorTypeInfos())
 {}
+#endif
 MemoryObjectDescr::MemoryObjectDescr(
     const vector<shared_ptr<BufferView>> &bufferViews,
     Access access)
@@ -82,6 +86,7 @@ MemoryObjectDescr::MemoryObjectDescr(
     , m_objects({buffer})
     , m_descriptorTypeInfos(getBufferDescriptorTypeInfos({range}))
 {}
+#ifndef QMVK_NO_GRAPHICS
 MemoryObjectDescr::MemoryObjectDescr(
     const shared_ptr<Image> &image,
     const shared_ptr<Sampler> &sampler,
@@ -103,6 +108,7 @@ MemoryObjectDescr::MemoryObjectDescr(
     , m_plane(plane)
     , m_descriptorTypeInfos(getImageDescriptorTypeInfos())
 {}
+#endif
 MemoryObjectDescr::MemoryObjectDescr(
     const shared_ptr<BufferView> &bufferView,
     Access access)
@@ -132,7 +138,9 @@ void MemoryObjectDescr::prepareObject(
             break;
     }
 
+#ifndef QMVK_NO_GRAPHICS
     size_t descriptorInfosIdx = 0;
+#endif
     for (auto &&object : m_objects)
     {
         switch (m_type)
@@ -153,6 +161,7 @@ void MemoryObjectDescr::prepareObject(
             }
             case Type::Image:
             {
+#ifndef QMVK_NO_GRAPHICS
                 auto image = static_pointer_cast<Image>(object);
                 image->pipelineBarrier(
                     commandBuffer,
@@ -164,6 +173,7 @@ void MemoryObjectDescr::prepareObject(
                     ? image->numPlanes()
                     : 1
                 ;
+#endif
                 break;
             }
         }
@@ -175,11 +185,13 @@ void MemoryObjectDescr::finalizeObject(
     if (m_type != Type::Image || m_access != Access::Write)
         return;
 
+#ifndef QMVK_NO_GRAPHICS
     for (auto &&object : m_objects)
     {
         auto image = static_pointer_cast<Image>(object);
         image->maybeGenerateMipmaps(commandBuffer);
     }
+#endif
 }
 
 MemoryObjectDescr::DescriptorTypeInfos MemoryObjectDescr::getBufferDescriptorTypeInfos(const vector<BufferRange> &ranges) const
@@ -231,6 +243,7 @@ MemoryObjectDescr::DescriptorTypeInfos MemoryObjectDescr::getBufferDescriptorTyp
     descriptorType.descriptorCount = descriptorInfos.size();
     return descriptorTypeInfos;
 }
+#ifndef QMVK_NO_GRAPHICS
 MemoryObjectDescr::DescriptorTypeInfos MemoryObjectDescr::getImageDescriptorTypeInfos() const
 {
     if (m_access == Access::Storage || m_access == Access::StorageRead || m_access == Access::StorageWrite || (m_sampler && m_access != Access::Read))
@@ -281,6 +294,7 @@ MemoryObjectDescr::DescriptorTypeInfos MemoryObjectDescr::getImageDescriptorType
     descriptorType.descriptorCount = descriptorInfos.size();
     return descriptorTypeInfos;
 }
+#endif
 MemoryObjectDescr::DescriptorTypeInfos MemoryObjectDescr::getBufferViewDescriptorTypeInfos() const
 {
     if (m_access == Access::Write)
@@ -316,10 +330,12 @@ MemoryObjectDescr::DescriptorTypeInfos MemoryObjectDescr::getBufferViewDescripto
 bool MemoryObjectDescr::operator ==(const MemoryObjectDescr &other) const
 {
     bool ret =
-        m_type == other.m_type &&
-        m_objects == other.m_objects &&
-        m_access == other.m_access &&
-        m_sampler == other.m_sampler && m_plane == other.m_plane
+           m_type == other.m_type
+        && m_objects == other.m_objects
+        && m_access == other.m_access
+#ifndef QMVK_NO_GRAPHICS
+        && m_sampler == other.m_sampler && m_plane == other.m_plane
+#endif
     ;
     if (ret && m_type == Type::Buffer)
     {
