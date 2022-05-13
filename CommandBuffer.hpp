@@ -18,8 +18,6 @@
 
 #pragma once
 
-#include "QmVkExport.hpp"
-
 #include <vulkan/vulkan.hpp>
 
 #include <functional>
@@ -33,7 +31,7 @@ class MemoryObjectBase;
 class DescriptorSet;
 class Queue;
 
-class QMVK_EXPORT CommandBuffer : public vk::CommandBuffer
+class CommandBuffer : public vk::CommandBuffer
 {
     struct Priv {};
     struct StoredData;

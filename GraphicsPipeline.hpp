@@ -18,8 +18,6 @@
 
 #pragma once
 
-#include "QmVkExport.hpp"
-
 #include "Pipeline.hpp"
 
 namespace QmVk {
@@ -30,7 +28,7 @@ class ShaderModule;
 class RenderPass;
 class CommandBuffer;
 
-class QMVK_EXPORT GraphicsPipeline final : public Pipeline
+class GraphicsPipeline final : public Pipeline
 {
     struct Priv {};
 

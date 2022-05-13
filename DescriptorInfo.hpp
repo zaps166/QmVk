@@ -18,15 +18,13 @@
 
 #pragma once
 
-#include "QmVkExport.hpp"
-
 #include <vulkan/vulkan.hpp>
 
 namespace QmVk {
 
 using namespace std;
 
-class QMVK_EXPORT DescriptorInfo
+class DescriptorInfo
 {
 public:
     enum class Type

@@ -18,8 +18,6 @@
 
 #pragma once
 
-#include "QmVkExport.hpp"
-
 #include <vulkan/vulkan.hpp>
 
 namespace QmVk {
@@ -28,7 +26,7 @@ using namespace std;
 
 class Device;
 
-class QMVK_EXPORT RenderPass
+class RenderPass
 {
     struct Priv {};
 

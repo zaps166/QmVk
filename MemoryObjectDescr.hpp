@@ -18,8 +18,6 @@
 
 #pragma once
 
-#include "QmVkExport.hpp"
-
 #include "DescriptorInfo.hpp"
 #include "MemoryObjectBase.hpp"
 

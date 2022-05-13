@@ -18,8 +18,6 @@
 
 #pragma once
 
-#include "QmVkExport.hpp"
-
 #include "MemoryObjectBase.hpp"
 
 namespace QmVk {
@@ -29,7 +27,7 @@ using namespace std;
 class CommandBuffer;
 class Buffer;
 
-class QMVK_EXPORT BufferView : public MemoryObjectBase
+class BufferView : public MemoryObjectBase
 {
     struct Priv {};
 

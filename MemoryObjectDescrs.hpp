@@ -18,15 +18,13 @@
 
 #pragma once
 
-#include "QmVkExport.hpp"
-
 #include "MemoryObjectDescr.hpp"
 
 namespace QmVk {
 
 using namespace std;
 
-class QMVK_EXPORT MemoryObjectDescrs
+class MemoryObjectDescrs
 {
     friend class hash<MemoryObjectDescrs>;
     friend class Pipeline;

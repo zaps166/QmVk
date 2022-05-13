@@ -18,8 +18,6 @@
 
 #pragma once
 
-#include "QmVkExport.hpp"
-
 #include <vulkan/vulkan.hpp>
 
 #include <mutex>
@@ -30,7 +28,7 @@ using namespace std;
 
 class Device;
 
-class QMVK_EXPORT Queue : public vk::Queue
+class Queue : public vk::Queue
 {
     struct Priv {};
 
