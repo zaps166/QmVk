@@ -77,8 +77,19 @@ void SwapChain::init(CreateInfo &createInfo)
         }
     }
 
+#ifdef VK_USE_PLATFORM_WIN32_KHR
+    const bool exclusiveFullScreen =
+        createInfo.exclusiveFullScreen != vk::FullScreenExclusiveEXT::eDefault &&
+        m_device->enabledExtensions().count(VK_EXT_FULL_SCREEN_EXCLUSIVE_EXTENSION_NAME) > 0
+    ;
+#endif
+
     if (createInfo.imageCount == 0 && presentMode == vk::PresentModeKHR::eMailbox)
         createInfo.imageCount = 3;
+#ifdef VK_USE_PLATFORM_WIN32_KHR
+    else if (exclusiveFullScreen && createInfo.imageCount == 0 && surfaceCapabilities.minImageCount == 1)
+        createInfo.imageCount = 2;
+#endif
     createInfo.imageCount = max(createInfo.imageCount, surfaceCapabilities.minImageCount);
     if (surfaceCapabilities.maxImageCount > 0)
         createInfo.imageCount = min(createInfo.imageCount, surfaceCapabilities.maxImageCount);
@@ -116,10 +127,8 @@ void SwapChain::init(CreateInfo &createInfo)
     vkCreateInfo.oldSwapchain = *m_oldSwapChain;
 #ifdef VK_USE_PLATFORM_WIN32_KHR
     vk::SurfaceFullScreenExclusiveInfoEXT surfaceFullScreenExclusiveInfo;
-    if (
-        createInfo.exclusiveFullScreen != vk::FullScreenExclusiveEXT::eDefault &&
-        m_device->enabledExtensions().count(VK_EXT_FULL_SCREEN_EXCLUSIVE_EXTENSION_NAME) > 0
-    ) {
+    if (exclusiveFullScreen)
+    {
         surfaceFullScreenExclusiveInfo.fullScreenExclusive = createInfo.exclusiveFullScreen;
         vkCreateInfo.pNext = &surfaceFullScreenExclusiveInfo;
     }
