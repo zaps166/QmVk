@@ -6,6 +6,8 @@
 
 #pragma once
 
+#include "QmVkExport.hpp"
+
 #include <vulkan/vulkan.hpp>
 
 namespace QmVk {
@@ -17,7 +19,7 @@ class Queue;
 class RenderPass;
 class Semaphore;
 
-class SwapChain
+class QMVK_EXPORT SwapChain
 {
     struct Priv {};
 

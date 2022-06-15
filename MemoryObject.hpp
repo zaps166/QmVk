@@ -6,6 +6,8 @@
 
 #pragma once
 
+#include "QmVkExport.hpp"
+
 #include "MemoryObjectBase.hpp"
 
 namespace QmVk {
@@ -16,7 +18,7 @@ class MemoryPropertyFlags;
 class PhysicalDevice;
 class CommandBuffer;
 
-class MemoryObject : public MemoryObjectBase
+class QMVK_EXPORT MemoryObject : public MemoryObjectBase
 {
 public:
     using FdDescriptors = vector<pair<int, size_t>>;

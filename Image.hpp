@@ -6,6 +6,8 @@
 
 #pragma once
 
+#include "QmVkExport.hpp"
+
 #include "MemoryObject.hpp"
 
 #include <functional>
@@ -18,7 +20,7 @@ using namespace std;
 class BufferView;
 #endif
 
-class Image : public MemoryObject, public enable_shared_from_this<Image>
+class QMVK_EXPORT Image : public MemoryObject, public enable_shared_from_this<Image>
 {
     friend class MemoryObjectDescr;
     struct Priv {};

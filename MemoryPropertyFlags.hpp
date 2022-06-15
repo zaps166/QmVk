@@ -6,13 +6,15 @@
 
 #pragma once
 
+#include "QmVkExport.hpp"
+
 #include <vulkan/vulkan.hpp>
 
 namespace QmVk {
 
 using namespace std;
 
-class MemoryPropertyFlags
+class QMVK_EXPORT MemoryPropertyFlags
 {
 public:
     MemoryPropertyFlags() = default;

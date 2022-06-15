@@ -6,6 +6,8 @@
 
 #pragma once
 
+#include "QmVkExport.hpp"
+
 #include "DescriptorSetLayout.hpp"
 
 namespace QmVk {
@@ -17,7 +19,7 @@ class DescriptorInfo;
 class DescriptorPool;
 class Device;
 
-class DescriptorSet
+class QMVK_EXPORT DescriptorSet
 {
     struct Priv {};
 

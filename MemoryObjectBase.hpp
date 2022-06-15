@@ -6,6 +6,8 @@
 
 #pragma once
 
+#include "QmVkExport.hpp"
+
 #include <vulkan/vulkan.hpp>
 
 namespace QmVk {
@@ -14,7 +16,7 @@ using namespace std;
 
 class Device;
 
-class MemoryObjectBase
+class QMVK_EXPORT MemoryObjectBase
 {
 public:
     template<typename T>

@@ -6,6 +6,8 @@
 
 #pragma once
 
+#include "QmVkExport.hpp"
+
 #include <vulkan/vulkan.hpp>
 
 namespace QmVk {
@@ -14,7 +16,7 @@ using namespace std;
 
 class Device;
 
-class Sampler
+class QMVK_EXPORT Sampler
 {
     struct Priv {};
 

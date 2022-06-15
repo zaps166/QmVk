@@ -6,13 +6,15 @@
 
 #pragma once
 
+#include "QmVkExport.hpp"
+
 #include <vulkan/vulkan.hpp>
 
 namespace QmVk {
 
 using namespace std;
 
-class DescriptorInfo
+class QMVK_EXPORT DescriptorInfo
 {
 public:
     enum class Type

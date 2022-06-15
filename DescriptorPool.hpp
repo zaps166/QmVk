@@ -6,6 +6,8 @@
 
 #pragma once
 
+#include "QmVkExport.hpp"
+
 #include <vulkan/vulkan.hpp>
 
 namespace QmVk {
@@ -15,7 +17,7 @@ using namespace std;
 class DescriptorSetLayout;
 class Device;
 
-class DescriptorPool
+class QMVK_EXPORT DescriptorPool
 {
     struct Priv {};
 

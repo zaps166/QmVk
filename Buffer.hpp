@@ -6,13 +6,15 @@
 
 #pragma once
 
+#include "QmVkExport.hpp"
+
 #include "MemoryObject.hpp"
 
 namespace QmVk {
 
 using namespace std;
 
-class Buffer : public MemoryObject, public enable_shared_from_this<Buffer>
+class QMVK_EXPORT Buffer : public MemoryObject, public enable_shared_from_this<Buffer>
 {
     Buffer(const Buffer &) = delete;
 

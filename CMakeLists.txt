@@ -15,6 +15,10 @@ if(NOT QMVK_GLSLC_COMMAND)
     set(QMVK_GLSLC_COMMAND "glslc" CACHE INTERNAL "")
 endif()
 
+if(NOT QMVK_LIBRARY_TYPE)
+    set(QMVK_LIBRARY_TYPE OBJECT)
+endif()
+
 macro(qmvk_add_shader SHADER_SOURCE_FILE)
     set(EXTRA_ARGS ${ARGN})
     list(LENGTH EXTRA_ARGS NUM_EXTRA_ARGS)
@@ -80,7 +84,7 @@ if(QMVK_NO_GRAPHICS)
     )
 endif()
 
-add_library(${PROJECT_NAME} OBJECT
+add_library(${PROJECT_NAME} ${QMVK_LIBRARY_TYPE}
     ${QMVK_VULKAN_HDR}
     ${QMVK_VULKAN_SRC}
 )
@@ -113,6 +117,13 @@ elseif(QMVK_USE_IMAGE_BUFFER_VIEW)
     target_compile_definitions(${PROJECT_NAME}
         PUBLIC
         -DQMVK_USE_IMAGE_BUFFER_VIEW
+    )
+endif()
+
+if(QMVK_NO_EXPORT)
+    target_compile_definitions(${PROJECT_NAME}
+        PUBLIC
+        -DQMVK_NO_EXPORT
     )
 endif()
 

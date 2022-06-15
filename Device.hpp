@@ -6,6 +6,8 @@
 
 #pragma once
 
+#include "QmVkExport.hpp"
+
 #include <vulkan/vulkan.hpp>
 
 #include <unordered_set>
@@ -19,7 +21,7 @@ class PhysicalDevice;
 class MemoryPropertyFlags;
 class Queue;
 
-class Device : public vk::Device, public enable_shared_from_this<Device>
+class QMVK_EXPORT Device : public vk::Device, public enable_shared_from_this<Device>
 {
     friend class PhysicalDevice;
     struct Priv {};

@@ -6,6 +6,8 @@
 
 #pragma once
 
+#include "QmVkExport.hpp"
+
 #include "MemoryObjectDescrs.hpp"
 
 #include <map>
@@ -21,7 +23,7 @@ class DescriptorPool;
 class DescriptorSet;
 class CommandBuffer;
 
-class Pipeline
+class QMVK_EXPORT Pipeline
 {
 protected:
     Pipeline(

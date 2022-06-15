@@ -6,6 +6,8 @@
 
 #pragma once
 
+#include "QmVkExport.hpp"
+
 #include <vulkan/vulkan.hpp>
 
 #include <mutex>
@@ -18,7 +20,7 @@ using namespace std;
 class PhysicalDevice;
 class Device;
 
-class AbstractInstance : public vk::Instance, public enable_shared_from_this<AbstractInstance>
+class QMVK_EXPORT AbstractInstance : public vk::Instance, public enable_shared_from_this<AbstractInstance>
 {
 protected:
     AbstractInstance() = default;
