@@ -83,7 +83,7 @@ public:
         const vector<const char *> &wantedExtensions
     ) const;
 
-    inline bool checkExtension(const char *extension);
+    inline bool checkExtension(const char *extension) const;
     bool checkExtensions(
         const vector<const char *> &wantedExtensions
     ) const;
@@ -176,7 +176,7 @@ vk::Extent2D PhysicalDevice::localWorkgroupSize() const
     return m_localWorkgroupSize;
 }
 
-bool PhysicalDevice::checkExtension(const char *extension)
+bool PhysicalDevice::checkExtension(const char *extension) const
 {
     return (m_extensionProperties.count(extension) > 0);
 }
