@@ -126,13 +126,20 @@ vector<PhysicalDevice::MemoryHeap> PhysicalDevice::getMemoryHeapsInfo() const
     vk::PhysicalDeviceMemoryProperties2 props;
     vk::PhysicalDeviceMemoryBudgetPropertiesEXT budget;
 
-    tie(props, budget) = getMemoryProperties2<
-        decltype(props),
-        decltype(budget)
-    >().get<
-        decltype(props),
-        decltype(budget)
-    >();
+    if (m_instance->checkExtension(VK_KHR_GET_PHYSICAL_DEVICE_PROPERTIES_2_EXTENSION_NAME))
+    {
+        tie(props, budget) = getMemoryProperties2KHR<
+            decltype(props),
+            decltype(budget)
+        >().get<
+            decltype(props),
+            decltype(budget)
+        >();
+    }
+    else
+    {
+        props = getMemoryProperties();
+    }
 
     vector<MemoryHeap> memoryHeaps(props.memoryProperties.memoryHeapCount);
     for (uint32_t i = 0; i < props.memoryProperties.memoryHeapCount; ++i)
