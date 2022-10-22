@@ -46,6 +46,8 @@ private:
     void init();
 
 public:
+    inline shared_ptr<Queue> queue() const;
+
     void storeData(
         const MemoryObjectDescrs &memoryObjects,
         const shared_ptr<DescriptorSet> &descriptorSet
@@ -75,5 +77,12 @@ private:
     unique_ptr<StoredData> m_storedData;
     bool m_resetNeeded = false;
 };
+
+/* Inline implementation */
+
+shared_ptr<Queue> CommandBuffer::queue() const
+{
+    return m_queue;
+}
 
 }
