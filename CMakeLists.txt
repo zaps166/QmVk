@@ -119,6 +119,13 @@ elseif(QMVK_USE_IMAGE_BUFFER_VIEW)
     )
 endif()
 
+if(QMVK_APPLY_MEMORY_PROPERTIES_QUIRKS)
+    target_compile_definitions(${PROJECT_NAME}
+        PUBLIC
+        -DQMVK_APPLY_MEMORY_PROPERTIES_QUIRKS
+    )
+endif()
+
 if(QMVK_NO_EXPORT)
     target_compile_definitions(${PROJECT_NAME}
         PUBLIC

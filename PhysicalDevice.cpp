@@ -121,6 +121,68 @@ shared_ptr<Device> PhysicalDevice::createDevice(
     return device;
 }
 
+#ifdef QMVK_APPLY_MEMORY_PROPERTIES_QUIRKS
+void PhysicalDevice::applyMemoryPropertiesQuirks(vk::PhysicalDeviceMemoryProperties &props) const
+{
+    const auto &physDevProps = properties();
+    if (physDevProps.deviceType != vk::PhysicalDeviceType::eIntegratedGpu || physDevProps.vendorID != 0x1002 /* AMD */)
+    {
+        // Not an AMD integrated GPU
+        return;
+    }
+
+    // Integrated AMD GPUs don't expose DeviceLocal flag when CPU has cached access.
+    // Adding the DeviceLocal flag can prevent some copies and speed-up things,
+    // because it's one and the same memory.
+
+    constexpr auto hostFlags =
+        vk::MemoryPropertyFlagBits::eHostVisible  |
+        vk::MemoryPropertyFlagBits::eHostCoherent |
+        vk::MemoryPropertyFlagBits::eHostCached
+    ;
+
+    const uint32_t nHeaps = props.memoryHeapCount;
+    const uint32_t nTypes = props.memoryTypeCount;
+
+    if (nHeaps <= 1)
+        return;
+
+    unordered_set<uint32_t> heapIndexes(nHeaps - 1);
+
+    for (uint32_t i = 0; i < nTypes; ++i)
+    {
+        auto &memoryType = props.memoryTypes[i];
+
+        if ((memoryType.propertyFlags & hostFlags) != hostFlags)
+        {
+            // Not a host coherent cached memory
+            continue;
+        }
+
+        if (memoryType.propertyFlags & vk::MemoryPropertyFlagBits::eDeviceLocal)
+        {
+            // We already have it, nothing to do
+            return;
+        }
+
+        if (memoryType.heapIndex < nHeaps)
+        {
+            heapIndexes.insert(memoryType.heapIndex);
+        }
+    }
+
+    for (auto &&heapIndex : heapIndexes)
+    {
+        props.memoryHeaps[heapIndex].flags |= vk::MemoryHeapFlagBits::eDeviceLocal;
+        for (uint32_t i = 0; i < nTypes; ++i)
+        {
+            if (props.memoryTypes[i].heapIndex == heapIndex)
+                props.memoryTypes[i].propertyFlags |= vk::MemoryPropertyFlagBits::eDeviceLocal;
+        }
+    }
+}
+#endif
+
 vector<PhysicalDevice::MemoryHeap> PhysicalDevice::getMemoryHeapsInfo() const
 {
     vk::PhysicalDeviceMemoryProperties2 props;
@@ -140,6 +202,9 @@ vector<PhysicalDevice::MemoryHeap> PhysicalDevice::getMemoryHeapsInfo() const
     {
         props = getMemoryProperties();
     }
+#ifdef QMVK_APPLY_MEMORY_PROPERTIES_QUIRKS
+    applyMemoryPropertiesQuirks(props.memoryProperties);
+#endif
 
     vector<MemoryHeap> memoryHeaps(props.memoryProperties.memoryHeapCount);
     for (uint32_t i = 0; i < props.memoryProperties.memoryHeapCount; ++i)
@@ -175,7 +240,10 @@ PhysicalDevice::MemoryType PhysicalDevice::findMemoryType(
 {
     MemoryType result;
 
-    const auto memoryProperties = getMemoryProperties();
+    auto memoryProperties = getMemoryProperties();
+#ifdef QMVK_APPLY_MEMORY_PROPERTIES_QUIRKS
+    applyMemoryPropertiesQuirks(memoryProperties);
+#endif
     bool optionalFallbackFound = false;
     for (uint32_t i = 0; i < memoryProperties.memoryTypeCount; ++i)
     {

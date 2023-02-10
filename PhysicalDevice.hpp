@@ -98,6 +98,10 @@ public:
 
     inline shared_ptr<AbstractInstance> instance() const;
 
+#ifdef QMVK_APPLY_MEMORY_PROPERTIES_QUIRKS
+    void applyMemoryPropertiesQuirks(vk::PhysicalDeviceMemoryProperties &props) const;
+#endif
+
     vector<MemoryHeap> getMemoryHeapsInfo() const;
 
     MemoryType findMemoryType(
