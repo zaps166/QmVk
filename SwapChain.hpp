@@ -34,6 +34,7 @@ public:
         vector<vk::PresentModeKHR> presentModes;
         vk::UniqueSwapchainKHR oldSwapChain;
         uint32_t imageCount = 0;
+        vk::ColorSpaceKHR colorSpace = vk::ColorSpaceKHR::eSrgbNonlinear;
 #ifdef VK_USE_PLATFORM_WIN32_KHR
         vk::FullScreenExclusiveEXT exclusiveFullScreen = vk::FullScreenExclusiveEXT::eDefault;
 #endif

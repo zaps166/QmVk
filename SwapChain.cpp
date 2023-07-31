@@ -115,7 +115,7 @@ void SwapChain::init(CreateInfo &createInfo)
     vkCreateInfo.surface = m_surface;
     vkCreateInfo.minImageCount = createInfo.imageCount;
     vkCreateInfo.imageFormat = m_renderPass->format();
-    vkCreateInfo.imageColorSpace = vk::ColorSpaceKHR::eSrgbNonlinear;
+    vkCreateInfo.imageColorSpace = createInfo.colorSpace;
     vkCreateInfo.imageExtent = m_size;
     vkCreateInfo.imageArrayLayers = 1;
     vkCreateInfo.imageUsage = vk::ImageUsageFlagBits::eColorAttachment;
