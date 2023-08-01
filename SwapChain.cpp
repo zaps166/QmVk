@@ -35,7 +35,7 @@ vk::Format SwapChain::getSurfaceFormat(
             return wantedFormat;
     }
 
-    return surfaceFormats[0].format;
+    return vk::Format::eUndefined;
 }
 
 shared_ptr<SwapChain> SwapChain::create(CreateInfo &createInfo)
