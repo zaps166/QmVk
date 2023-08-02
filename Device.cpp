@@ -7,7 +7,6 @@
 #include "Device.hpp"
 #include "AbstractInstance.hpp"
 #include "PhysicalDevice.hpp"
-#include "MemoryPropertyFlags.hpp"
 #include "Queue.hpp"
 
 #include <cstring>

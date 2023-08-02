@@ -5,7 +5,6 @@
 */
 
 #include "Buffer.hpp"
-#include "PhysicalDevice.hpp"
 #include "Device.hpp"
 #include "MemoryPropertyFlags.hpp"
 #include "CommandBuffer.hpp"

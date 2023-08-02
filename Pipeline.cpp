@@ -7,7 +7,6 @@
 #include "Pipeline.hpp"
 #include "PhysicalDevice.hpp"
 #include "Device.hpp"
-#include "MemoryObjectDescr.hpp"
 #include "DescriptorPool.hpp"
 #include "DescriptorSet.hpp"
 #include "DescriptorInfo.hpp"

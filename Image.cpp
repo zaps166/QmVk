@@ -8,10 +8,9 @@
 #include "PhysicalDevice.hpp"
 #include "Device.hpp"
 #include "MemoryPropertyFlags.hpp"
-#include "DescriptorInfo.hpp"
 #include "CommandBuffer.hpp"
-#include "Buffer.hpp"
 #ifdef QMVK_USE_IMAGE_BUFFER_VIEW
+#   include "Buffer.hpp"
 #   include "BufferView.hpp"
 #endif
 

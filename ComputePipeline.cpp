@@ -7,7 +7,6 @@
 #include "ComputePipeline.hpp"
 #include "PhysicalDevice.hpp"
 #include "Device.hpp"
-#include "DescriptorSet.hpp"
 #include "ShaderModule.hpp"
 #include "CommandBuffer.hpp"
 

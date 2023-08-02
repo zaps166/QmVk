@@ -6,7 +6,6 @@
 
 #include "Queue.hpp"
 #include "Device.hpp"
-#include "PhysicalDevice.hpp"
 
 namespace QmVk {
 
