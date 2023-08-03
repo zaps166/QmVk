@@ -40,7 +40,7 @@ void RenderPass::init(vk::ImageLayout finalLayout, bool clear)
     colorAttachment.format = m_format;
     colorAttachment.samples = vk::SampleCountFlagBits::e1;
     colorAttachment.loadOp = clear ? vk::AttachmentLoadOp::eClear : vk::AttachmentLoadOp::eDontCare;
-    colorAttachment.storeOp = vk::AttachmentStoreOp::eDontCare;
+    colorAttachment.storeOp = vk::AttachmentStoreOp::eStore;
     colorAttachment.stencilLoadOp = vk::AttachmentLoadOp::eDontCare;
     colorAttachment.stencilStoreOp = vk::AttachmentStoreOp::eDontCare;
     colorAttachment.initialLayout = vk::ImageLayout::eUndefined;
