@@ -21,16 +21,20 @@ shared_ptr<Sampler> Sampler::create(
     sampler->init();
     return sampler;
 }
-shared_ptr<Sampler> Sampler::createLinear(
-    const shared_ptr<Device> &device)
+shared_ptr<Sampler> Sampler::createClampToEdge(
+    const shared_ptr<Device> &device,
+    vk::Filter filter)
 {
     vk::SamplerCreateInfo createInfo;
-    createInfo.magFilter = vk::Filter::eLinear;
-    createInfo.minFilter = vk::Filter::eLinear;
+    createInfo.magFilter = filter;
+    createInfo.minFilter = filter;
     createInfo.addressModeU = vk::SamplerAddressMode::eClampToEdge;
     createInfo.addressModeV = vk::SamplerAddressMode::eClampToEdge;
     createInfo.addressModeW = vk::SamplerAddressMode::eClampToEdge;
-    createInfo.mipmapMode = vk::SamplerMipmapMode::eLinear;
+    createInfo.mipmapMode = (filter == vk::Filter::eNearest)
+        ? vk::SamplerMipmapMode::eNearest
+        : vk::SamplerMipmapMode::eLinear
+    ;
     createInfo.maxLod = numeric_limits<float>::max();
 
     auto sampler = make_shared<Sampler>(

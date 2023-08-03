@@ -25,8 +25,9 @@ public:
         const shared_ptr<Device> &device,
         const vk::SamplerCreateInfo &createInfo = {}
     );
-    static shared_ptr<Sampler> createLinear(
-        const shared_ptr<Device> &device
+    static shared_ptr<Sampler> createClampToEdge(
+        const shared_ptr<Device> &device,
+        vk::Filter filter = vk::Filter::eLinear
     );
 
 public:
@@ -43,6 +44,8 @@ private:
 public:
     inline float maxLod() const;
 
+    inline const vk::SamplerCreateInfo &createInfo() const;
+
 public:
     inline operator vk::Sampler() const;
 
@@ -58,6 +61,11 @@ private:
 float Sampler::maxLod() const
 {
     return m_createInfo.maxLod;
+}
+
+const vk::SamplerCreateInfo &Sampler::createInfo() const
+{
+    return m_createInfo;
 }
 
 Sampler::operator vk::Sampler() const
