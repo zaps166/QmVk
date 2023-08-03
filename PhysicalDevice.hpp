@@ -79,6 +79,8 @@ public:
 
     inline vk::Extent2D localWorkgroupSize() const;
 
+    inline bool isGpu() const;
+
     vector<const char *> filterAvailableExtensions(
         const vector<const char *> &wantedExtensions
     ) const;
@@ -178,6 +180,12 @@ bool PhysicalDevice::hasFullHostVisibleDeviceLocal() const
 vk::Extent2D PhysicalDevice::localWorkgroupSize() const
 {
     return m_localWorkgroupSize;
+}
+
+bool PhysicalDevice::isGpu() const
+{
+    const auto type = properties().deviceType;
+    return (type != vk::PhysicalDeviceType::eOther && type != vk::PhysicalDeviceType::eCpu);
 }
 
 bool PhysicalDevice::checkExtension(const char *extension) const
