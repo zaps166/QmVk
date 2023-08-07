@@ -25,7 +25,23 @@ PhysicalDevice::~PhysicalDevice()
 
 void PhysicalDevice::init()
 {
-    for (auto &&extensionProperty : enumerateDeviceExtensionProperties())
+    const auto deviceExtensionProperties = [this] {
+        vector<vk::ExtensionProperties> deviceExtensionProperties;
+        uint32_t propertyCount = 0;
+        auto result = enumerateDeviceExtensionProperties(nullptr, &propertyCount, static_cast<vk::ExtensionProperties *>(nullptr));
+        if (result == vk::Result::eSuccess && propertyCount > 0)
+        {
+            deviceExtensionProperties.resize(propertyCount);
+            result = enumerateDeviceExtensionProperties(nullptr, &propertyCount, deviceExtensionProperties.data());
+            if (result != vk::Result::eSuccess && result != vk::Result::eIncomplete)
+                propertyCount = 0;
+            if (propertyCount != deviceExtensionProperties.size())
+                deviceExtensionProperties.resize(propertyCount);
+        }
+        return deviceExtensionProperties;
+    }();
+
+    for (auto &&extensionProperty : deviceExtensionProperties)
         m_extensionProperties.insert(static_cast<string>(extensionProperty.extensionName));
 
     if (m_instance->checkExtension(VK_KHR_GET_PHYSICAL_DEVICE_PROPERTIES_2_EXTENSION_NAME))

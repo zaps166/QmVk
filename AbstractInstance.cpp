@@ -43,7 +43,22 @@ void AbstractInstance::init(PFN_vkGetInstanceProcAddr vkGetInstanceProcAddr)
 
 vector<shared_ptr<PhysicalDevice>> AbstractInstance::enumeratePhysicalDevices(bool compatibleOnly)
 {
-    const auto physicalDevices = static_cast<vk::Instance *>(this)->enumeratePhysicalDevices();
+    const auto physicalDevices = [this] {
+        const auto self = static_cast<vk::Instance *>(this);
+        vector<vk::PhysicalDevice> physicalDevices;
+        uint32_t physicalDevicesCount = 0;
+        auto result = self->enumeratePhysicalDevices(&physicalDevicesCount, static_cast<vk::PhysicalDevice *>(nullptr));
+        if (result == vk::Result::eSuccess && physicalDevicesCount > 0)
+        {
+            physicalDevices.resize(physicalDevicesCount);
+            result = self->enumeratePhysicalDevices(&physicalDevicesCount, physicalDevices.data());
+            if (result != vk::Result::eSuccess && result != vk::Result::eIncomplete)
+                physicalDevicesCount = 0;
+            if (physicalDevicesCount != physicalDevices.size())
+                physicalDevices.resize(physicalDevicesCount);
+        }
+        return physicalDevices;
+    }();
 
     vector<shared_ptr<PhysicalDevice>> physicalDeviceInstances;
     physicalDeviceInstances.reserve(physicalDevices.size());
