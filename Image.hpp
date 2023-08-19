@@ -107,7 +107,7 @@ private:
     );
     void allocateAndBindMemory(MemoryPropertyPreset memoryPropertyPreset, uint32_t heap);
 
-    void finishImport(const vector<vk::DeviceSize> &offsets);
+    void finishImport(const vector<vk::DeviceSize> &offsets, vk::DeviceSize globalOffset = 0u);
 
     void createImageViews();
 
@@ -127,7 +127,8 @@ public:
     void importWin32Handle(
         const vector<HANDLE> &rawHandles,
         const vector<vk::DeviceSize> &offsets,
-        vk::ExternalMemoryHandleTypeFlagBits handleType
+        vk::ExternalMemoryHandleTypeFlagBits handleType,
+        vk::DeviceSize globalOffset = 0u
     );
 #endif
 

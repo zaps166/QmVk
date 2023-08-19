@@ -445,14 +445,14 @@ void Image::allocateAndBindMemory(MemoryPropertyPreset memoryPropertyPreset, uin
     createImageViews();
 }
 
-void Image::finishImport(const vector<vk::DeviceSize> &offsets)
+void Image::finishImport(const vector<vk::DeviceSize> &offsets, vk::DeviceSize globalOffset)
 {
     for (uint32_t i = 0; i < m_numPlanes; ++i)
     {
         m_device->bindImageMemory(
             *m_images[i],
             deviceMemory(min<uint32_t>(i, deviceMemoryCount() - 1)),
-            offsets[i]
+            offsets[i] + globalOffset
         );
     }
     createImageViews();
@@ -523,7 +523,8 @@ void Image::importFD(
 void Image::importWin32Handle(
     const vector<HANDLE> &rawHandles,
     const vector<vk::DeviceSize> &offsets,
-    vk::ExternalMemoryHandleTypeFlagBits handleType)
+    vk::ExternalMemoryHandleTypeFlagBits handleType,
+    vk::DeviceSize globalOffset)
 {
     if (m_numPlanes != offsets.size())
         throw vk::LogicError("Offsets count and planes count missmatch");
@@ -534,7 +535,7 @@ void Image::importWin32Handle(
     {
         auto size = m_device->getImageMemoryRequirements(*m_images[i]).size;
         if (i < imageSizes.size())
-            imageSizes[i] = size;
+            imageSizes[i] = size + globalOffset;
         else
             imageSizes.back() += size;
     }
@@ -550,7 +551,7 @@ void Image::importWin32Handle(
     }
     MemoryObject::importWin32Handle(handles, handleType);
 
-    finishImport(offsets);
+    finishImport(offsets, globalOffset);
 }
 #endif
 
