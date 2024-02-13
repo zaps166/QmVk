@@ -10,6 +10,8 @@
 
 #include <vulkan/vulkan.hpp>
 
+#include <memory>
+
 namespace QmVk {
 
 using namespace std;

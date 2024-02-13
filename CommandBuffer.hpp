@@ -11,6 +11,7 @@
 #include <vulkan/vulkan.hpp>
 
 #include <functional>
+#include <memory>
 
 namespace QmVk {
 

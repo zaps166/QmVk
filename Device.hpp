@@ -11,6 +11,7 @@
 #include <vulkan/vulkan.hpp>
 
 #include <unordered_set>
+#include <memory>
 #include <mutex>
 
 namespace QmVk {

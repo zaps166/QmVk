@@ -10,6 +10,7 @@
 
 #include <vulkan/vulkan.hpp>
 
+#include <memory>
 #include <mutex>
 
 namespace QmVk {
