@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 /*
    QmVk - simple Vulkan library created for QMPlay2
-   Copyright (C) 2020-2023 Błażej Szczygieł
+   Copyright (C) 2020-2024 Błażej Szczygieł
 */
 
 #include "Device.hpp"
