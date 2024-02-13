@@ -130,7 +130,11 @@ void GraphicsPipeline::createPipeline()
     pipelineInfo.pColorBlendState = &colorBlending;
     pipelineInfo.layout = *m_pipelineLayout;
     pipelineInfo.renderPass = *m_renderPass;
-    m_pipeline = m_device->createGraphicsPipelineUnique(nullptr, pipelineInfo);
+    m_pipeline = m_device->createGraphicsPipelineUnique(nullptr, pipelineInfo)
+#if VK_HEADER_VERSION >= 136
+        .value
+#endif
+    ;
 }
 
 void GraphicsPipeline::setCustomSpecializationDataVertex(const vector<uint32_t> &data)

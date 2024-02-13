@@ -65,7 +65,11 @@ void ComputePipeline::createPipeline()
         pipelineCreateInfo.flags = vk::PipelineCreateFlagBits::eDispatchBase;
     pipelineCreateInfo.stage = m_shaderModule->getPipelineShaderStageCreateInfo(specializationInfo);
     pipelineCreateInfo.layout = *m_pipelineLayout;
-    m_pipeline = m_device->createComputePipelineUnique(nullptr, pipelineCreateInfo);
+    m_pipeline = m_device->createComputePipelineUnique(nullptr, pipelineCreateInfo)
+#if VK_HEADER_VERSION >= 136
+        .value
+#endif
+    ;
 }
 
 void ComputePipeline::setCustomSpecializationData(const vector<uint32_t> &data)
