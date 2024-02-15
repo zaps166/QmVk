@@ -511,6 +511,9 @@ void Image::importFD(
     const vector<vk::DeviceSize> &offsets,
     vk::ExternalMemoryHandleTypeFlagBits handleType)
 {
+    if (!m_externalImport)
+        throw vk::LogicError("Importing FD requires external import");
+
     if (m_numPlanes != offsets.size())
         throw vk::LogicError("Offsets count and planes count missmatch");
 
