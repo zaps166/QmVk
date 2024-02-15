@@ -39,7 +39,6 @@ Queue::~Queue()
 void Queue::init()
 {
     static_cast<vk::Queue &>(*this) = m_device->getQueue(m_queueFamilyIndex, m_queueIndex);
-    m_fence = m_device->createFenceUnique(vk::FenceCreateInfo());
 }
 
 unique_lock<mutex> Queue::lock()
@@ -49,7 +48,11 @@ unique_lock<mutex> Queue::lock()
 
 void Queue::submitCommandBuffer(vk::SubmitInfo &&submitInfo)
 {
-    if (m_fenceResetNeeded)
+    if (!m_fence)
+    {
+        m_fence = m_device->createFenceUnique(vk::FenceCreateInfo());
+    }
+    else if (m_fenceResetNeeded)
     {
         m_device->resetFences(*m_fence);
         m_fenceResetNeeded = false;
