@@ -34,7 +34,7 @@ protected:
     );
     ~MemoryObject();
 
-public:
+protected:
     void importFD(
         const FdDescriptors &descriptors,
         vk::ExternalMemoryHandleTypeFlagBits handleType
@@ -47,7 +47,6 @@ public:
     );
 #endif
 
-protected:
     void allocateMemory(
         const MemoryPropertyFlags &userMemoryPropertyFlags,
         void *allocateInfoPNext = nullptr
