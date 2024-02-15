@@ -87,6 +87,41 @@ void PhysicalDevice::init()
         min(localWorkgroupSizeSqr, limits().maxComputeWorkGroupSize[0]),
         min(localWorkgroupSizeSqr, limits().maxComputeWorkGroupSize[1])
     );
+
+    const auto queueFamilyProperties = getQueueFamilyProperties();
+    for (uint32_t queueFamilyIndex = 0; queueFamilyIndex < queueFamilyProperties.size(); ++queueFamilyIndex)
+    {
+        auto &&props = queueFamilyProperties[queueFamilyIndex];
+
+        if (props.queueCount < 1)
+            continue;
+
+#ifndef QMVK_NO_GRAPHICS
+        const bool hasGraphics = static_cast<bool>(props.queueFlags & vk::QueueFlagBits::eGraphics);
+#else
+        const bool hasGraphics = false;
+#endif
+#if VK_HEADER_VERSION > 237
+        const bool hasDecode = static_cast<bool>(props.queueFlags & vk::QueueFlagBits::eVideoDecodeKHR);
+#else
+        const bool hasDecode = false;
+#endif
+#if VK_HEADER_VERSION > 274
+        const bool hasEncode = static_cast<bool>(props.queueFlags & vk::QueueFlagBits::eVideoEncodeKHR);
+#else
+        const bool hasEncode = false;
+#endif
+        const bool hasCompute = static_cast<bool>(props.queueFlags & vk::QueueFlagBits::eCompute);
+        const bool hasTransfer = static_cast<bool>(props.queueFlags & vk::QueueFlagBits::eTransfer);
+        if (!hasGraphics && !hasCompute && !hasTransfer && !hasDecode && !hasEncode)
+            continue;
+
+        m_queues[queueFamilyIndex] = {
+            props.queueFlags,
+            queueFamilyIndex,
+            props.queueCount
+        };
+    }
 }
 
 vector<const char *> PhysicalDevice::filterAvailableExtensions(
@@ -123,17 +158,15 @@ bool PhysicalDevice::checkExtensions(
 }
 
 shared_ptr<Device> PhysicalDevice::createDevice(
-    uint32_t queueFamilyIndex,
     const vk::PhysicalDeviceFeatures2 &features,
     const vector<const char *> &extensions,
-    uint32_t maxQueueCount)
+    const vector<pair<uint32_t, uint32_t>> &queuesFamily)
 {
     auto device = make_shared<Device>(
         shared_from_this(),
-        queueFamilyIndex,
         Device::Priv()
     );
-    device->init(features, extensions, maxQueueCount);
+    device->init(features, extensions, queuesFamily);
     return device;
 }
 
@@ -333,20 +366,41 @@ PhysicalDevice::MemoryType PhysicalDevice::findMemoryType(
     return findMemoryType(MemoryPropertyFlags(), memoryTypeBits);
 }
 
-uint32_t PhysicalDevice::getQueueFamilyIndex(
+vector<pair<uint32_t, uint32_t>> PhysicalDevice::getQueuesFamily(
     vk::QueueFlags queueFlags,
-    bool matchExactly) const
+    bool tryExcludeGraphics,
+    bool firstOnly,
+    bool exceptionOnFail) const
 {
-    const auto queueFamilies = getQueueFamilyProperties();
-    for (uint32_t i = 0; i < queueFamilies.size(); ++i)
+    vector<pair<uint32_t, uint32_t>> ret;
+    for (uint32_t t = 0; t < 2; ++t)
     {
-        auto &&props = queueFamilies[i];
-        if (props.queueCount < 1)
+        for (auto &&familypropsPair : m_queues)
+        {
+            auto &&props = familypropsPair.second;
+
+            if (tryExcludeGraphics && (props.flags & vk::QueueFlagBits::eGraphics))
+                continue;
+
+            if ((props.flags & queueFlags) == queueFlags)
+            {
+                ret.emplace_back(props.familyIndex, props.count);
+                if (firstOnly)
+                    break;
+            }
+        }
+
+        if (tryExcludeGraphics && ret.empty())
+        {
+            tryExcludeGraphics = false;
             continue;
-        if ((matchExactly && props.queueFlags == queueFlags) || (!matchExactly && (props.queueFlags & queueFlags)))
-            return i;
+        }
+
+        break;
     }
-    throw vk::InitializationFailedError("Cannot find specified queue family index");
+    if (exceptionOnFail && ret.empty())
+        throw vk::InitializationFailedError("Cannot find specified queue family");
+    return ret;
 }
 
 string PhysicalDevice::linuxPCIPath() const

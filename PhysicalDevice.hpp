@@ -14,6 +14,7 @@
 #include <unordered_set>
 #include <memory>
 #include <mutex>
+#include <map>
 
 namespace std {
 
@@ -55,6 +56,13 @@ public:
         bool hostVisible;
     };
 
+    struct QueueProps
+    {
+        vk::QueueFlags flags;
+        uint32_t familyIndex;
+        uint32_t count;
+    };
+
 public:
     PhysicalDevice(
         const shared_ptr<AbstractInstance> &instance,
@@ -94,10 +102,9 @@ public:
 
     using vk::PhysicalDevice::createDevice;
     shared_ptr<Device> createDevice(
-        uint32_t queueFamilyIndex,
         const vk::PhysicalDeviceFeatures2 &features,
         const vector<const char *> &extensions,
-        uint32_t maxQueueCount
+        const vector<pair<uint32_t, uint32_t>> &queuesFamily
     );
 
     inline shared_ptr<AbstractInstance> instance() const;
@@ -117,10 +124,15 @@ public:
         uint32_t memoryTypeBits
     ) const;
 
-    uint32_t getQueueFamilyIndex(
+    // {family index, count}
+    vector<pair<uint32_t, uint32_t>> getQueuesFamily(
         vk::QueueFlags queueFlags,
-        bool matchExactly = false
+        bool tryExcludeGraphics = false,
+        bool firstOnly = false,
+        bool exceptionOnFail = false
     ) const;
+
+    inline const QueueProps &getQueueProps(uint32_t queueFamilyIndex) const;
 
     string linuxPCIPath() const;
 
@@ -140,6 +152,8 @@ private:
     bool m_hasFullHostVisibleDeviceLocal = false;
 
     vk::Extent2D m_localWorkgroupSize;
+
+    map<uint32_t, QueueProps> m_queues;
 
     mutex m_formatPropertiesMutex;
     unordered_map<vk::Format, vk::FormatProperties> m_formatProperties;
@@ -199,6 +213,11 @@ bool PhysicalDevice::checkExtension(const char *extension) const
 shared_ptr<AbstractInstance> PhysicalDevice::instance() const
 {
     return m_instance;
+}
+
+const PhysicalDevice::QueueProps &PhysicalDevice::getQueueProps(uint32_t queueFamilyIndex) const
+{
+    return m_queues.at(queueFamilyIndex);
 }
 
 }

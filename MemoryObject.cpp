@@ -177,7 +177,7 @@ void MemoryObject::allocateMemory(
 shared_ptr<CommandBuffer> MemoryObject::internalCommandBuffer()
 {
     if (!m_internalCommandBuffer)
-        m_internalCommandBuffer = CommandBuffer::create(m_device->queue());
+        m_internalCommandBuffer = CommandBuffer::create(m_device->firstQueue());
     return m_internalCommandBuffer;
 }
 

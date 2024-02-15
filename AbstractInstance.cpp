@@ -86,31 +86,14 @@ vector<shared_ptr<PhysicalDevice>> AbstractInstance::enumeratePhysicalDevices(bo
 
 shared_ptr<Device> AbstractInstance::createDevice(
     const shared_ptr<PhysicalDevice> &physicalDevice,
-    vk::QueueFlags queueFlags,
     const vk::PhysicalDeviceFeatures2 &physicalDeviceFeatures,
     const vector<const char *> &physicalDeviceExtensions,
-    uint32_t maxQueueCount)
-{
-    return createDevice(
-        physicalDevice,
-        physicalDevice->getQueueFamilyIndex(queueFlags),
-        physicalDeviceFeatures,
-        physicalDeviceExtensions,
-        maxQueueCount
-    );
-}
-shared_ptr<Device> AbstractInstance::createDevice(
-    const shared_ptr<PhysicalDevice> &physicalDevice,
-    uint32_t queueFamilyIndex,
-    const vk::PhysicalDeviceFeatures2 &physicalDeviceFeatures,
-    const vector<const char *> &physicalDeviceExtensions,
-    uint32_t maxQueueCount)
+    const vector<pair<uint32_t, uint32_t>> &queuesFamily)
 {
     auto device = physicalDevice->createDevice(
-        queueFamilyIndex,
         physicalDeviceFeatures,
         physicalDevice->filterAvailableExtensions(physicalDeviceExtensions),
-        maxQueueCount
+        queuesFamily
     );
 
     lock_guard<mutex> locker(m_deviceMutex);

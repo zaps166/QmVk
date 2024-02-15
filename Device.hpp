@@ -10,6 +10,7 @@
 
 #include <vulkan/vulkan.hpp>
 
+#include <unordered_map>
 #include <unordered_set>
 #include <memory>
 #include <mutex>
@@ -30,7 +31,6 @@ class QMVK_EXPORT Device : public vk::Device, public enable_shared_from_this<Dev
 public:
     Device(
         const shared_ptr<PhysicalDevice> &physicalDevice,
-        uint32_t queueFamilyIndex,
         Priv
     );
     ~Device();
@@ -39,7 +39,7 @@ private:
     void init(
         const vk::PhysicalDeviceFeatures2 &features,
         const vector<const char *> &extensions,
-        uint32_t maxQueueCount
+        const vector<pair<uint32_t, uint32_t>> &queuesFamilyIn // {family index, max count}
     );
 
 public:
@@ -48,17 +48,24 @@ public:
     inline const auto &enabledExtensions() const;
     inline bool hasExtension(const char *extensionName) const;
 
-    inline uint32_t numQueues() const;
-    shared_ptr<Queue> queue(uint32_t index = 0);
+    inline const auto &queues() const;
+
+    inline uint32_t numQueueFamilies() const;
+    inline uint32_t queueFamilyIndex(uint32_t logicalQueueFamilyIndex) const;
+    inline uint32_t numQueues(uint32_t queueFamilyIndex) const;
+
+    shared_ptr<Queue> queue(uint32_t queueFamilyIndex, uint32_t index);
+    inline shared_ptr<Queue> firstQueue();
 
 private:
     const shared_ptr<PhysicalDevice> m_physicalDevice;
-    const uint32_t m_queueFamilyIndex;
 
     unordered_set<string> m_enabledExtensions;
 
+    vector<uint32_t> m_queues;
+
     mutex m_queueMutex;
-    vector<weak_ptr<Queue>> m_weakQueues;
+    unordered_map<uint32_t, vector<weak_ptr<Queue>>> m_weakQueues;
 };
 
 /* Inline implementation */
@@ -77,9 +84,27 @@ bool Device::hasExtension(const char *extensionName) const
     return (m_enabledExtensions.count(extensionName) > 0);
 }
 
-uint32_t Device::numQueues() const
+const auto &Device::queues() const
 {
-    return m_weakQueues.size();
+    return m_queues;
+}
+
+uint32_t Device::numQueueFamilies() const
+{
+    return m_queues.size();
+}
+uint32_t Device::queueFamilyIndex(uint32_t logicalQueueFamilyIndex) const
+{
+    return m_queues.at(logicalQueueFamilyIndex);
+}
+uint32_t QmVk::Device::numQueues(uint32_t queueFamilyIndex) const
+{
+    return m_weakQueues.at(queueFamilyIndex).size();
+}
+
+shared_ptr<Queue> Device::firstQueue()
+{
+    return queue(queueFamilyIndex(0), 0);
 }
 
 }

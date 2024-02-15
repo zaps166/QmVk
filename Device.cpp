@@ -15,10 +15,8 @@ namespace QmVk {
 
 Device::Device(
     const shared_ptr<PhysicalDevice> &physicalDevice,
-    uint32_t queueFamilyIndex,
     Priv)
     : m_physicalDevice(physicalDevice)
-    , m_queueFamilyIndex(queueFamilyIndex)
 {}
 Device::~Device()
 {
@@ -26,33 +24,58 @@ Device::~Device()
         destroy();
 }
 
-void Device::init(
-    const vk::PhysicalDeviceFeatures2 &features,
+void Device::init(const vk::PhysicalDeviceFeatures2 &features,
     const vector<const char *> &extensions,
-    uint32_t maxQueueCount)
+    const vector<pair<uint32_t, uint32_t>> &queuesFamilyIn)
 {
-    const uint32_t queueCount = min(
-        maxQueueCount,
-        m_physicalDevice->getQueueFamilyProperties().at(m_queueFamilyIndex).queueCount
-    );
+    vector<pair<uint32_t, uint32_t>> queuesFamily;
+    queuesFamily.reserve(queuesFamilyIn.size());
 
-    const vector<float> queuePriorities(queueCount, 1.0f);
-    vk::DeviceQueueCreateInfo queueCreateInfo(
-        vk::DeviceQueueCreateFlags(),
-        m_queueFamilyIndex,
-        queueCount,
-        queuePriorities.data()
-    );
+    // Remove possible duplicates
+    for (uint32_t i = 0; i < queuesFamilyIn.size(); ++i)
+    {
+        auto it = find_if(queuesFamily.begin(), queuesFamily.end(), [queueFamilyIndex = queuesFamilyIn[i].first](auto &&p) {
+            return (p.first == queueFamilyIndex);
+        });
+        if (it == queuesFamily.end())
+        {
+            queuesFamily.push_back(queuesFamilyIn[i]);
+        }
+    }
+
+    vector<vk::DeviceQueueCreateInfo> queueCreateInfos(queuesFamily.size());
+    vector<vector<float>> queuePriorities(queuesFamily.size());
+
+    m_queues.reserve(queuesFamily.size());
+
+    for (uint32_t i = 0; i < queuesFamily.size(); ++i)
+    {
+        const uint32_t queueFamilyIndex = queuesFamily[i].first;
+        const uint32_t queueCount = min(
+            queuesFamily[i].second,
+            m_physicalDevice->getQueueProps(queueFamilyIndex).count
+        );
+
+        queuePriorities[i].resize(queueCount, 1.0f / queueCount);
+        queueCreateInfos[i] = {
+            vk::DeviceQueueCreateFlags(),
+            queueFamilyIndex,
+            queueCount,
+            queuePriorities[i].data()
+        };
+
+        m_queues.push_back(queueFamilyIndex);
+
+        m_weakQueues[queueFamilyIndex].resize(queueCount);
+    }
 
     m_enabledExtensions.reserve(extensions.size());
     for (auto &&extension : extensions)
         m_enabledExtensions.insert(extension);
 
-    m_weakQueues.resize(queueCount);
-
     vk::DeviceCreateInfo deviceCreateInfo;
-    deviceCreateInfo.queueCreateInfoCount = 1;
-    deviceCreateInfo.pQueueCreateInfos = &queueCreateInfo;
+    deviceCreateInfo.queueCreateInfoCount = queueCreateInfos.size();
+    deviceCreateInfo.pQueueCreateInfos = queueCreateInfos.data();
     deviceCreateInfo.enabledExtensionCount = extensions.size();
     deviceCreateInfo.ppEnabledExtensionNames = extensions.data();
     if (m_physicalDevice->instance()->checkExtension(VK_KHR_GET_PHYSICAL_DEVICE_PROPERTIES_2_EXTENSION_NAME))
@@ -62,18 +85,19 @@ void Device::init(
     static_cast<vk::Device &>(*this) = m_physicalDevice->createDevice(deviceCreateInfo, nullptr);
 }
 
-shared_ptr<Queue> Device::queue(uint32_t index)
+shared_ptr<Queue> Device::queue(uint32_t queueFamilyIndex, uint32_t index)
 {
     lock_guard<mutex> locker(m_queueMutex);
-    auto queue = m_weakQueues.at(index).lock();
+    auto &weakQueue = m_weakQueues.at(queueFamilyIndex).at(index);
+    auto queue = weakQueue.lock();
     if (!queue)
     {
         queue = Queue::create(
             shared_from_this(),
-            m_queueFamilyIndex,
+            queueFamilyIndex,
             index
         );
-        m_weakQueues[index] = queue;
+        weakQueue = queue;
     }
     return queue;
 }

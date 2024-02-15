@@ -31,23 +31,16 @@ protected:
     void init(PFN_vkGetInstanceProcAddr vkGetInstanceProcAddr = nullptr);
 
 public:
+    inline set<string> enabledExtensions() const;
     inline bool checkExtension(const char *extension) const;
 
     vector<shared_ptr<PhysicalDevice>> enumeratePhysicalDevices(bool compatibleOnly);
 
     shared_ptr<Device> createDevice(
         const shared_ptr<PhysicalDevice> &physicalDevice,
-        vk::QueueFlags queueFlags,
         const vk::PhysicalDeviceFeatures2 &physicalDeviceFeatures,
         const vector<const char *> &physicalDeviceExtensions,
-        uint32_t maxQueueCount
-    );
-    shared_ptr<Device> createDevice(
-        const shared_ptr<PhysicalDevice> &physicalDevice,
-        uint32_t queueFamilyIndex,
-        const vk::PhysicalDeviceFeatures2 &physicalDeviceFeatures,
-        const vector<const char *> &physicalDeviceExtensions,
-        uint32_t maxQueueCount
+        const vector<pair<uint32_t, uint32_t>> &queuesFamily
     );
     void resetDevice(const shared_ptr<Device> &deviceToReset);
     shared_ptr<Device> device() const;
@@ -66,6 +59,10 @@ private:
 
 /* Inline implementation */
 
+set<string> AbstractInstance::enabledExtensions() const
+{
+    return m_extensions;
+}
 bool AbstractInstance::checkExtension(const char *extension) const
 {
     return (m_extensions.count(extension) > 0);
