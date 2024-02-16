@@ -24,11 +24,16 @@ class Device;
 class QMVK_EXPORT AbstractInstance : public vk::Instance, public enable_shared_from_this<AbstractInstance>
 {
 protected:
-    AbstractInstance() = default;
-    virtual ~AbstractInstance() = default;
+    // Functions must be called only once and are not thread-safe
+    static PFN_vkGetInstanceProcAddr loadVulkanLibrary(const string &vulkanLibrary = {});
+    static void initDispatchLoaderDynamic(PFN_vkGetInstanceProcAddr vkGetInstanceProcAddr, vk::Instance instance = {});
+
+public:
+    static const vk::DispatchLoaderDynamic &getDispatchLoaderDynamic();
 
 protected:
-    void init(PFN_vkGetInstanceProcAddr vkGetInstanceProcAddr = nullptr);
+    AbstractInstance() = default;
+    virtual ~AbstractInstance() = default;
 
 public:
     inline set<string> enabledExtensions() const;

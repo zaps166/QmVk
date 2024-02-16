@@ -11,34 +11,38 @@ vk::DispatchLoaderDynamic vk::defaultDispatchLoaderDynamic;
 
 namespace QmVk {
 
-void AbstractInstance::init(PFN_vkGetInstanceProcAddr vkGetInstanceProcAddr)
+PFN_vkGetInstanceProcAddr AbstractInstance::loadVulkanLibrary(const string &vulkanLibrary)
 {
-    if (!vkGetInstanceProcAddr)
+    static unique_ptr<vk::DynamicLoader> g_dyld;
+
+    g_dyld.reset();
+
+    try
     {
-        static unique_ptr<vk::DynamicLoader> dyld;
-        static mutex dyldMutex;
-
-        lock_guard<mutex> locker(dyldMutex);
-        if (!dyld)
-        {
-            try
-            {
-                dyld = make_unique<vk::DynamicLoader>();
-            }
-            catch (const runtime_error &e)
-            {
-                throw vk::InitializationFailedError(e.what());
-            }
-        }
-
-        vkGetInstanceProcAddr = dyld->getProcAddress<PFN_vkGetInstanceProcAddr>("vkGetInstanceProcAddr");
-        if (!vkGetInstanceProcAddr)
-            throw vk::InitializationFailedError("Unable to get \"vkGetInstanceProcAddr\"");
+        g_dyld = make_unique<vk::DynamicLoader>(vulkanLibrary);
     }
-    if (*this)
-        vk::defaultDispatchLoaderDynamic.init(*this, vkGetInstanceProcAddr);
+    catch (const runtime_error &e)
+    {
+        throw vk::InitializationFailedError(e.what());
+    }
+
+    auto vkGetInstanceProcAddr = g_dyld->getProcAddress<PFN_vkGetInstanceProcAddr>("vkGetInstanceProcAddr");
+    if (!vkGetInstanceProcAddr)
+        throw vk::InitializationFailedError("Unable to get \"vkGetInstanceProcAddr\"");
+
+    return vkGetInstanceProcAddr;
+}
+void AbstractInstance::initDispatchLoaderDynamic(PFN_vkGetInstanceProcAddr vkGetInstanceProcAddr, vk::Instance instance)
+{
+    if (instance)
+        vk::defaultDispatchLoaderDynamic.init(instance, vkGetInstanceProcAddr);
     else
         vk::defaultDispatchLoaderDynamic.init(vkGetInstanceProcAddr);
+}
+
+const vk::DispatchLoaderDynamic &AbstractInstance::getDispatchLoaderDynamic()
+{
+    return vk::defaultDispatchLoaderDynamic;
 }
 
 vector<shared_ptr<PhysicalDevice>> AbstractInstance::enumeratePhysicalDevices(bool compatibleOnly)
