@@ -369,6 +369,7 @@ string PhysicalDevice::linuxPCIPath() const
 
 const vk::FormatProperties &PhysicalDevice::getFormatPropertiesCached(vk::Format fmt)
 {
+    lock_guard<mutex> locker(m_formatPropertiesMutex);
     auto it = m_formatProperties.find(fmt);
     if (it == m_formatProperties.end())
     {

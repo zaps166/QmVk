@@ -13,6 +13,7 @@
 #include <unordered_map>
 #include <unordered_set>
 #include <memory>
+#include <mutex>
 
 namespace std {
 
@@ -140,6 +141,7 @@ private:
 
     vk::Extent2D m_localWorkgroupSize;
 
+    mutex m_formatPropertiesMutex;
     unordered_map<vk::Format, vk::FormatProperties> m_formatProperties;
 };
 
