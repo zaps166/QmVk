@@ -44,6 +44,7 @@ void Device::init(
         queuePriorities.data()
     );
 
+    m_enabledExtensions.reserve(extensions.size());
     for (auto &&extension : extensions)
         m_enabledExtensions.insert(extension);
 
