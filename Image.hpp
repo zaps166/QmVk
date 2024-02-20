@@ -87,6 +87,15 @@ public:
         ImageCreateInfoCallback imageCreateInfoCallback = nullptr
     );
 
+    static shared_ptr<Image> createFromImage(
+        const shared_ptr<Device> &device,
+        vector<vk::Image> &&vkImages,
+        const vk::Extent2D &size,
+        vk::Format fmt,
+        bool linear,
+        uint32_t mipLevels = 1
+    );
+
 public:
     Image(
         const shared_ptr<Device> &device,
@@ -97,6 +106,7 @@ public:
         bool useMipmaps,
         bool storage,
         bool externalImport,
+        bool externalImage,
         vk::ExternalMemoryHandleTypeFlags exportMemoryTypes,
         Priv
     );
@@ -148,6 +158,7 @@ public:
     inline bool useMipmaps() const;
     inline bool isStorage() const;
     inline bool isExternalImport() const;
+    inline bool isExternalImage() const;
     inline bool isYcbcr() const;
 
     inline uint32_t numPlanes() const;
@@ -223,6 +234,7 @@ private:
     const bool m_useMipMaps;
     const bool m_storage;
     const bool m_externalImport;
+    const bool m_externalImage;
     const uint32_t m_numPlanes;
     const bool m_ycbcr;
     const uint32_t m_numImages;
@@ -302,6 +314,10 @@ bool Image::isStorage() const
 bool Image::isExternalImport() const
 {
     return m_externalImport;
+}
+bool Image::isExternalImage() const
+{
+    return m_externalImage;
 }
 bool Image::isYcbcr() const
 {

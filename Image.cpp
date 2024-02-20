@@ -116,6 +116,7 @@ shared_ptr<Image> Image::createOptimal(
         useMipMaps,
         storage,
         false,
+        false,
         exportMemoryTypes,
         Priv()
     );
@@ -142,6 +143,7 @@ shared_ptr<Image> Image::createLinear(
         useMipMaps,
         storage,
         false,
+        false,
         exportMemoryTypes,
         Priv()
     );
@@ -166,10 +168,41 @@ shared_ptr<Image> Image::createExternalImport(
         false,
         false,
         true,
+        false,
         exportMemoryTypes,
         Priv()
     );
     image->init({}, ~0u, imageCreateInfoCallback);
+    return image;
+}
+
+shared_ptr<Image> Image::createFromImage(
+    const shared_ptr<Device> &device,
+    vector<vk::Image> &&vkImages,
+    const vk::Extent2D &size,
+    vk::Format fmt,
+    bool linear,
+    uint32_t mipLevels)
+{
+    auto image = make_shared<Image>(
+        device,
+        size,
+        fmt,
+        0,
+        linear,
+        false,
+        false,
+        false,
+        true,
+        vk::ExternalMemoryHandleTypeFlags(),
+        Priv()
+    );
+    if (image->m_numImages != vkImages.size())
+        throw vk::LogicError("Number of images doesn't match");
+    if (mipLevels > 1)
+        image->m_mipLevels = mipLevels;
+    image->m_images = move(vkImages);
+    image->init({}, ~0u);
     return image;
 }
 
@@ -182,6 +215,7 @@ Image::Image(
     bool useMipmaps,
     bool storage,
     bool externalImport,
+    bool externalImage,
     vk::ExternalMemoryHandleTypeFlags exportMemoryTypes,
     Priv)
     : MemoryObject(device, exportMemoryTypes)
@@ -192,6 +226,7 @@ Image::Image(
     , m_useMipMaps(useMipmaps)
     , m_storage(storage)
     , m_externalImport(externalImport)
+    , m_externalImage(externalImage)
     , m_numPlanes(getNumPlanes(m_mainFormat))
     , m_ycbcr(
         m_numPlanes > 1 &&
@@ -216,8 +251,11 @@ Image::~Image()
     unmap();
     for (auto &&imageView : m_imageViews)
         m_device->destroyImageView(imageView);
-    for (auto &&image : m_images)
-        m_device->destroyImage(image);
+    if (!m_externalImage)
+    {
+        for (auto &&image : m_images)
+            m_device->destroyImage(image);
+    }
 }
 
 void Image::init(
@@ -235,7 +273,8 @@ void Image::init(
     m_paddingHeights.resize(m_numPlanes);
     m_formats.resize(m_numPlanes);
     m_subresourceLayouts.resize(m_numPlanes);
-    m_images.resize(m_numImages);
+    if (!m_externalImage)
+        m_images.resize(m_numImages);
     m_imageViews.resize(m_numPlanes);
 
     function<vk::Extent2D(const vk::Extent2D &)> getChromaPlaneSizeFn;
@@ -330,6 +369,13 @@ void Image::init(
     ;
     if (m_sampled || m_sampledYcbcr)
         imageUsageFlags |= vk::ImageUsageFlagBits::eSampled;
+
+    if (m_externalImage)
+    {
+        if (m_linear)
+            fetchSubresourceLayouts();
+        return; // Importing image ends here
+    }
 
     if (!m_externalImport)
         imageUsageFlags |= vk::ImageUsageFlagBits::eTransferDst;
@@ -677,7 +723,7 @@ void *Image::map(uint32_t plane)
 {
     if (!m_mapped)
     {
-        if (m_externalImport)
+        if (m_externalImport || m_externalImage)
             throw vk::LogicError("Can't map externally imported memory or image");
 
         m_mapped = m_device->mapMemory(deviceMemory(), 0, memorySize());
@@ -701,6 +747,9 @@ void Image::copyTo(
     const shared_ptr<Image> &dstImage,
     const shared_ptr<CommandBuffer> &externalCommandBuffer)
 {
+    if (dstImage->m_externalImport || dstImage->m_externalImage)
+        throw vk::LogicError("Can't copy to externally imported memory or image");
+
     if (m_numPlanes != dstImage->m_numPlanes)
         throw vk::LogicError("Source image and destination image planes count missmatch");
 
