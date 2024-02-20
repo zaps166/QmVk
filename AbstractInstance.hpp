@@ -10,9 +10,9 @@
 
 #include <vulkan/vulkan.hpp>
 
+#include <unordered_set>
 #include <memory>
 #include <mutex>
-#include <set>
 
 namespace QmVk {
 
@@ -36,7 +36,7 @@ protected:
     virtual ~AbstractInstance() = default;
 
 public:
-    inline set<string> enabledExtensions() const;
+    inline const auto &enabledExtensions() const;
     inline bool checkExtension(const char *extension) const;
 
     vector<shared_ptr<PhysicalDevice>> enumeratePhysicalDevices(bool compatibleOnly);
@@ -55,7 +55,7 @@ protected:
     virtual void sortPhysicalDevices(vector<shared_ptr<PhysicalDevice>> &physicalDeivecs) const;
 
 protected:
-    set<string> m_extensions;
+    unordered_set<string> m_extensions;
 
 private:
     weak_ptr<Device> m_deviceWeak;
@@ -64,7 +64,7 @@ private:
 
 /* Inline implementation */
 
-set<string> AbstractInstance::enabledExtensions() const
+const auto &AbstractInstance::enabledExtensions() const
 {
     return m_extensions;
 }
