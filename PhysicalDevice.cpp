@@ -96,7 +96,7 @@ vector<const char *> PhysicalDevice::filterAvailableExtensions(
     availableWantedExtensions.reserve(wantedExtensions.size());
     for (auto &&wantedExtension : wantedExtensions)
     {
-        if (m_extensionProperties.count(wantedExtension) > 0)
+        if (checkExtension(wantedExtension))
         {
             availableWantedExtensions.push_back(wantedExtension);
             if (availableWantedExtensions.size() == wantedExtensions.size())
@@ -112,7 +112,7 @@ bool PhysicalDevice::checkExtensions(
     size_t foundExtensions = 0;
     for (auto &&wantedExtension : wantedExtensions)
     {
-        if (m_extensionProperties.count(wantedExtension) > 0)
+        if (checkExtension(wantedExtension))
         {
             ++foundExtensions;
             if (foundExtensions == wantedExtensions.size())
