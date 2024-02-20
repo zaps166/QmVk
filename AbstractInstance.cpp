@@ -45,6 +45,44 @@ const vk::DispatchLoaderDynamic &AbstractInstance::getDispatchLoaderDynamic()
     return vk::defaultDispatchLoaderDynamic;
 }
 
+void AbstractInstance::fetchAllExtensions()
+{
+    const auto instanceExtensionProperties = [] {
+        vector<vk::ExtensionProperties> instanceExtensionProperties;
+        uint32_t propertyCount = 0;
+        auto result = vk::enumerateInstanceExtensionProperties(nullptr, &propertyCount, static_cast<vk::ExtensionProperties *>(nullptr));
+        if (result == vk::Result::eSuccess && propertyCount > 0)
+        {
+            instanceExtensionProperties.resize(propertyCount);
+            result = vk::enumerateInstanceExtensionProperties(nullptr, &propertyCount, instanceExtensionProperties.data());
+            if (result != vk::Result::eSuccess && result != vk::Result::eIncomplete)
+                propertyCount = 0;
+            if (propertyCount != instanceExtensionProperties.size())
+                instanceExtensionProperties.resize(propertyCount);
+        }
+        return instanceExtensionProperties;
+    }();
+    m_extensions.reserve(instanceExtensionProperties.size());
+    for (auto &&instanceExtensionProperty : instanceExtensionProperties)
+        m_extensions.insert(instanceExtensionProperty.extensionName);
+}
+vector<const char *> AbstractInstance::filterAvailableExtensions(
+    const vector<const char *> &wantedExtensions)
+{
+    vector<const char *> availableWantedExtensions;
+    availableWantedExtensions.reserve(wantedExtensions.size());
+    for (auto &&wantedExtension : wantedExtensions)
+    {
+        if (checkExtension(wantedExtension))
+        {
+            availableWantedExtensions.push_back(wantedExtension);
+            if (availableWantedExtensions.size() == wantedExtensions.size())
+                break;
+        }
+    }
+    return availableWantedExtensions;
+}
+
 vector<shared_ptr<PhysicalDevice>> AbstractInstance::enumeratePhysicalDevices(bool compatibleOnly)
 {
     const auto physicalDevices = [this] {

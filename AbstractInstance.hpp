@@ -35,6 +35,11 @@ protected:
     AbstractInstance() = default;
     virtual ~AbstractInstance() = default;
 
+    void fetchAllExtensions();
+    vector<const char *> filterAvailableExtensions(
+        const  vector<const char *> &wantedExtensions
+    );
+
 public:
     inline const auto &enabledExtensions() const;
     inline bool checkExtension(const char *extension) const;
