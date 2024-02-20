@@ -9,6 +9,7 @@
 #include "QmVkExport.hpp"
 
 #include "DescriptorInfo.hpp"
+#include "DescriptorType.hpp"
 #include "MemoryObjectBase.hpp"
 
 namespace QmVk {
@@ -26,7 +27,7 @@ class MemoryObjectDescr
 {
     friend class MemoryObjectDescrs;
 
-    using DescriptorTypeInfos = pair<vk::DescriptorPoolSize, vector<DescriptorInfo>>;
+    using DescriptorTypeInfos = pair<DescriptorType, vector<DescriptorInfo>>;
 
 public:
     enum class Type
@@ -92,7 +93,7 @@ public:
     );
 
 public:
-    inline const vk::DescriptorPoolSize &descriptorType() const;
+    inline const DescriptorType &descriptorType() const;
     inline const vector<DescriptorInfo> &descriptorInfos() const;
 
 private:
@@ -131,7 +132,7 @@ private:
 
 /* Inline implementation */
 
-const vk::DescriptorPoolSize &MemoryObjectDescr::descriptorType() const
+const DescriptorType &MemoryObjectDescr::descriptorType() const
 {
     return m_descriptorTypeInfos.first;
 }

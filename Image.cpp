@@ -19,16 +19,30 @@
 
 namespace QmVk {
 
-bool Image::checkFormatSampledImage(
+bool Image::checkImageFormat(
     const shared_ptr<PhysicalDevice> &physicalDevice,
     vk::Format fmt,
-    bool linear)
+    bool linear,
+    vk::FormatFeatureFlags flags)
 {
     const auto &formatProperties = physicalDevice->getFormatPropertiesCached(fmt);
-    const auto flags = vk::FormatFeatureFlagBits::eSampledImage | vk::FormatFeatureFlagBits::eSampledImageFilterLinear;
     if (linear)
-        return static_cast<bool>(formatProperties.linearTilingFeatures & flags);
-    return static_cast<bool>(formatProperties.optimalTilingFeatures & flags);
+        return ((formatProperties.linearTilingFeatures & flags) == flags);
+    return ((formatProperties.optimalTilingFeatures & flags) == flags);
+}
+
+vk::ImageAspectFlagBits Image::getImageAspectFlagBits(uint32_t plane)
+{
+    switch (plane)
+    {
+        case 0:
+            return vk::ImageAspectFlagBits::ePlane0;
+        case 1:
+            return vk::ImageAspectFlagBits::ePlane1;
+        case 2:
+            return vk::ImageAspectFlagBits::ePlane2;
+    }
+    return vk::ImageAspectFlagBits::eColor;
 }
 
 uint32_t Image::getNumPlanes(vk::Format format)
@@ -72,7 +86,7 @@ vk::ExternalMemoryProperties Image::getExternalMemoryProperties(
     imageFormatInfo.usage =
         vk::ImageUsageFlagBits::eTransferSrc
     ;
-    if (checkFormatSampledImage(physicalDevice, realFmt, linear))
+    if (checkImageFormat(physicalDevice, realFmt, linear, vk::FormatFeatureFlagBits::eSampledImage))
         imageFormatInfo.usage |= vk::ImageUsageFlagBits::eSampled;
     imageFormatInfo.pNext = &externalImageFormatInfo;
 
@@ -155,7 +169,7 @@ shared_ptr<Image> Image::createExternalImport(
         exportMemoryTypes,
         Priv()
     );
-    image->init(MemoryPropertyPreset::PreferNoHostAccess, ~0u, imageCreateInfoCallback);
+    image->init({}, ~0u, imageCreateInfoCallback);
     return image;
 }
 
@@ -173,16 +187,37 @@ Image::Image(
     : MemoryObject(device, exportMemoryTypes)
     , m_wantedSize(size)
     , m_wantedPaddingHeight(paddingHeight)
-    , m_wantedFormat(fmt)
+    , m_mainFormat(fmt)
     , m_linear(linear)
     , m_useMipMaps(useMipmaps)
     , m_storage(storage)
     , m_externalImport(externalImport)
-    , m_numPlanes(getNumPlanes(m_wantedFormat))
+    , m_numPlanes(getNumPlanes(m_mainFormat))
+    , m_ycbcr(
+        m_numPlanes > 1 &&
+        !m_exportMemoryTypes &&
+        !m_useMipMaps &&
+        !m_storage &&
+        !m_externalImport &&
+        m_device->hasYcbcr() &&
+        checkImageFormat(
+            m_physicalDevice,
+            m_mainFormat,
+            m_linear,
+            m_externalImage
+              ? vk::FormatFeatureFlagBits::eTransferSrc
+              : vk::FormatFeatureFlagBits::eTransferSrc | vk::FormatFeatureFlagBits::eDisjoint
+        )
+    )
+    , m_numImages(m_ycbcr ? 1 : getNumPlanes(m_mainFormat))
 {}
 Image::~Image()
 {
     unmap();
+    for (auto &&imageView : m_imageViews)
+        m_device->destroyImageView(imageView);
+    for (auto &&image : m_images)
+        m_device->destroyImage(image);
 }
 
 void Image::init(
@@ -190,7 +225,7 @@ void Image::init(
     uint32_t heap,
     ImageCreateInfoCallback imageCreateInfoCallback)
 {
-    if (!m_externalImport && m_useMipMaps)
+    if (m_useMipMaps)
     {
         m_mipLevels = getMipLevels(m_wantedSize);
         m_mipLevelsLimit = m_mipLevels;
@@ -200,11 +235,11 @@ void Image::init(
     m_paddingHeights.resize(m_numPlanes);
     m_formats.resize(m_numPlanes);
     m_subresourceLayouts.resize(m_numPlanes);
-    m_images.resize(m_numPlanes);
+    m_images.resize(m_numImages);
     m_imageViews.resize(m_numPlanes);
 
     function<vk::Extent2D(const vk::Extent2D &)> getChromaPlaneSizeFn;
-    switch (m_wantedFormat)
+    switch (m_mainFormat)
     {
         case vk::Format::eG8B8R82Plane420Unorm:
         case vk::Format::eG16B16R162Plane420Unorm:
@@ -243,7 +278,7 @@ void Image::init(
         }
     }
 
-    switch (m_wantedFormat)
+    switch (m_mainFormat)
     {
         case vk::Format::eG8B8R83Plane420Unorm:
         case vk::Format::eG8B8R83Plane422Unorm:
@@ -270,37 +305,44 @@ void Image::init(
             m_formats[1] = vk::Format::eR16G16Unorm;
             break;
         default:
-            m_formats[0] = m_wantedFormat;
+            m_formats[0] = m_mainFormat;
             break;
     }
 
-    auto checkSampledImage = [this] {
-        for (uint32_t i = 0; i < m_numPlanes; ++i)
+    m_sampled = true;
+    for (uint32_t i = 0; i < m_numPlanes; ++i)
+    {
+        if (!checkImageFormat(m_physicalDevice, m_formats[i], m_linear, vk::FormatFeatureFlagBits::eSampledImage))
         {
-            if (!checkFormatSampledImage(m_physicalDevice, m_formats[i], m_linear))
-                return false;
+            m_sampled = false;
+            break;
         }
-        return true;
-    };
+        if (m_storage && !checkImageFormat(m_physicalDevice, m_formats[i], m_linear, vk::FormatFeatureFlagBits::eStorageImage))
+            throw vk::LogicError("Storage image is not supported");
+    }
+
+    m_sampledYcbcr = true;
+    if (!m_ycbcr || !checkImageFormat(m_physicalDevice, m_mainFormat, m_linear, vk::FormatFeatureFlagBits::eSampledImage))
+        m_sampledYcbcr = false;
 
     vk::ImageUsageFlags imageUsageFlags =
         vk::ImageUsageFlagBits::eTransferSrc
     ;
-    if (checkSampledImage())
-    {
+    if (m_sampled || m_sampledYcbcr)
         imageUsageFlags |= vk::ImageUsageFlagBits::eSampled;
-        m_sampled = true;
-    }
+
     if (!m_externalImport)
         imageUsageFlags |= vk::ImageUsageFlagBits::eTransferDst;
     if (m_storage)
         imageUsageFlags |= vk::ImageUsageFlagBits::eStorage;
 
-    for (uint32_t i = 0; i < m_numPlanes; ++i)
+    for (uint32_t i = 0; i < m_numImages; ++i)
     {
         vk::ImageCreateInfo imageCreateInfo;
+        if (m_ycbcr)
+            imageCreateInfo.flags |= vk::ImageCreateFlagBits::eMutableFormat | vk::ImageCreateFlagBits::eDisjoint;
         imageCreateInfo.imageType = vk::ImageType::e2D;
-        imageCreateInfo.format = m_formats[i];
+        imageCreateInfo.format = m_ycbcr ? m_mainFormat : m_formats[i];
         imageCreateInfo.extent = vk::Extent3D(m_sizes[i], 1);
         imageCreateInfo.mipLevels = m_mipLevels;
         imageCreateInfo.arrayLayers = 1;
@@ -322,7 +364,7 @@ void Image::init(
         if (imageCreateInfoCallback)
             imageCreateInfoCallback(i, imageCreateInfo);
 
-        m_images[i] = m_device->createImageUnique(imageCreateInfo);
+        m_images[i] = m_device->createImage(imageCreateInfo);
     }
 
     allocateAndBindMemory(memoryPropertyPreset, heap);
@@ -331,6 +373,9 @@ void Image::allocateAndBindMemory(MemoryPropertyPreset memoryPropertyPreset, uin
 {
     vector<vk::DeviceSize> memoryOffsets(m_numPlanes);
 
+    if (m_linear)
+        fetchSubresourceLayouts();
+
     for (uint32_t i = 0; i < m_numPlanes; ++i)
     {
         vk::DeviceSize paddingBytes = 0;
@@ -338,15 +383,26 @@ void Image::allocateAndBindMemory(MemoryPropertyPreset memoryPropertyPreset, uin
         memoryOffsets[i] = m_memoryRequirements.size;
 
         if (m_linear)
-        {
-            m_subresourceLayouts[i] = m_device->getImageSubresourceLayout(
-                *m_images[i],
-                vk::ImageSubresource(vk::ImageAspectFlagBits::eColor)
-            );
             paddingBytes = m_subresourceLayouts[i].rowPitch * m_paddingHeights[i];
-        }
 
-        const auto memoryRequirements = m_device->getImageMemoryRequirements(*m_images[i]);
+        vk::MemoryRequirements2 memoryRequirements2;
+        auto &memoryRequirements = memoryRequirements2.memoryRequirements;
+
+        if (m_ycbcr)
+        {
+            vk::ImagePlaneMemoryRequirementsInfo imagePlaneMemReqInfo;
+            imagePlaneMemReqInfo.planeAspect = getImageAspectFlagBits(i);
+
+            vk::ImageMemoryRequirementsInfo2 imageMemoryRequirementsInfo2;
+            imageMemoryRequirementsInfo2.image = m_images[0];
+            imageMemoryRequirementsInfo2.pNext = &imagePlaneMemReqInfo;
+
+            memoryRequirements2 = m_device->getImageMemoryRequirements2KHR(imageMemoryRequirementsInfo2);
+        }
+        else
+        {
+            memoryRequirements = m_device->getImageMemoryRequirements(m_images[i]);
+        }
         const auto memoryRequirementsSize = aligned(memoryRequirements.size + paddingBytes, memoryRequirements.alignment);
 
         m_memoryRequirements.size += memoryRequirementsSize;
@@ -359,9 +415,11 @@ void Image::allocateAndBindMemory(MemoryPropertyPreset memoryPropertyPreset, uin
     }
 
     if (m_externalImport)
-        return;
+        return; // Importing external handler ends here
 
 #ifdef QMVK_USE_IMAGE_BUFFER_VIEW
+    if (m_linear)
+    {
         vk::BufferCreateInfo bufferCreateInfo;
         bufferCreateInfo.usage = vk::BufferUsageFlagBits::eUniformTexelBuffer | vk::BufferUsageFlagBits::eStorageTexelBuffer;
         bufferCreateInfo.size = m_memoryRequirements.size;
@@ -372,6 +430,7 @@ void Image::allocateAndBindMemory(MemoryPropertyPreset memoryPropertyPreset, uin
             m_device->getBufferMemoryRequirements(*m_uniqueBuffer).alignment
         );
         m_memoryRequirements.size = aligned(m_memoryRequirements.size, m_memoryRequirements.alignment);
+    }
 #endif
 
     MemoryPropertyFlags memoryPropertyFlags;
@@ -440,38 +499,84 @@ void Image::allocateAndBindMemory(MemoryPropertyPreset memoryPropertyPreset, uin
     memoryPropertyFlags.heap = heap;
     allocateMemory(memoryPropertyFlags);
 
-    for (uint32_t i = 0; i < m_numPlanes; ++i)
-        m_device->bindImageMemory(*m_images[i], deviceMemory(), memoryOffsets[i]);
-    createImageViews();
+    if (m_ycbcr)
+    {
+        vector<vk::BindImagePlaneMemoryInfo> bindImagePlaneMemInfos(m_numPlanes);
+        vector<vk::BindImageMemoryInfo> bindImageMemInfos(m_numPlanes);
+        for (uint32_t i = 0; i < m_numPlanes; ++i)
+        {
+            bindImagePlaneMemInfos[i].planeAspect = getImageAspectFlagBits(i);
+
+            bindImageMemInfos[i].image = m_images[0];
+            bindImageMemInfos[i].memory = deviceMemory();
+            bindImageMemInfos[i].memoryOffset = memoryOffsets[i];
+            bindImageMemInfos[i].pNext = &bindImagePlaneMemInfos[i];
+        }
+        m_device->bindImageMemory2KHR(bindImageMemInfos);
+    }
+    else for (uint32_t i = 0; i < m_numImages; ++i)
+    {
+        m_device->bindImageMemory(m_images[i], deviceMemory(), memoryOffsets[i]);
+    }
 }
 
 void Image::finishImport(const vector<vk::DeviceSize> &offsets, vk::DeviceSize globalOffset)
 {
-    for (uint32_t i = 0; i < m_numPlanes; ++i)
+    for (uint32_t i = 0; i < m_numImages; ++i)
     {
         m_device->bindImageMemory(
-            *m_images[i],
+            m_images[i],
             deviceMemory(min<uint32_t>(i, deviceMemoryCount() - 1)),
             offsets[i] + globalOffset
         );
     }
-    createImageViews();
 }
 
-void Image::createImageViews()
+void Image::recreateImageViews(vk::SamplerYcbcrConversion samperYcbcr)
 {
-    if (!m_storage && !m_sampled)
-        return;
-
-    for (uint32_t i = 0; i < m_numPlanes; ++i)
+    for (auto &&imageView : m_imageViews)
     {
-        vk::ImageViewCreateInfo imageViewCreateInfo;
-        imageViewCreateInfo.image = *m_images[i];
-        imageViewCreateInfo.viewType = vk::ImageViewType::e2D;
-        imageViewCreateInfo.format = m_formats[i];
-        imageViewCreateInfo.subresourceRange = getImageSubresourceRange();
-        m_imageViews[i] = m_device->createImageViewUnique(imageViewCreateInfo);
+        m_device->destroyImageView(imageView);
+        imageView = nullptr;
     }
+
+    m_hasImageViews = false;
+    m_samperYcbcr = nullptr;
+
+    if (samperYcbcr && m_ycbcr)
+    {
+        if (!m_storage && !m_sampledYcbcr)
+            return;
+
+        vk::SamplerYcbcrConversionInfo samplerYcbcrInfo(samperYcbcr);
+
+        vk::ImageViewCreateInfo imageViewCreateInfo;
+        imageViewCreateInfo.image = m_images[0];
+        imageViewCreateInfo.viewType = vk::ImageViewType::e2D;
+        imageViewCreateInfo.format = m_mainFormat;
+        imageViewCreateInfo.subresourceRange = getImageSubresourceRange();
+        imageViewCreateInfo.pNext = &samplerYcbcrInfo;
+        m_imageViews[0] = m_device->createImageView(imageViewCreateInfo);
+
+        m_samperYcbcr = samperYcbcr;
+    }
+    else
+    {
+        if (!m_storage && !m_sampled)
+            return;
+
+        for (uint32_t i = 0; i < m_numPlanes; ++i)
+        {
+            vk::ImageViewCreateInfo imageViewCreateInfo;
+            imageViewCreateInfo.image = m_images[m_ycbcr ? 0 : i];
+            imageViewCreateInfo.viewType = vk::ImageViewType::e2D;
+            imageViewCreateInfo.format = m_formats[i];
+            imageViewCreateInfo.subresourceRange = getImageSubresourceRange(~0u, m_ycbcr ? i : ~0u);
+            m_imageViews[i] = m_device->createImageView(imageViewCreateInfo);
+        }
+    }
+
+    m_hasImageViews = true;
 }
 
 #ifdef QMVK_USE_IMAGE_BUFFER_VIEW
@@ -514,8 +619,8 @@ void Image::importFD(
     if (!m_externalImport)
         throw vk::LogicError("Importing FD requires external import");
 
-    if (m_numPlanes != offsets.size())
-        throw vk::LogicError("Offsets count and planes count missmatch");
+    if (m_numImages != offsets.size())
+        throw vk::LogicError("Offsets count and images count missmatch");
 
     MemoryObject::importFD(descriptors, handleType);
 
@@ -529,14 +634,14 @@ void Image::importWin32Handle(
     vk::ExternalMemoryHandleTypeFlagBits handleType,
     vk::DeviceSize globalOffset)
 {
-    if (m_numPlanes != offsets.size())
-        throw vk::LogicError("Offsets count and planes count missmatch");
+    if (m_numImages != offsets.size())
+        throw vk::LogicError("Offsets count and images count missmatch");
 
     vector<vk::DeviceSize> imageSizes;
     imageSizes.resize(rawHandles.size());
-    for (uint32_t i = 0; i < m_numPlanes; ++i)
+    for (uint32_t i = 0; i < m_numImages; ++i)
     {
-        auto size = m_device->getImageMemoryRequirements(*m_images[i]).size;
+        auto size = m_device->getImageMemoryRequirements(m_images[i]).size;
         if (i < imageSizes.size())
             imageSizes[i] = size + globalOffset;
         else
@@ -571,7 +676,12 @@ bool Image::setMipLevelsLimitForSize(const vk::Extent2D &size)
 void *Image::map(uint32_t plane)
 {
     if (!m_mapped)
+    {
+        if (m_externalImport)
+            throw vk::LogicError("Can't map externally imported memory or image");
+
         m_mapped = m_device->mapMemory(deviceMemory(), 0, memorySize());
+    }
 
     if (plane == ~0u)
         return m_mapped;
@@ -591,13 +701,10 @@ void Image::copyTo(
     const shared_ptr<Image> &dstImage,
     const shared_ptr<CommandBuffer> &externalCommandBuffer)
 {
-    if (dstImage->m_externalImport)
-        throw vk::LogicError("Can't copy to externally imported memory");
-
     if (m_numPlanes != dstImage->m_numPlanes)
         throw vk::LogicError("Source image and destination image planes count missmatch");
 
-    if (m_formats != dstImage->m_formats)
+    if (m_mainFormat != dstImage->m_mainFormat)
         throw vk::LogicError("Source image and destination image format missmatch");
 
     auto copyCommands = [&](vk::CommandBuffer commandBuffer) {
@@ -617,9 +724,9 @@ void Image::copyTo(
         for (uint32_t i = 0; i < m_numPlanes; ++i)
         {
             vk::ImageCopy region;
-            region.srcSubresource.aspectMask = vk::ImageAspectFlagBits::eColor;
+            region.srcSubresource.aspectMask = getImageAspectFlagBits(m_ycbcr ? i : ~0u);
             region.srcSubresource.layerCount = 1;
-            region.dstSubresource.aspectMask = vk::ImageAspectFlagBits::eColor;
+            region.dstSubresource.aspectMask = getImageAspectFlagBits(dstImage->m_ycbcr ? i : ~0u);
             region.dstSubresource.layerCount = 1;
             region.extent = vk::Extent3D(
                 min(m_sizes[i].width,  dstImage->m_sizes[i].width),
@@ -628,9 +735,9 @@ void Image::copyTo(
             );
 
             commandBuffer.copyImage(
-                *m_images[i],
+                m_images[m_ycbcr ? 0 : i],
                 m_imageLayout,
-                *dstImage->m_images[i],
+                dstImage->m_images[dstImage->m_ycbcr ? 0 : i],
                 dstImage->m_imageLayout,
                 region
             );
@@ -657,9 +764,20 @@ void Image::maybeGenerateMipmaps(const shared_ptr<CommandBuffer> &commandBuffer)
         commandBuffer->storeData(shared_from_this());
 }
 
+void Image::fetchSubresourceLayouts()
+{
+    for (uint32_t i = 0; i < m_numPlanes; ++i)
+    {
+        m_subresourceLayouts[i] = m_device->getImageSubresourceLayout(
+            m_images[m_ycbcr ? 0 : i],
+            vk::ImageSubresource(getImageAspectFlagBits(m_ycbcr ? i : ~0u))
+        );
+    }
+}
+
 bool Image::maybeGenerateMipmaps(vk::CommandBuffer commandBuffer)
 {
-    if (m_mipLevels <= 1)
+    if (!m_useMipMaps || m_mipLevels <= 1)
         return false;
 
     vk::ImageSubresourceRange imageSubresourceRange = getImageSubresourceRange(1);
@@ -707,7 +825,7 @@ bool Image::maybeGenerateMipmaps(vk::CommandBuffer commandBuffer)
         if (l >= m_mipLevelsLimit)
             continue;
 
-        for (uint32_t i = 0; i < m_numPlanes; ++i)
+        for (uint32_t i = 0; i < m_numImages; ++i)
         {
             auto &mipWidth = reinterpret_cast<int32_t &>(mipSizes[i].width);
             auto &mipHeight = reinterpret_cast<int32_t &>(mipSizes[i].height);
@@ -731,9 +849,9 @@ bool Image::maybeGenerateMipmaps(vk::CommandBuffer commandBuffer)
             blit.dstOffsets[1] = vk::Offset3D(mipWidth, mipHeight, 1);
 
             commandBuffer.blitImage(
-                *m_images[i],
+                m_images[i],
                 vk::ImageLayout::eTransferSrcOptimal,
-                *m_images[i],
+                m_images[i],
                 vk::ImageLayout::eTransferDstOptimal,
                 1,
                 &blit,
@@ -762,17 +880,17 @@ bool Image::maybeGenerateMipmaps(vk::CommandBuffer commandBuffer)
 
 uint32_t Image::getMipLevels(const vk::Extent2D &inSize) const
 {
-    const auto size = (m_numPlanes == 1)
+    const auto size = (m_numImages == 1)
         ? max(inSize.width, inSize.height)
         : max((inSize.width + 1) / 2, (inSize.height + 1) / 2)
     ;
     return static_cast<uint32_t>(log2(size)) + 1;
 }
 
-vk::ImageSubresourceRange Image::getImageSubresourceRange(uint32_t mipLevels) const
+vk::ImageSubresourceRange Image::getImageSubresourceRange(uint32_t mipLevels, uint32_t plane) const
 {
     vk::ImageSubresourceRange imageSubresourceRange;
-    imageSubresourceRange.aspectMask = vk::ImageAspectFlagBits::eColor;
+    imageSubresourceRange.aspectMask = getImageAspectFlagBits(plane);
     imageSubresourceRange.levelCount = (mipLevels == ~0u) ? m_mipLevels : mipLevels;
     imageSubresourceRange.layerCount = 1;
     return imageSubresourceRange;
@@ -827,7 +945,7 @@ void Image::pipelineBarrier(
             dstImageLayout,
             VK_QUEUE_FAMILY_IGNORED,
             VK_QUEUE_FAMILY_IGNORED,
-            *image,
+            image,
             imageSubresourceRange
         );
         commandBuffer.pipelineBarrier(

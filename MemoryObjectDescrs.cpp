@@ -25,9 +25,9 @@ void MemoryObjectDescrs::append(const MemoryObjectDescr &memoryObjectDescr)
     m_memoryObjects->push_back(memoryObjectDescr);
 }
 
-vector<vk::DescriptorPoolSize> MemoryObjectDescrs::fetchDescriptorTypes() const
+vector<DescriptorType> MemoryObjectDescrs::fetchDescriptorTypes() const
 {
-    vector<vk::DescriptorPoolSize> descriptorTypes;
+    vector<DescriptorType> descriptorTypes;
     descriptorTypes.reserve(m_memoryObjects->size());
     for (auto &&memoryObject : *m_memoryObjects)
         descriptorTypes.push_back(memoryObject.descriptorType());

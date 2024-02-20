@@ -11,7 +11,7 @@ namespace QmVk {
 
 shared_ptr<DescriptorSetLayout> DescriptorSetLayout::create(
     const shared_ptr<Device> &device,
-    const vector<vk::DescriptorPoolSize> &descriptorTypes)
+    const vector<DescriptorType> &descriptorTypes)
 {
     auto descriptorSetLayout = make_shared<DescriptorSetLayout>(
         device,
@@ -24,7 +24,7 @@ shared_ptr<DescriptorSetLayout> DescriptorSetLayout::create(
 
 DescriptorSetLayout::DescriptorSetLayout(
     const shared_ptr<Device> &device,
-    const vector<vk::DescriptorPoolSize> &descriptorTypes,
+    const vector<DescriptorType> &descriptorTypes,
     Priv)
     : m_device(device)
     , m_descriptorTypes(descriptorTypes)
@@ -45,6 +45,9 @@ void DescriptorSetLayout::init()
         descriptorSetLayoutBinding.descriptorType = m_descriptorTypes[i].type;
         descriptorSetLayoutBinding.descriptorCount = m_descriptorTypes[i].descriptorCount;
         descriptorSetLayoutBinding.stageFlags = vk::ShaderStageFlagBits::eAll;
+#ifndef QMVK_NO_GRAPHICS
+        descriptorSetLayoutBinding.pImmutableSamplers = m_descriptorTypes[i].immutableSamplers.data();
+#endif
         descriptorSetLayoutBindings.push_back(descriptorSetLayoutBinding);
     }
     vk::DescriptorSetLayoutCreateInfo descriptorSetLayoutCreateInfo;

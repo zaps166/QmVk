@@ -28,7 +28,7 @@ public:
 public:
     void append(const MemoryObjectDescr &memoryObjectDescr);
 
-    vector<vk::DescriptorPoolSize> fetchDescriptorTypes() const;
+    vector<DescriptorType> fetchDescriptorTypes() const;
     vector<DescriptorInfo> fetchDescriptorInfos() const;
 
 private:

@@ -8,7 +8,7 @@
 
 #include "QmVkExport.hpp"
 
-#include <vulkan/vulkan.hpp>
+#include "DescriptorType.hpp"
 
 #include <memory>
 
@@ -25,13 +25,13 @@ class QMVK_EXPORT DescriptorSetLayout
 public:
     static shared_ptr<DescriptorSetLayout> create(
         const shared_ptr<Device> &device,
-        const vector<vk::DescriptorPoolSize> &descriptorTypes
+        const vector<DescriptorType> &descriptorTypes
     );
 
 public:
     DescriptorSetLayout(
         const shared_ptr<Device> &device,
-        const vector<vk::DescriptorPoolSize> &descriptorTypes,
+        const vector<DescriptorType> &descriptorTypes,
         Priv
     );
     ~DescriptorSetLayout();
@@ -43,14 +43,14 @@ public:
     inline shared_ptr<Device> device() const;
 
     inline bool isEmpty() const;
-    inline const vector<vk::DescriptorPoolSize> &descriptorTypes() const;
+    inline const vector<DescriptorType> &descriptorTypes() const;
 
 public:
     inline operator const vk::DescriptorSetLayout *() const;
 
 private:
     const shared_ptr<Device> m_device;
-    const vector<vk::DescriptorPoolSize> m_descriptorTypes;
+    const vector<DescriptorType> m_descriptorTypes;
 
     vk::UniqueDescriptorSetLayout m_descriptorSetLayout;
 };
@@ -66,7 +66,7 @@ bool DescriptorSetLayout::isEmpty() const
 {
     return m_descriptorTypes.empty();
 }
-const vector<vk::DescriptorPoolSize> &DescriptorSetLayout::descriptorTypes() const
+const vector<DescriptorType> &DescriptorSetLayout::descriptorTypes() const
 {
     return m_descriptorTypes;
 }

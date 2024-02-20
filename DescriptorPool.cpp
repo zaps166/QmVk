@@ -37,8 +37,13 @@ DescriptorPool::~DescriptorPool()
 
 void DescriptorPool::init()
 {
-    auto descriptorPoolSizes = m_descriptorSetLayout->descriptorTypes();
+    const auto &descriptorTypes = m_descriptorSetLayout->descriptorTypes();
     auto device = m_descriptorSetLayout->device();
+
+    vector<vk::DescriptorPoolSize> descriptorPoolSizes(
+        descriptorTypes.begin(),
+        descriptorTypes.end()
+    );
 
     if (m_max > 1)
     {

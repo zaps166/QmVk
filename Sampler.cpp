@@ -11,11 +11,13 @@ namespace QmVk {
 
 shared_ptr<Sampler> Sampler::create(
     const shared_ptr<Device> &device,
-    const vk::SamplerCreateInfo &createInfo)
+    const vk::SamplerCreateInfo &createInfo,
+    const vk::SamplerYcbcrConversionCreateInfo &ycbcrCreateInfo)
 {
     auto sampler = make_shared<Sampler>(
         device,
         createInfo,
+        ycbcrCreateInfo,
         Priv()
     );
     sampler->init();
@@ -23,7 +25,8 @@ shared_ptr<Sampler> Sampler::create(
 }
 shared_ptr<Sampler> Sampler::createClampToEdge(
     const shared_ptr<Device> &device,
-    vk::Filter filter)
+    vk::Filter filter,
+    const vk::SamplerYcbcrConversionCreateInfo &ycbcrCreateInfo)
 {
     vk::SamplerCreateInfo createInfo;
     createInfo.magFilter = filter;
@@ -40,6 +43,7 @@ shared_ptr<Sampler> Sampler::createClampToEdge(
     auto sampler = make_shared<Sampler>(
         device,
         createInfo,
+        ycbcrCreateInfo,
         Priv()
     );
     sampler->init();
@@ -49,16 +53,33 @@ shared_ptr<Sampler> Sampler::createClampToEdge(
 Sampler::Sampler(
     const shared_ptr<Device> &device,
     const vk::SamplerCreateInfo &createInfo,
+    const vk::SamplerYcbcrConversionCreateInfo &ycbcrCreateInfo,
     Priv)
     : m_device(device)
     , m_createInfo(createInfo)
+    , m_ycbcrCreateInfo(ycbcrCreateInfo)
 {}
 Sampler::~Sampler()
 {}
 
 void Sampler::init()
 {
+    vk::SamplerYcbcrConversionInfo samplerYcbcrInfo;
+
+    if (m_ycbcrCreateInfo.format != vk::Format::eUndefined)
+    {
+        m_samplerYcbcr = m_device->createSamplerYcbcrConversionKHRUnique(m_ycbcrCreateInfo);
+
+        samplerYcbcrInfo.pNext = m_createInfo.pNext;
+        m_createInfo.pNext = &samplerYcbcrInfo;
+
+        samplerYcbcrInfo.conversion = *m_samplerYcbcr;
+    }
+
     m_sampler = m_device->createSamplerUnique(m_createInfo);
+
+    m_createInfo.pNext = nullptr;
+    m_ycbcrCreateInfo.pNext = nullptr;
 }
 
 }

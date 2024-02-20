@@ -157,7 +157,7 @@ void MemoryObjectDescr::prepareObject(
                     pipelineStageFlags,
                     accessFlag
                 );
-                descriptorInfosIdx += (m_plane == ~0u)
+                descriptorInfosIdx += (m_plane == ~0u && !image->samplerYcbcr())
                     ? image->numPlanes()
                     : 1
                 ;
@@ -256,13 +256,27 @@ MemoryObjectDescr::DescriptorTypeInfos MemoryObjectDescr::getImageDescriptorType
         : vk::ImageLayout::eGeneral
     ;
 
+    vk::SamplerYcbcrConversion samplerYcbcr;
+    if (m_sampler)
+        samplerYcbcr = m_sampler->samplerYcbcr();
+    if (samplerYcbcr && m_plane != ~0u)
+        throw vk::LogicError("YCbCr descriptor must not have plane specified");
+
     for (auto &&object : m_objects)
     {
         auto image = static_pointer_cast<Image>(object);
 
+        if (!image->hasImageViews() || samplerYcbcr != image->samplerYcbcr())
+            image->recreateImageViews(samplerYcbcr);
+
+        if (samplerYcbcr && !image->samplerYcbcr())
+            throw vk::LogicError("Image is not YCbCr");
+
         const uint32_t n = (m_plane != ~0u)
             ? m_plane + 1
-            : image->numPlanes()
+            : samplerYcbcr
+              ? 1
+              : image->numPlanes()
         ;
         uint32_t i = (m_plane != ~0u)
             ? m_plane
@@ -280,6 +294,10 @@ MemoryObjectDescr::DescriptorTypeInfos MemoryObjectDescr::getImageDescriptorType
     }
 
     descriptorType.descriptorCount = descriptorInfos.size();
+
+    if (samplerYcbcr)
+        descriptorType.immutableSamplers.resize(descriptorType.descriptorCount, *m_sampler);
+
     return descriptorTypeInfos;
 }
 #endif

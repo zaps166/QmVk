@@ -38,11 +38,14 @@ public:
     using ImageCreateInfoCallback = function<void(uint32_t plane, vk::ImageCreateInfo &imageCreateInfo)>;
 
 public:
-    static bool checkFormatSampledImage(
+    static bool checkImageFormat(
         const shared_ptr<PhysicalDevice> &physicalDevice,
         vk::Format fmt,
-        bool linear
+        bool linear,
+        vk::FormatFeatureFlags flags
     );
+
+    static vk::ImageAspectFlagBits getImageAspectFlagBits(uint32_t plane);
 
     static uint32_t getNumPlanes(vk::Format format);
 
@@ -109,14 +112,13 @@ private:
 
     void finishImport(const vector<vk::DeviceSize> &offsets, vk::DeviceSize globalOffset = 0u);
 
-    void createImageViews();
+public:
+    void recreateImageViews(vk::SamplerYcbcrConversion samperYcbcr = nullptr);
 
 #ifdef QMVK_USE_IMAGE_BUFFER_VIEW
-public:
     shared_ptr<BufferView> bufferView(uint32_t plane = 0);
 #endif
 
-public:
     void importFD(
         const FdDescriptors &descriptors,
         const vector<vk::DeviceSize> &offsets,
@@ -146,10 +148,16 @@ public:
     inline bool useMipmaps() const;
     inline bool isStorage() const;
     inline bool isExternalImport() const;
+    inline bool isYcbcr() const;
 
     inline uint32_t numPlanes() const;
+    inline uint32_t numImages() const;
 
     inline bool isSampled() const;
+    inline bool isSampledYcbcr() const;
+
+    inline bool hasImageViews() const;
+    inline vk::SamplerYcbcrConversion samplerYcbcr() const;
 
     inline vk::ImageView imageView(uint32_t plane = 0) const;
 
@@ -175,11 +183,13 @@ public:
     void maybeGenerateMipmaps(const shared_ptr<CommandBuffer> &commandBuffer);
 
 private:
+    void fetchSubresourceLayouts();
+
     bool maybeGenerateMipmaps(vk::CommandBuffer commandBuffer);
 
     uint32_t getMipLevels(const vk::Extent2D &inSize) const;
 
-    vk::ImageSubresourceRange getImageSubresourceRange(uint32_t mipLevels = ~0u) const;
+    vk::ImageSubresourceRange getImageSubresourceRange(uint32_t mipLevels = ~0u, uint32_t plane = ~0u) const;
 
     inline bool mustExecPipelineBarrier(
         vk::ImageLayout dstImageLayout,
@@ -208,14 +218,20 @@ private:
 private:
     const vk::Extent2D m_wantedSize;
     const uint32_t m_wantedPaddingHeight;
-    const vk::Format m_wantedFormat;
+    const vk::Format m_mainFormat;
     const bool m_linear;
     const bool m_useMipMaps;
     const bool m_storage;
     const bool m_externalImport;
     const uint32_t m_numPlanes;
+    const bool m_ycbcr;
+    const uint32_t m_numImages;
 
     bool m_sampled = false;
+    bool m_sampledYcbcr = false;
+
+    bool m_hasImageViews = false;
+    vk::SamplerYcbcrConversion m_samperYcbcr = nullptr;
 
     vector<vk::Extent2D> m_sizes;
     vector<uint32_t> m_paddingHeights;
@@ -227,8 +243,8 @@ private:
 
     vector<vk::SubresourceLayout> m_subresourceLayouts;
 
-    vector<vk::UniqueImage> m_images;
-    vector<vk::UniqueImageView> m_imageViews;
+    vector<vk::Image> m_images;
+    vector<vk::ImageView> m_imageViews;
 
 #ifdef QMVK_USE_IMAGE_BUFFER_VIEW
     vk::UniqueBuffer m_uniqueBuffer;
@@ -264,7 +280,7 @@ uint32_t Image::paddingHeight(uint32_t plane) const
 
 vk::Format Image::format() const
 {
-    return m_wantedFormat;
+    return m_mainFormat;
 }
 vk::Format Image::format(uint32_t plane) const
 {
@@ -287,20 +303,41 @@ bool Image::isExternalImport() const
 {
     return m_externalImport;
 }
+bool Image::isYcbcr() const
+{
+    return m_ycbcr;
+}
 
 uint32_t Image::numPlanes() const
 {
     return m_numPlanes;
 }
+uint32_t Image::numImages() const
+{
+    return m_numImages;
+}
 
-inline bool Image::isSampled() const
+bool Image::isSampled() const
 {
     return m_sampled;
+}
+bool Image::isSampledYcbcr() const
+{
+    return m_sampledYcbcr;
+}
+
+bool Image::hasImageViews() const
+{
+    return m_hasImageViews;
+}
+vk::SamplerYcbcrConversion Image::samplerYcbcr() const
+{
+    return m_samperYcbcr;
 }
 
 vk::ImageView Image::imageView(uint32_t plane) const
 {
-    return *m_imageViews[plane];
+    return m_imageViews[plane];
 }
 
 uint32_t Image::mipLevels() const
