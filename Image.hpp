@@ -193,6 +193,11 @@ public:
 
     void maybeGenerateMipmaps(const shared_ptr<CommandBuffer> &commandBuffer);
 
+    // Modify only on external image
+    inline vk::ImageLayout &imageLayout();
+    inline vk::PipelineStageFlags &stage();
+    inline vk::AccessFlags &accessFlags();
+
 private:
     void fetchSubresourceLayouts();
 
@@ -372,6 +377,19 @@ vk::DeviceSize Image::planeOffset(uint32_t plane) const
 vk::DeviceSize Image::linesize(uint32_t plane) const
 {
     return m_subresourceLayouts[plane].rowPitch;
+}
+
+inline vk::ImageLayout &Image::imageLayout()
+{
+    return m_imageLayout;
+}
+inline vk::PipelineStageFlags &Image::stage()
+{
+    return m_stage;
+}
+inline vk::AccessFlags &Image::accessFlags()
+{
+    return m_accessFlags;
 }
 
 template<typename T>
