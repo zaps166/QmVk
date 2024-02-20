@@ -35,6 +35,8 @@ protected:
     AbstractInstance() = default;
     virtual ~AbstractInstance() = default;
 
+    unordered_set<string> getAllInstanceLayers();
+
     void fetchAllExtensions();
     vector<const char *> filterAvailableExtensions(
         const  vector<const char *> &wantedExtensions

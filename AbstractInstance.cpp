@@ -45,6 +45,28 @@ const vk::DispatchLoaderDynamic &AbstractInstance::getDispatchLoaderDynamic()
     return vk::defaultDispatchLoaderDynamic;
 }
 
+unordered_set<string> AbstractInstance::getAllInstanceLayers()
+{
+    vector<vk::LayerProperties> instanceLayerProperties;
+    uint32_t propertyCount = 0;
+    auto result = vk::enumerateInstanceLayerProperties(&propertyCount, static_cast<vk::LayerProperties *>(nullptr));
+    if (result == vk::Result::eSuccess && propertyCount > 0)
+    {
+        instanceLayerProperties.resize(propertyCount);
+        result = vk::enumerateInstanceLayerProperties(&propertyCount, instanceLayerProperties.data());
+        if (result != vk::Result::eSuccess && result != vk::Result::eIncomplete)
+            propertyCount = 0;
+        if (propertyCount != instanceLayerProperties.size())
+            instanceLayerProperties.resize(propertyCount);
+    }
+
+    unordered_set<string> instanceLayers;
+    instanceLayers.reserve(instanceLayerProperties.size());
+    for (auto &&instanceLayerProperty : instanceLayerProperties)
+        instanceLayers.insert(instanceLayerProperty.layerName);
+    return instanceLayers;
+}
+
 void AbstractInstance::fetchAllExtensions()
 {
     const auto instanceExtensionProperties = [] {
