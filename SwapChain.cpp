@@ -80,7 +80,7 @@ void SwapChain::init(CreateInfo &createInfo)
 #ifdef VK_USE_PLATFORM_WIN32_KHR
     const bool exclusiveFullScreen =
         createInfo.exclusiveFullScreen != vk::FullScreenExclusiveEXT::eDefault &&
-        m_device->enabledExtensions().count(VK_EXT_FULL_SCREEN_EXCLUSIVE_EXTENSION_NAME) > 0
+        m_device->hasExtension(VK_EXT_FULL_SCREEN_EXCLUSIVE_EXTENSION_NAME)
     ;
 #endif
 
