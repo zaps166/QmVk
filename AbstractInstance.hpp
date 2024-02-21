@@ -31,6 +31,9 @@ protected:
 public:
     static const vk::DispatchLoaderDynamic &getDispatchLoaderDynamic();
 
+    static bool isVk10();
+    static uint32_t version();
+
 protected:
     AbstractInstance() = default;
     virtual ~AbstractInstance() = default;

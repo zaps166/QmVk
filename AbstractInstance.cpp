@@ -45,6 +45,18 @@ const vk::DispatchLoaderDynamic &AbstractInstance::getDispatchLoaderDynamic()
     return vk::defaultDispatchLoaderDynamic;
 }
 
+bool AbstractInstance::isVk10()
+{
+    return (vk::defaultDispatchLoaderDynamic.vkEnumerateInstanceVersion == nullptr);
+}
+uint32_t AbstractInstance::version()
+{
+    uint32_t ver = VK_API_VERSION_1_0;
+    if (vk::defaultDispatchLoaderDynamic.vkEnumerateInstanceVersion)
+        vk::defaultDispatchLoaderDynamic.vkEnumerateInstanceVersion(&ver);
+    return ver;
+}
+
 unordered_set<string> AbstractInstance::getAllInstanceLayers()
 {
     vector<vk::LayerProperties> instanceLayerProperties;
