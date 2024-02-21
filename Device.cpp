@@ -73,16 +73,33 @@ void Device::init(const vk::PhysicalDeviceFeatures2 &features,
     for (auto &&extension : extensions)
         m_enabledExtensions.insert(extension);
 
+    const bool hasPhysDevs2Props = !AbstractInstance::isVk10() || m_physicalDevice->instance()->checkExtension(VK_KHR_GET_PHYSICAL_DEVICE_PROPERTIES_2_EXTENSION_NAME);
+
     vk::DeviceCreateInfo deviceCreateInfo;
     deviceCreateInfo.queueCreateInfoCount = queueCreateInfos.size();
     deviceCreateInfo.pQueueCreateInfos = queueCreateInfos.data();
     deviceCreateInfo.enabledExtensionCount = extensions.size();
     deviceCreateInfo.ppEnabledExtensionNames = extensions.data();
-    if (m_physicalDevice->instance()->checkExtension(VK_KHR_GET_PHYSICAL_DEVICE_PROPERTIES_2_EXTENSION_NAME))
+    if (hasPhysDevs2Props)
         deviceCreateInfo.pNext = &features;
     else
         deviceCreateInfo.pEnabledFeatures = &features.features;
     static_cast<vk::Device &>(*this) = m_physicalDevice->createDevice(deviceCreateInfo, nullptr);
+
+    if (!AbstractInstance::isVk10() || (hasPhysDevs2Props && hasExtension(VK_KHR_SAMPLER_YCBCR_CONVERSION_EXTENSION_NAME)))
+    {
+        auto pNext = reinterpret_cast<vk::BaseOutStructure *>(features.pNext);
+        while (pNext)
+        {
+            if (pNext->sType == vk::StructureType::ePhysicalDeviceSamplerYcbcrConversionFeatures)
+            {
+                if (reinterpret_cast<vk::PhysicalDeviceSamplerYcbcrConversionFeatures *>(pNext)->samplerYcbcrConversion)
+                    m_hasYcbcr = true;
+                break;
+            }
+            pNext = pNext->pNext;
+        }
+    }
 }
 
 shared_ptr<Queue> Device::queue(uint32_t queueFamilyIndex, uint32_t index)

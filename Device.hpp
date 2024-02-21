@@ -48,6 +48,8 @@ public:
     inline const auto &enabledExtensions() const;
     inline bool hasExtension(const char *extensionName) const;
 
+    inline bool hasYcbcr() const;
+
     inline const auto &queues() const;
 
     inline uint32_t numQueueFamilies() const;
@@ -61,6 +63,7 @@ private:
     const shared_ptr<PhysicalDevice> m_physicalDevice;
 
     unordered_set<string> m_enabledExtensions;
+    bool m_hasYcbcr = false;
 
     vector<uint32_t> m_queues;
 
@@ -82,6 +85,11 @@ const auto &Device::enabledExtensions() const
 bool Device::hasExtension(const char *extensionName) const
 {
     return (m_enabledExtensions.count(extensionName) > 0);
+}
+
+bool Device::hasYcbcr() const
+{
+    return m_hasYcbcr;
 }
 
 const auto &Device::queues() const

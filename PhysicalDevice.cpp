@@ -44,7 +44,7 @@ void PhysicalDevice::init()
     for (auto &&extensionProperty : deviceExtensionProperties)
         m_extensionProperties.insert(extensionProperty.extensionName);
 
-    if (m_instance->checkExtension(VK_KHR_GET_PHYSICAL_DEVICE_PROPERTIES_2_EXTENSION_NAME))
+    if (!AbstractInstance::isVk10() || m_instance->checkExtension(VK_KHR_GET_PHYSICAL_DEVICE_PROPERTIES_2_EXTENSION_NAME))
     {
         tie(m_properties, m_pciBusInfo) = getProperties2KHR<
             decltype(m_properties),
@@ -237,7 +237,7 @@ vector<PhysicalDevice::MemoryHeap> PhysicalDevice::getMemoryHeapsInfo() const
     vk::PhysicalDeviceMemoryProperties2 props;
     vk::PhysicalDeviceMemoryBudgetPropertiesEXT budget;
 
-    if (m_instance->checkExtension(VK_KHR_GET_PHYSICAL_DEVICE_PROPERTIES_2_EXTENSION_NAME))
+    if (!AbstractInstance::isVk10() || m_instance->checkExtension(VK_KHR_GET_PHYSICAL_DEVICE_PROPERTIES_2_EXTENSION_NAME))
     {
         tie(props, budget) = getMemoryProperties2KHR<
             decltype(props),
