@@ -88,6 +88,9 @@ public:
     inline T *map();
     void unmap();
 
+    inline vk::PipelineStageFlags stage() const;
+    inline vk::AccessFlags accessFlags() const;
+
 public:
     inline operator vk::Buffer() const;
 
@@ -126,6 +129,15 @@ vk::DeviceSize Buffer::size() const
 vk::BufferUsageFlags Buffer::usage() const
 {
     return m_usage;
+}
+
+vk::PipelineStageFlags Buffer::stage() const
+{
+    return m_stage;
+}
+vk::AccessFlags Buffer::accessFlags() const
+{
+    return m_accessFlags;
 }
 
 template<typename T>
