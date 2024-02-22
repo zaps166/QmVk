@@ -102,7 +102,9 @@ private:
         vk::PipelineStageFlags pipelineStageFlags
     ) const;
     void finalizeObject(
-        vk::CommandBuffer commandBuffer
+        vk::CommandBuffer commandBuffer,
+        bool genMipmapsOnWrite,
+        bool resetPipelineStageFlags
     ) const;
 
 private:

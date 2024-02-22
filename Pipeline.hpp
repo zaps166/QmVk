@@ -75,10 +75,14 @@ public:
 
     void finalizeObjects(
         const shared_ptr<CommandBuffer> &commandBuffer,
-        const MemoryObjectDescrs &memoryObjects
+        const MemoryObjectDescrs &memoryObjects,
+        bool genMipmapsOnWrite,
+        bool resetPipelineStageFlags
     );
     void finalizeObjects(
-        const shared_ptr<CommandBuffer> &commandBuffer
+        const shared_ptr<CommandBuffer> &commandBuffer,
+        bool genMipmapsOnWrite,
+        bool resetPipelineStageFlags
     );
 
 protected:

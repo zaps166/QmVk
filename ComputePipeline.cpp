@@ -156,7 +156,7 @@ void ComputePipeline::recordCommands(
     recordCommandsInit(commandBuffer);
     recordCommandsCompute(commandBuffer, groupCount);
     if (doFinalizeObjects)
-        finalizeObjects(commandBuffer);
+        finalizeObjects(commandBuffer, true, false);
 }
 void ComputePipeline::recordCommands(
     const shared_ptr<CommandBuffer> &commandBuffer,
@@ -167,7 +167,7 @@ void ComputePipeline::recordCommands(
     recordCommandsInit(commandBuffer);
     recordCommandsCompute(commandBuffer, baseGroup, groupCount);
     if (doFinalizeObjects)
-        finalizeObjects(commandBuffer);
+        finalizeObjects(commandBuffer, true, false);
 }
 
 }

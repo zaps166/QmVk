@@ -168,18 +168,56 @@ void MemoryObjectDescr::prepareObject(
     }
 }
 void MemoryObjectDescr::finalizeObject(
-    vk::CommandBuffer commandBuffer) const
+    vk::CommandBuffer commandBuffer,
+    bool genMipmapsOnWrite,
+    bool resetPipelineStageFlags) const
 {
-    if (m_type != Type::Image || m_access != Access::Write)
+    if (!genMipmapsOnWrite && !resetPipelineStageFlags)
         return;
 
-#ifndef QMVK_NO_GRAPHICS
     for (auto &&object : m_objects)
     {
-        auto image = static_pointer_cast<Image>(object);
-        image->maybeGenerateMipmaps(commandBuffer);
-    }
+        switch (m_type)
+        {
+            case Type::Buffer:
+            case Type::BufferView:
+            {
+                if (resetPipelineStageFlags)
+                {
+                    auto buffer = (m_type == Type::BufferView)
+                        ? static_pointer_cast<BufferView>(object)->buffer()
+                        : static_pointer_cast<Buffer>(object)
+                    ;
+                    buffer->pipelineBarrier(
+                        commandBuffer,
+                        vk::PipelineStageFlagBits::eBottomOfPipe,
+                        vk::AccessFlags()
+                    );
+                }
+                break;
+            }
+            case Type::Image:
+            {
+#ifndef QMVK_NO_GRAPHICS
+                auto image = static_pointer_cast<Image>(object);
+                if (genMipmapsOnWrite && m_access == Access::Write)
+                {
+                    image->maybeGenerateMipmaps(commandBuffer);
+                }
+                if (resetPipelineStageFlags)
+                {
+                    image->pipelineBarrier(
+                        commandBuffer,
+                        image->imageLayout(),
+                        vk::PipelineStageFlagBits::eBottomOfPipe,
+                        vk::AccessFlags()
+                    );
+                }
 #endif
+                break;
+            }
+        }
+    }
 }
 
 MemoryObjectDescr::DescriptorTypeInfos MemoryObjectDescr::getBufferDescriptorTypeInfos(const vector<BufferRange> &ranges) const

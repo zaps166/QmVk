@@ -37,7 +37,9 @@ private:
         vk::PipelineStageFlags pipelineStageFlags
     ) const;
     void finalizeObjects(
-        vk::CommandBuffer commandBuffer
+        vk::CommandBuffer commandBuffer,
+        bool genMipmapsOnWrite,
+        bool resetPipelineStageFlags
     ) const;
 
 public:

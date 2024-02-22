@@ -52,10 +52,12 @@ void MemoryObjectDescrs::prepareObjects(
         memoryObject.prepareObject(commandBuffer, pipelineStageFlags);
 }
 void MemoryObjectDescrs::finalizeObjects(
-    vk::CommandBuffer commandBuffer) const
+    vk::CommandBuffer commandBuffer,
+    bool genMipmapsOnWrite,
+    bool resetPipelineStageFlags) const
 {
     for (auto &&memoryObject : *m_memoryObjects)
-        memoryObject.finalizeObject(commandBuffer);
+        memoryObject.finalizeObject(commandBuffer, genMipmapsOnWrite, resetPipelineStageFlags);
 }
 
 bool MemoryObjectDescrs::operator ==(const MemoryObjectDescrs &other) const

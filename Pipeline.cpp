@@ -211,14 +211,18 @@ void Pipeline::prepareObjects(
 
 void Pipeline::finalizeObjects(
     const shared_ptr<CommandBuffer> &commandBuffer,
-    const MemoryObjectDescrs &memoryObjects)
+    const MemoryObjectDescrs &memoryObjects,
+    bool genMipmapsOnWrite,
+    bool resetPipelineStageFlags)
 {
-    memoryObjects.finalizeObjects(*commandBuffer);
+    memoryObjects.finalizeObjects(*commandBuffer, genMipmapsOnWrite, resetPipelineStageFlags);
 }
 void Pipeline::finalizeObjects(
-    const shared_ptr<CommandBuffer> &commandBuffer)
+    const shared_ptr<CommandBuffer> &commandBuffer,
+    bool genMipmapsOnWrite,
+    bool resetPipelineStageFlags)
 {
-    finalizeObjects(commandBuffer, m_memoryObjects);
+    finalizeObjects(commandBuffer, m_memoryObjects, genMipmapsOnWrite, resetPipelineStageFlags);
 }
 
 }
