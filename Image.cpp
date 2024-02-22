@@ -382,6 +382,7 @@ void Image::init(
     if (m_storage)
         imageUsageFlags |= vk::ImageUsageFlagBits::eStorage;
 
+    const auto &enabledQueues = m_device->queues();
     for (uint32_t i = 0; i < m_numImages; ++i)
     {
         vk::ImageCreateInfo imageCreateInfo;
@@ -399,6 +400,12 @@ void Image::init(
         ;
         imageCreateInfo.usage = imageUsageFlags;
         imageCreateInfo.initialLayout = vk::ImageLayout::eUndefined;
+        if (enabledQueues.size() > 1)
+        {
+            imageCreateInfo.sharingMode = vk::SharingMode::eConcurrent;
+            imageCreateInfo.queueFamilyIndexCount = enabledQueues.size();
+            imageCreateInfo.pQueueFamilyIndices = enabledQueues.data();
+        }
 
         vk::ExternalMemoryImageCreateInfo externalMemoryImageCreateInfo;
         if (m_exportMemoryTypes)
