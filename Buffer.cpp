@@ -134,9 +134,18 @@ void Buffer::init(const MemoryPropertyFlags *userMemoryPropertyFlags)
 {
     if (!m_buffer)
     {
+        const auto &enabledQueues = m_device->queues();
+
         vk::BufferCreateInfo bufferCreateInfo;
         bufferCreateInfo.size = m_size;
         bufferCreateInfo.usage = m_usage;
+        if (enabledQueues.size() > 1)
+        {
+            bufferCreateInfo.sharingMode = vk::SharingMode::eConcurrent;
+            bufferCreateInfo.queueFamilyIndexCount = enabledQueues.size();
+            bufferCreateInfo.pQueueFamilyIndices = enabledQueues.data();
+        }
+
         m_buffer = m_device->createBufferUnique(bufferCreateInfo);
     }
 
