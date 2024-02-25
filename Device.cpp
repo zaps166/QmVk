@@ -86,16 +86,24 @@ void Device::init(const vk::PhysicalDeviceFeatures2 &features,
         deviceCreateInfo.pEnabledFeatures = &features.features;
     static_cast<vk::Device &>(*this) = m_physicalDevice->createDevice(deviceCreateInfo, nullptr);
 
-    if (!AbstractInstance::isVk10() || (hasPhysDevs2Props && hasExtension(VK_KHR_SAMPLER_YCBCR_CONVERSION_EXTENSION_NAME)))
+    if (hasPhysDevs2Props)
     {
+        const auto version = m_physicalDevice->version();
+        const bool hasV11 = (version.first > 1 || version.second >= 1);
+
+        const bool ycbcr = (hasV11 || hasExtension(VK_KHR_SAMPLER_YCBCR_CONVERSION_EXTENSION_NAME));
+
         auto pNext = reinterpret_cast<vk::BaseOutStructure *>(features.pNext);
         while (pNext)
         {
-            if (pNext->sType == vk::StructureType::ePhysicalDeviceSamplerYcbcrConversionFeatures)
+            switch (pNext->sType)
             {
-                if (reinterpret_cast<vk::PhysicalDeviceSamplerYcbcrConversionFeatures *>(pNext)->samplerYcbcrConversion)
-                    m_hasYcbcr = true;
-                break;
+                case vk::StructureType::ePhysicalDeviceSamplerYcbcrConversionFeatures:
+                    if (ycbcr && reinterpret_cast<vk::PhysicalDeviceSamplerYcbcrConversionFeatures *>(pNext)->samplerYcbcrConversion)
+                        m_hasYcbcr = true;
+                    break;
+                default:
+                    break;
             }
             pNext = pNext->pNext;
         }

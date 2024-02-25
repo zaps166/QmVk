@@ -75,6 +75,9 @@ private:
     void init();
 
 public:
+    inline pair<uint16_t, uint16_t> version() const;
+    inline bool isVk10() const;
+
     inline const auto &extensionProperties() const;
 
     inline const auto &properties() const;
@@ -160,6 +163,19 @@ private:
 };
 
 /* Inline implementation */
+
+pair<uint16_t, uint16_t> PhysicalDevice::version() const
+{
+    return {
+        VK_VERSION_MAJOR(m_properties.properties.apiVersion),
+        VK_VERSION_MINOR(m_properties.properties.apiVersion),
+    };
+}
+bool PhysicalDevice::isVk10() const
+{
+    const auto v = version();
+    return (v.first <= 1 && v.second == 0);
+}
 
 const auto &PhysicalDevice::extensionProperties() const
 {
