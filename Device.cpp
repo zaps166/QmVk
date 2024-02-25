@@ -90,8 +90,10 @@ void Device::init(const vk::PhysicalDeviceFeatures2 &features,
     {
         const auto version = m_physicalDevice->version();
         const bool hasV11 = (version.first > 1 || version.second >= 1);
+        const bool hasV13 = (version.first > 1 || version.second >= 3);
 
         const bool ycbcr = (hasV11 || hasExtension(VK_KHR_SAMPLER_YCBCR_CONVERSION_EXTENSION_NAME));
+        const bool sync2 = (hasV13 || hasExtension(VK_KHR_SYNCHRONIZATION_2_EXTENSION_NAME));
 
         auto pNext = reinterpret_cast<vk::BaseOutStructure *>(features.pNext);
         while (pNext)
@@ -101,6 +103,10 @@ void Device::init(const vk::PhysicalDeviceFeatures2 &features,
                 case vk::StructureType::ePhysicalDeviceSamplerYcbcrConversionFeatures:
                     if (ycbcr && reinterpret_cast<vk::PhysicalDeviceSamplerYcbcrConversionFeatures *>(pNext)->samplerYcbcrConversion)
                         m_hasYcbcr = true;
+                    break;
+                case vk::StructureType::ePhysicalDeviceSynchronization2Features:
+                    if (sync2 && reinterpret_cast<vk::PhysicalDeviceSynchronization2Features *>(pNext)->synchronization2)
+                        m_hasSync2 = true;
                     break;
                 default:
                     break;

@@ -49,6 +49,7 @@ public:
     inline bool hasExtension(const char *extensionName) const;
 
     inline bool hasYcbcr() const;
+    inline bool hasSync2() const;
 
     inline const auto &queues() const;
 
@@ -64,6 +65,7 @@ private:
 
     unordered_set<string> m_enabledExtensions;
     bool m_hasYcbcr = false;
+    bool m_hasSync2 = false;
 
     vector<uint32_t> m_queues;
 
@@ -90,6 +92,10 @@ bool Device::hasExtension(const char *extensionName) const
 bool Device::hasYcbcr() const
 {
     return m_hasYcbcr;
+}
+bool Device::hasSync2() const
+{
+    return m_hasSync2;
 }
 
 const auto &Device::queues() const
