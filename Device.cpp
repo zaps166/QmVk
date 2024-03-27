@@ -104,8 +104,8 @@ void Device::init(const vk::PhysicalDeviceFeatures2 &features,
                     if (ycbcr && reinterpret_cast<vk::PhysicalDeviceSamplerYcbcrConversionFeatures *>(pNext)->samplerYcbcrConversion)
                         m_hasYcbcr = true;
                     break;
-                case vk::StructureType::ePhysicalDeviceSynchronization2Features:
-                    if (sync2 && reinterpret_cast<vk::PhysicalDeviceSynchronization2Features *>(pNext)->synchronization2)
+                case vk::StructureType::ePhysicalDeviceSynchronization2FeaturesKHR:
+                    if (sync2 && reinterpret_cast<vk::PhysicalDeviceSynchronization2FeaturesKHR *>(pNext)->synchronization2)
                         m_hasSync2 = true;
                     break;
                 default:
