@@ -44,15 +44,23 @@ void PhysicalDevice::init()
     for (auto &&extensionProperty : deviceExtensionProperties)
         m_extensionProperties.insert(extensionProperty.extensionName);
 
-    if (!AbstractInstance::isVk10() || m_instance->checkExtension(VK_KHR_GET_PHYSICAL_DEVICE_PROPERTIES_2_EXTENSION_NAME))
+    const bool usegetProperties2KHR = m_instance->checkExtension(VK_KHR_GET_PHYSICAL_DEVICE_PROPERTIES_2_EXTENSION_NAME);
+    if (!AbstractInstance::isVk10() || usegetProperties2KHR)
     {
-        tie(m_properties, m_pciBusInfo) = getProperties2KHR<
-            decltype(m_properties),
-            decltype(m_pciBusInfo)
-        >().get<
-            decltype(m_properties),
-            decltype(m_pciBusInfo)
-        >();
+        if (usegetProperties2KHR)
+        {
+            tie(m_properties, m_pciBusInfo) = getProperties2KHR<
+                decltype(m_properties),
+                decltype(m_pciBusInfo)
+            >();
+        }
+        else
+        {
+            tie(m_properties, m_pciBusInfo) = getProperties2<
+                decltype(m_properties),
+                decltype(m_pciBusInfo)
+            >();
+        }
 
         m_hasMemoryBudget = checkExtension(VK_EXT_MEMORY_BUDGET_EXTENSION_NAME);
         m_hasPciBusInfo = checkExtension(VK_EXT_PCI_BUS_INFO_EXTENSION_NAME);
@@ -237,15 +245,23 @@ vector<PhysicalDevice::MemoryHeap> PhysicalDevice::getMemoryHeapsInfo() const
     vk::PhysicalDeviceMemoryProperties2 props;
     vk::PhysicalDeviceMemoryBudgetPropertiesEXT budget;
 
-    if (!AbstractInstance::isVk10() || m_instance->checkExtension(VK_KHR_GET_PHYSICAL_DEVICE_PROPERTIES_2_EXTENSION_NAME))
+    const bool useGetMemoryProperties2KHR = m_instance->checkExtension(VK_KHR_GET_PHYSICAL_DEVICE_PROPERTIES_2_EXTENSION_NAME);
+    if (!AbstractInstance::isVk10() || useGetMemoryProperties2KHR)
     {
-        tie(props, budget) = getMemoryProperties2KHR<
-            decltype(props),
-            decltype(budget)
-        >().get<
-            decltype(props),
-            decltype(budget)
-        >();
+        if (useGetMemoryProperties2KHR)
+        {
+            tie(props, budget) = getMemoryProperties2KHR<
+                decltype(props),
+                decltype(budget)
+            >();
+        }
+        else
+        {
+            tie(props, budget) = getMemoryProperties2<
+                decltype(props),
+                decltype(budget)
+            >();
+        }
     }
     else
     {
