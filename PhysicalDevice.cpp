@@ -52,11 +52,17 @@ void PhysicalDevice::init()
             tie(m_properties, m_pciBusInfo) = getProperties2KHR<
                 decltype(m_properties),
                 decltype(m_pciBusInfo)
+            >().get<
+                decltype(m_properties),
+                decltype(m_pciBusInfo)
             >();
         }
         else
         {
             tie(m_properties, m_pciBusInfo) = getProperties2<
+                decltype(m_properties),
+                decltype(m_pciBusInfo)
+            >().get<
                 decltype(m_properties),
                 decltype(m_pciBusInfo)
             >();
@@ -253,11 +259,17 @@ vector<PhysicalDevice::MemoryHeap> PhysicalDevice::getMemoryHeapsInfo() const
             tie(props, budget) = getMemoryProperties2KHR<
                 decltype(props),
                 decltype(budget)
+            >().get<
+                decltype(props),
+                decltype(budget)
             >();
         }
         else
         {
             tie(props, budget) = getMemoryProperties2<
+                decltype(props),
+                decltype(budget)
+            >().get<
                 decltype(props),
                 decltype(budget)
             >();
