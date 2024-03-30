@@ -44,10 +44,10 @@ void PhysicalDevice::init()
     for (auto &&extensionProperty : deviceExtensionProperties)
         m_extensionProperties.insert(extensionProperty.extensionName);
 
-    const bool usegetProperties2KHR = m_instance->checkExtension(VK_KHR_GET_PHYSICAL_DEVICE_PROPERTIES_2_EXTENSION_NAME);
-    if (!AbstractInstance::isVk10() || usegetProperties2KHR)
+    const bool useGetProperties2KHR = m_instance->checkExtension(VK_KHR_GET_PHYSICAL_DEVICE_PROPERTIES_2_EXTENSION_NAME);
+    if (!AbstractInstance::isVk10() || useGetProperties2KHR)
     {
-        if (usegetProperties2KHR)
+        if (useGetProperties2KHR)
         {
             tie(m_properties, m_pciBusInfo) = getProperties2KHR<
                 decltype(m_properties),
