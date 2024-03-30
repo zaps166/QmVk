@@ -5,6 +5,7 @@
 */
 
 #include "Image.hpp"
+#include "AbstractInstance.hpp"
 #include "PhysicalDevice.hpp"
 #include "Device.hpp"
 #include "MemoryPropertyFlags.hpp"
@@ -90,12 +91,25 @@ vk::ExternalMemoryProperties Image::getExternalMemoryProperties(
         imageFormatInfo.usage |= vk::ImageUsageFlagBits::eSampled;
     imageFormatInfo.pNext = &externalImageFormatInfo;
 
-    return physicalDevice->getImageFormatProperties2KHR<
-        vk::ImageFormatProperties2,
-        vk::ExternalImageFormatProperties
-    >(imageFormatInfo).get<
-        vk::ExternalImageFormatProperties
-    >().externalMemoryProperties;
+    // This requires Vulkan 1.1 or extension
+    if (physicalDevice->instance()->checkExtension(VK_KHR_GET_PHYSICAL_DEVICE_PROPERTIES_2_EXTENSION_NAME))
+    {
+        return physicalDevice->getImageFormatProperties2KHR<
+            vk::ImageFormatProperties2,
+            vk::ExternalImageFormatProperties
+        >(imageFormatInfo).get<
+            vk::ExternalImageFormatProperties
+        >().externalMemoryProperties;
+    }
+    else
+    {
+        return physicalDevice->getImageFormatProperties2<
+            vk::ImageFormatProperties2,
+            vk::ExternalImageFormatProperties
+        >(imageFormatInfo).get<
+            vk::ExternalImageFormatProperties
+        >().externalMemoryProperties;
+    }
 }
 
 shared_ptr<Image> Image::createOptimal(
