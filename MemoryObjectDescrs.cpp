@@ -6,6 +6,10 @@
 
 #include "MemoryObjectDescrs.hpp"
 
+#ifndef NDEBUG
+#   include <unordered_map>
+#endif
+
 namespace QmVk {
 
 MemoryObjectDescrs::MemoryObjectDescrs()
@@ -48,6 +52,24 @@ void MemoryObjectDescrs::prepareObjects(
     vk::CommandBuffer commandBuffer,
     vk::PipelineStageFlags pipelineStageFlags) const
 {
+#ifndef NDEBUG
+    unordered_map<MemoryObjectBase *, MemoryObjectDescr::Access> accessMap;
+    for (auto &&memoryObjectDescr : *m_memoryObjects)
+    {
+        for (auto &&memoryObject : memoryObjectDescr.m_objects)
+        {
+            auto it = accessMap.find(memoryObject.get());
+            if (it == accessMap.end())
+            {
+                accessMap[memoryObject.get()] = memoryObjectDescr.m_access;
+            }
+            else if (it->second != memoryObjectDescr.m_access)
+            {
+                throw vk::LogicError("Different access to the same memory object");
+            }
+        }
+    }
+#endif
     for (auto &&memoryObjectDescr : *m_memoryObjects)
         memoryObjectDescr.prepareObject(commandBuffer, pipelineStageFlags);
 }
