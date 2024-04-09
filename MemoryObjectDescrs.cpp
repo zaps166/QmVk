@@ -29,16 +29,16 @@ vector<DescriptorType> MemoryObjectDescrs::fetchDescriptorTypes() const
 {
     vector<DescriptorType> descriptorTypes;
     descriptorTypes.reserve(m_memoryObjects->size());
-    for (auto &&memoryObject : *m_memoryObjects)
-        descriptorTypes.push_back(memoryObject.descriptorType());
+    for (auto &&memoryObjectDescr : *m_memoryObjects)
+        descriptorTypes.push_back(memoryObjectDescr.descriptorType());
     return descriptorTypes;
 }
 vector<DescriptorInfo> MemoryObjectDescrs::fetchDescriptorInfos() const
 {
     vector<DescriptorInfo> descriptorInfos;
-    for (auto &&memoryObject : *m_memoryObjects)
+    for (auto &&memoryObjectDescr : *m_memoryObjects)
     {
-        for (auto &&descriptorInfo : memoryObject.descriptorInfos())
+        for (auto &&descriptorInfo : memoryObjectDescr.descriptorInfos())
             descriptorInfos.push_back(descriptorInfo);
     }
     return descriptorInfos;
@@ -48,16 +48,16 @@ void MemoryObjectDescrs::prepareObjects(
     vk::CommandBuffer commandBuffer,
     vk::PipelineStageFlags pipelineStageFlags) const
 {
-    for (auto &&memoryObject : *m_memoryObjects)
-        memoryObject.prepareObject(commandBuffer, pipelineStageFlags);
+    for (auto &&memoryObjectDescr : *m_memoryObjects)
+        memoryObjectDescr.prepareObject(commandBuffer, pipelineStageFlags);
 }
 void MemoryObjectDescrs::finalizeObjects(
     vk::CommandBuffer commandBuffer,
     bool genMipmapsOnWrite,
     bool resetPipelineStageFlags) const
 {
-    for (auto &&memoryObject : *m_memoryObjects)
-        memoryObject.finalizeObject(commandBuffer, genMipmapsOnWrite, resetPipelineStageFlags);
+    for (auto &&memoryObjectDescr : *m_memoryObjects)
+        memoryObjectDescr.finalizeObject(commandBuffer, genMipmapsOnWrite, resetPipelineStageFlags);
 }
 
 bool MemoryObjectDescrs::operator ==(const MemoryObjectDescrs &other) const
