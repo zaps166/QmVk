@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.12)
+cmake_minimum_required(VERSION 3.16)
 project(QmVk)
 
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
