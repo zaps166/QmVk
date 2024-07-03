@@ -16,19 +16,6 @@
 #include <mutex>
 #include <map>
 
-namespace std {
-
-// Needed for old compilers (GCC < 6.1)
-template<> struct hash<vk::Format>
-{
-    size_t operator ()(const vk::Format &t) const
-    {
-        return static_cast<size_t>(t);
-    }
-};
-
-}
-
 namespace QmVk {
 
 using namespace std;
