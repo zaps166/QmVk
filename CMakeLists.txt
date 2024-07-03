@@ -67,6 +67,14 @@ file(GLOB QMVK_VULKAN_SRC
     "*.cpp"
 )
 if(QMVK_NO_GRAPHICS)
+    if(QMVK_NO_SEMAPHORE)
+        list(REMOVE_ITEM QMVK_VULKAN_HDR
+            "${CMAKE_CURRENT_SOURCE_DIR}/Semaphore.hpp"
+        )
+        list(REMOVE_ITEM QMVK_VULKAN_SRC
+            "${CMAKE_CURRENT_SOURCE_DIR}/Semaphore.cpp"
+        )
+    endif()
     list(REMOVE_ITEM QMVK_VULKAN_HDR
         "${CMAKE_CURRENT_SOURCE_DIR}/GraphicsPipeline.hpp"
         "${CMAKE_CURRENT_SOURCE_DIR}/Image.hpp"
