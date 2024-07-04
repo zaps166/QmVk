@@ -17,11 +17,12 @@ Device::Device(
     const shared_ptr<PhysicalDevice> &physicalDevice,
     Priv)
     : m_physicalDevice(physicalDevice)
+    , m_dld(m_physicalDevice->dld())
 {}
 Device::~Device()
 {
     if (*this)
-        destroy();
+        destroy(nullptr, dld());
 }
 
 void Device::init(const vk::PhysicalDeviceFeatures2 &features,
@@ -73,7 +74,8 @@ void Device::init(const vk::PhysicalDeviceFeatures2 &features,
     for (auto &&extension : extensions)
         m_enabledExtensions.insert(extension);
 
-    const bool hasPhysDevs2Props = !AbstractInstance::isVk10() || m_physicalDevice->instance()->checkExtension(VK_KHR_GET_PHYSICAL_DEVICE_PROPERTIES_2_EXTENSION_NAME);
+    const auto instance = m_physicalDevice->instance();
+    const bool hasPhysDevs2Props = !instance->isVk10() || instance->checkExtension(VK_KHR_GET_PHYSICAL_DEVICE_PROPERTIES_2_EXTENSION_NAME);
 
     vk::DeviceCreateInfo deviceCreateInfo;
     deviceCreateInfo.queueCreateInfoCount = queueCreateInfos.size();
@@ -84,7 +86,7 @@ void Device::init(const vk::PhysicalDeviceFeatures2 &features,
         deviceCreateInfo.pNext = &features;
     else
         deviceCreateInfo.pEnabledFeatures = &features.features;
-    static_cast<vk::Device &>(*this) = m_physicalDevice->createDevice(deviceCreateInfo, nullptr);
+    static_cast<vk::Device &>(*this) = m_physicalDevice->createDevice(deviceCreateInfo, nullptr, dld());
 
     if (hasPhysDevs2Props)
     {

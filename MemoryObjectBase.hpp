@@ -32,11 +32,12 @@ public:
     };
 
 protected:
-    inline MemoryObjectBase(const shared_ptr<Device> &device);
+    MemoryObjectBase(const shared_ptr<Device> &device);
     virtual ~MemoryObjectBase() = default;
 
 public:
     inline shared_ptr<Device> device() const;
+    inline const vk::DispatchLoaderDynamic &dld() const;
 
     template<typename T>
     inline T *customData();
@@ -44,7 +45,10 @@ public:
 
 protected:
     const shared_ptr<Device> m_device;
+private:
+    const vk::DispatchLoaderDynamic &m_dld;
 
+protected:
     unique_ptr<CustomData> m_customData;
 };
 
@@ -56,14 +60,13 @@ T MemoryObjectBase::aligned(const T value, const T alignment)
     return (value + alignment - 1 ) & ~(alignment - 1);
 }
 
-MemoryObjectBase::MemoryObjectBase(const shared_ptr<Device> &device)
-    : m_device(device)
-{
-}
-
 shared_ptr<Device> MemoryObjectBase::device() const
 {
     return m_device;
+}
+const vk::DispatchLoaderDynamic &MemoryObjectBase::dld() const
+{
+    return m_dld;
 }
 
 template<typename T>

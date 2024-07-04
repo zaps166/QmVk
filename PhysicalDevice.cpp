@@ -19,6 +19,7 @@ PhysicalDevice::PhysicalDevice(
         Priv)
     : vk::PhysicalDevice(physicalDevice)
     , m_instance(instance)
+    , m_dld(m_instance->dld())
 {}
 PhysicalDevice::~PhysicalDevice()
 {}
@@ -28,11 +29,11 @@ void PhysicalDevice::init()
     const auto deviceExtensionProperties = [this] {
         vector<vk::ExtensionProperties> deviceExtensionProperties;
         uint32_t propertyCount = 0;
-        auto result = enumerateDeviceExtensionProperties(nullptr, &propertyCount, static_cast<vk::ExtensionProperties *>(nullptr));
+        auto result = enumerateDeviceExtensionProperties(nullptr, &propertyCount, static_cast<vk::ExtensionProperties *>(nullptr), dld());
         if (result == vk::Result::eSuccess && propertyCount > 0)
         {
             deviceExtensionProperties.resize(propertyCount);
-            result = enumerateDeviceExtensionProperties(nullptr, &propertyCount, deviceExtensionProperties.data());
+            result = enumerateDeviceExtensionProperties(nullptr, &propertyCount, deviceExtensionProperties.data(), dld());
             if (result != vk::Result::eSuccess && result != vk::Result::eIncomplete)
                 propertyCount = 0;
             if (propertyCount != deviceExtensionProperties.size())
@@ -45,14 +46,14 @@ void PhysicalDevice::init()
         m_extensionProperties.insert(extensionProperty.extensionName);
 
     const bool useGetProperties2KHR = m_instance->checkExtension(VK_KHR_GET_PHYSICAL_DEVICE_PROPERTIES_2_EXTENSION_NAME);
-    if (!AbstractInstance::isVk10() || useGetProperties2KHR)
+    if (!m_instance->isVk10() || useGetProperties2KHR)
     {
         if (useGetProperties2KHR)
         {
             tie(m_properties, m_pciBusInfo) = getProperties2KHR<
                 decltype(m_properties),
                 decltype(m_pciBusInfo)
-            >().get<
+            >(dld()).get<
                 decltype(m_properties),
                 decltype(m_pciBusInfo)
             >();
@@ -62,7 +63,7 @@ void PhysicalDevice::init()
             tie(m_properties, m_pciBusInfo) = getProperties2<
                 decltype(m_properties),
                 decltype(m_pciBusInfo)
-            >().get<
+            >(dld()).get<
                 decltype(m_properties),
                 decltype(m_pciBusInfo)
             >();
@@ -73,7 +74,7 @@ void PhysicalDevice::init()
     }
     else
     {
-        m_properties = getProperties();
+        m_properties = getProperties(dld());
     }
 
     vk::DeviceSize deviceLocalAndHostVisibleSize = 0;
@@ -102,7 +103,7 @@ void PhysicalDevice::init()
         min(localWorkgroupSizeSqr, limits().maxComputeWorkGroupSize[1])
     );
 
-    const auto queueFamilyProperties = getQueueFamilyProperties();
+    const auto queueFamilyProperties = getQueueFamilyProperties(dld());
     for (uint32_t queueFamilyIndex = 0; queueFamilyIndex < queueFamilyProperties.size(); ++queueFamilyIndex)
     {
         auto &&props = queueFamilyProperties[queueFamilyIndex];
@@ -252,14 +253,14 @@ vector<PhysicalDevice::MemoryHeap> PhysicalDevice::getMemoryHeapsInfo() const
     vk::PhysicalDeviceMemoryBudgetPropertiesEXT budget;
 
     const bool useGetMemoryProperties2KHR = m_instance->checkExtension(VK_KHR_GET_PHYSICAL_DEVICE_PROPERTIES_2_EXTENSION_NAME);
-    if (!AbstractInstance::isVk10() || useGetMemoryProperties2KHR)
+    if (!m_instance->isVk10() || useGetMemoryProperties2KHR)
     {
         if (useGetMemoryProperties2KHR)
         {
             tie(props, budget) = getMemoryProperties2KHR<
                 decltype(props),
                 decltype(budget)
-            >().get<
+            >(dld()).get<
                 decltype(props),
                 decltype(budget)
             >();
@@ -269,7 +270,7 @@ vector<PhysicalDevice::MemoryHeap> PhysicalDevice::getMemoryHeapsInfo() const
             tie(props, budget) = getMemoryProperties2<
                 decltype(props),
                 decltype(budget)
-            >().get<
+            >(dld()).get<
                 decltype(props),
                 decltype(budget)
             >();
@@ -277,7 +278,7 @@ vector<PhysicalDevice::MemoryHeap> PhysicalDevice::getMemoryHeapsInfo() const
     }
     else
     {
-        props = getMemoryProperties();
+        props = getMemoryProperties(dld());
     }
 #ifdef QMVK_APPLY_MEMORY_PROPERTIES_QUIRKS
     applyMemoryPropertiesQuirks(props.memoryProperties);
@@ -317,7 +318,7 @@ PhysicalDevice::MemoryType PhysicalDevice::findMemoryType(
 {
     MemoryType result;
 
-    auto memoryProperties = getMemoryProperties();
+    auto memoryProperties = getMemoryProperties(dld());
 #ifdef QMVK_APPLY_MEMORY_PROPERTIES_QUIRKS
     applyMemoryPropertiesQuirks(memoryProperties);
 #endif
@@ -455,7 +456,7 @@ const vk::FormatProperties &PhysicalDevice::getFormatPropertiesCached(vk::Format
     auto it = m_formatProperties.find(fmt);
     if (it == m_formatProperties.end())
     {
-        m_formatProperties[fmt] = getFormatProperties(fmt);
+        m_formatProperties[fmt] = getFormatProperties(fmt, dld());
         it = m_formatProperties.find(fmt);
     }
     return it->second;

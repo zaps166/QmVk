@@ -20,6 +20,7 @@ Pipeline::Pipeline(
     const vk::PipelineStageFlags &objectsPipelineStageFlags,
     uint32_t pushConstantsSize)
     : m_device(device)
+    , m_dld(m_device->dld())
     , m_pushConstantsShaderStageFlags(pushConstantsShaderStageFlags)
     , m_objectsPipelineStageFlags(objectsPipelineStageFlags)
     , m_pushConstants(pushConstantsSize)
@@ -80,14 +81,15 @@ void Pipeline::pushConstants(
         m_pushConstantsShaderStageFlags,
         0,
         m_pushConstants.size(),
-        m_pushConstants.data()
+        m_pushConstants.data(),
+        m_dld
     );
 }
 void Pipeline::bindObjects(
     const shared_ptr<CommandBuffer> &commandBuffer,
     vk::PipelineBindPoint pipelineBindPoint)
 {
-    commandBuffer->bindPipeline(pipelineBindPoint, *m_pipeline);
+    commandBuffer->bindPipeline(pipelineBindPoint, *m_pipeline, m_dld);
     if (m_descriptorSet)
     {
         commandBuffer->storeData(
@@ -99,7 +101,8 @@ void Pipeline::bindObjects(
             *m_pipelineLayout,
             0,
             {*m_descriptorSet},
-            {}
+            {},
+            m_dld
         );
     }
 }
@@ -190,7 +193,7 @@ void Pipeline::prepare()
             pipelineLayoutInfo.pushConstantRangeCount = 1;
             pipelineLayoutInfo.pPushConstantRanges = &pushConstantRange;
         }
-        m_pipelineLayout = m_device->createPipelineLayoutUnique(pipelineLayoutInfo);
+        m_pipelineLayout = m_device->createPipelineLayoutUnique(pipelineLayoutInfo, nullptr, m_dld);
 
         createPipeline();
         m_mustRecreate = false;

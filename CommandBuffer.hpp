@@ -48,6 +48,7 @@ private:
 
 public:
     inline shared_ptr<Queue> queue() const;
+    inline const vk::DispatchLoaderDynamic &dld() const;
 
     void storeData(
         const MemoryObjectDescrs &memoryObjects,
@@ -72,6 +73,7 @@ public:
 
 private:
     const shared_ptr<Queue> m_queue;
+    const vk::DispatchLoaderDynamic &m_dld;
 
     vk::UniqueCommandPool m_commandPool;
 
@@ -84,6 +86,10 @@ private:
 shared_ptr<Queue> CommandBuffer::queue() const
 {
     return m_queue;
+}
+const vk::DispatchLoaderDynamic &CommandBuffer::dld() const
+{
+    return m_dld;
 }
 
 }

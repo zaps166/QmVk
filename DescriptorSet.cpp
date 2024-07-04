@@ -43,7 +43,7 @@ void DescriptorSet::init()
     descriptorSetAllocateInfo.descriptorPool = *m_descriptorPool;
     descriptorSetAllocateInfo.descriptorSetCount = 1;
     descriptorSetAllocateInfo.pSetLayouts = *descriptorSetLayout;
-    m_descriptorSet = move(device->allocateDescriptorSetsUnique(descriptorSetAllocateInfo)[0]);
+    m_descriptorSet = move(device->allocateDescriptorSetsUnique(descriptorSetAllocateInfo, device->dld())[0]);
 }
 
 void DescriptorSet::updateDescriptorInfos(const vector<DescriptorInfo> &descriptorInfos)
@@ -81,7 +81,7 @@ void DescriptorSet::updateDescriptorInfos(const vector<DescriptorInfo> &descript
         }
     }
 
-    device->updateDescriptorSets(writeDescriptorSets, nullptr);
+    device->updateDescriptorSets(writeDescriptorSets, nullptr, device->dld());
 }
 
 }

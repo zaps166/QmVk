@@ -130,7 +130,7 @@ void GraphicsPipeline::createPipeline()
     pipelineInfo.pColorBlendState = &colorBlending;
     pipelineInfo.layout = *m_pipelineLayout;
     pipelineInfo.renderPass = *m_renderPass;
-    m_pipeline = m_device->createGraphicsPipelineUnique(nullptr, pipelineInfo).value;
+    m_pipeline = m_device->createGraphicsPipelineUnique(nullptr, pipelineInfo, nullptr, m_dld).value;
 }
 
 void GraphicsPipeline::setCustomSpecializationDataVertex(const vector<uint32_t> &data)

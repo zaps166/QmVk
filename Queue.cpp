@@ -30,6 +30,7 @@ Queue::Queue(
     uint32_t queueIndex,
     Priv)
     : m_device(device)
+    , m_dld(m_device->dld())
     , m_queueFamilyIndex(queueFamilyIndex)
     , m_queueIndex(queueIndex)
 {}
@@ -38,7 +39,7 @@ Queue::~Queue()
 
 void Queue::init()
 {
-    static_cast<vk::Queue &>(*this) = m_device->getQueue(m_queueFamilyIndex, m_queueIndex);
+    static_cast<vk::Queue &>(*this) = m_device->getQueue(m_queueFamilyIndex, m_queueIndex, dld());
 }
 
 unique_lock<mutex> Queue::lock()
@@ -50,14 +51,14 @@ void Queue::submitCommandBuffer(vk::SubmitInfo &&submitInfo)
 {
     if (!m_fence)
     {
-        m_fence = m_device->createFenceUnique(vk::FenceCreateInfo());
+        m_fence = m_device->createFenceUnique(vk::FenceCreateInfo(), nullptr, dld());
     }
     else if (m_fenceResetNeeded)
     {
-        m_device->resetFences(*m_fence);
+        m_device->resetFences(*m_fence, dld());
         m_fenceResetNeeded = false;
     }
-    submit(submitInfo, *m_fence);
+    submit(submitInfo, *m_fence, dld());
     m_fenceResetNeeded = true;
 }
 void Queue::waitForCommandsFinished()
@@ -66,10 +67,11 @@ void Queue::waitForCommandsFinished()
         *m_fence,
         true,
 #ifdef QMVK_WAIT_TIMEOUT_MS
-        QMVK_WAIT_TIMEOUT_MS * static_cast<uint64_t>(1e6)
+        QMVK_WAIT_TIMEOUT_MS * static_cast<uint64_t>(1e6),
 #else
-        numeric_limits<uint64_t>::max()
+        numeric_limits<uint64_t>::max(),
 #endif
+        dld()
     );
     if (result == vk::Result::eTimeout)
         throw vk::SystemError(vk::make_error_code(result), "vkWaitForFences");

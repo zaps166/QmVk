@@ -7,26 +7,24 @@
 #include "AbstractInstance.hpp"
 #include "PhysicalDevice.hpp"
 
-vk::DispatchLoaderDynamic vk::defaultDispatchLoaderDynamic;
-
 namespace QmVk {
 
 PFN_vkGetInstanceProcAddr AbstractInstance::loadVulkanLibrary(const string &vulkanLibrary)
 {
-    static unique_ptr<vk::DynamicLoader> g_dyld;
-
-    g_dyld.reset();
-
     try
     {
-        g_dyld = make_unique<vk::DynamicLoader>(vulkanLibrary);
+        return setVulkanLibrary(make_shared<vk::DynamicLoader>(vulkanLibrary));
     }
     catch (const runtime_error &e)
     {
         throw vk::InitializationFailedError(e.what());
     }
+}
+PFN_vkGetInstanceProcAddr AbstractInstance::setVulkanLibrary(const shared_ptr<vk::DynamicLoader> &dl)
+{
+    m_dl = dl;
 
-    auto vkGetInstanceProcAddr = g_dyld->getProcAddress<PFN_vkGetInstanceProcAddr>("vkGetInstanceProcAddr");
+    auto vkGetInstanceProcAddr = m_dl->getProcAddress<PFN_vkGetInstanceProcAddr>("vkGetInstanceProcAddr");
     if (!vkGetInstanceProcAddr)
         throw vk::InitializationFailedError("Unable to get \"vkGetInstanceProcAddr\"");
 
@@ -35,37 +33,20 @@ PFN_vkGetInstanceProcAddr AbstractInstance::loadVulkanLibrary(const string &vulk
 void AbstractInstance::initDispatchLoaderDynamic(PFN_vkGetInstanceProcAddr vkGetInstanceProcAddr, vk::Instance instance)
 {
     if (instance)
-        vk::defaultDispatchLoaderDynamic.init(instance, vkGetInstanceProcAddr);
+        m_dld.init(instance, vkGetInstanceProcAddr);
     else
-        vk::defaultDispatchLoaderDynamic.init(vkGetInstanceProcAddr);
-}
-
-const vk::DispatchLoaderDynamic &AbstractInstance::getDispatchLoaderDynamic()
-{
-    return vk::defaultDispatchLoaderDynamic;
-}
-
-bool AbstractInstance::isVk10()
-{
-    return (vk::defaultDispatchLoaderDynamic.vkEnumerateInstanceVersion == nullptr);
-}
-uint32_t AbstractInstance::version()
-{
-    uint32_t ver = VK_API_VERSION_1_0;
-    if (vk::defaultDispatchLoaderDynamic.vkEnumerateInstanceVersion)
-        vk::defaultDispatchLoaderDynamic.vkEnumerateInstanceVersion(&ver);
-    return ver;
+        m_dld.init(vkGetInstanceProcAddr);
 }
 
 unordered_set<string> AbstractInstance::getAllInstanceLayers()
 {
     vector<vk::LayerProperties> instanceLayerProperties;
     uint32_t propertyCount = 0;
-    auto result = vk::enumerateInstanceLayerProperties(&propertyCount, static_cast<vk::LayerProperties *>(nullptr));
+    auto result = vk::enumerateInstanceLayerProperties(&propertyCount, static_cast<vk::LayerProperties *>(nullptr), dld());
     if (result == vk::Result::eSuccess && propertyCount > 0)
     {
         instanceLayerProperties.resize(propertyCount);
-        result = vk::enumerateInstanceLayerProperties(&propertyCount, instanceLayerProperties.data());
+        result = vk::enumerateInstanceLayerProperties(&propertyCount, instanceLayerProperties.data(), dld());
         if (result != vk::Result::eSuccess && result != vk::Result::eIncomplete)
             propertyCount = 0;
         if (propertyCount != instanceLayerProperties.size())
@@ -81,14 +62,14 @@ unordered_set<string> AbstractInstance::getAllInstanceLayers()
 
 void AbstractInstance::fetchAllExtensions()
 {
-    const auto instanceExtensionProperties = [] {
+    const auto instanceExtensionProperties = [this] {
         vector<vk::ExtensionProperties> instanceExtensionProperties;
         uint32_t propertyCount = 0;
-        auto result = vk::enumerateInstanceExtensionProperties(nullptr, &propertyCount, static_cast<vk::ExtensionProperties *>(nullptr));
+        auto result = vk::enumerateInstanceExtensionProperties(nullptr, &propertyCount, static_cast<vk::ExtensionProperties *>(nullptr), dld());
         if (result == vk::Result::eSuccess && propertyCount > 0)
         {
             instanceExtensionProperties.resize(propertyCount);
-            result = vk::enumerateInstanceExtensionProperties(nullptr, &propertyCount, instanceExtensionProperties.data());
+            result = vk::enumerateInstanceExtensionProperties(nullptr, &propertyCount, instanceExtensionProperties.data(), dld());
             if (result != vk::Result::eSuccess && result != vk::Result::eIncomplete)
                 propertyCount = 0;
             if (propertyCount != instanceExtensionProperties.size())
@@ -117,17 +98,25 @@ vector<const char *> AbstractInstance::filterAvailableExtensions(
     return availableWantedExtensions;
 }
 
+uint32_t AbstractInstance::version()
+{
+    uint32_t ver = VK_API_VERSION_1_0;
+    if (dld().vkEnumerateInstanceVersion)
+        dld().vkEnumerateInstanceVersion(&ver);
+    return ver;
+}
+
 vector<shared_ptr<PhysicalDevice>> AbstractInstance::enumeratePhysicalDevices(bool compatibleOnly)
 {
     const auto physicalDevices = [this] {
         const auto self = static_cast<vk::Instance *>(this);
         vector<vk::PhysicalDevice> physicalDevices;
         uint32_t physicalDevicesCount = 0;
-        auto result = self->enumeratePhysicalDevices(&physicalDevicesCount, static_cast<vk::PhysicalDevice *>(nullptr));
+        auto result = self->enumeratePhysicalDevices(&physicalDevicesCount, static_cast<vk::PhysicalDevice *>(nullptr), dld());
         if (result == vk::Result::eSuccess && physicalDevicesCount > 0)
         {
             physicalDevices.resize(physicalDevicesCount);
-            result = self->enumeratePhysicalDevices(&physicalDevicesCount, physicalDevices.data());
+            result = self->enumeratePhysicalDevices(&physicalDevicesCount, physicalDevices.data(), dld());
             if (result != vk::Result::eSuccess && result != vk::Result::eIncomplete)
                 physicalDevicesCount = 0;
             if (physicalDevicesCount != physicalDevices.size())

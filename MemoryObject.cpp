@@ -23,7 +23,7 @@ MemoryObject::~MemoryObject()
 {
     m_customData.reset();
     for (auto &&deviceMemory : m_deviceMemory)
-        m_device->freeMemory(deviceMemory);
+        m_device->freeMemory(deviceMemory, nullptr, dld());
 }
 
 void MemoryObject::importFD(
@@ -46,7 +46,8 @@ void MemoryObject::importFD(
 
         auto memoryTypeBits = m_device->getMemoryFdPropertiesKHR(
             handleType,
-            import.fd
+            import.fd,
+            dld()
         ).memoryTypeBits;
         if (memoryTypeBits == 0 && m_device->physicalDevice()->properties().vendorID == 0x1002)
         {
@@ -58,7 +59,7 @@ void MemoryObject::importFD(
             memoryTypeBits
         );
 
-        m_deviceMemory.push_back(m_device->allocateMemory(alloc));
+        m_deviceMemory.push_back(m_device->allocateMemory(alloc, nullptr, dld()));
     }
 }
 
@@ -84,11 +85,12 @@ void MemoryObject::importWin32Handle(
         tie(alloc.memoryTypeIndex, m_memoryPropertyFlags) = m_physicalDevice->findMemoryType(
             m_device->getMemoryWin32HandlePropertiesKHR(
                 import.handleType,
-                import.handle
+                import.handle,
+                dld()
             ).memoryTypeBits
         );
 
-        m_deviceMemory.push_back(m_device->allocateMemory(alloc));
+        m_deviceMemory.push_back(m_device->allocateMemory(alloc, nullptr, dld()));
     }
 }
 #endif
@@ -115,7 +117,7 @@ void MemoryObject::allocateMemory(
             userMemoryPropertyFlags.heap
         );
 
-        m_deviceMemory.push_back(m_device->allocateMemory(allocateInfo));
+        m_deviceMemory.push_back(m_device->allocateMemory(allocateInfo, nullptr, dld()));
     };
 
     try
@@ -189,7 +191,7 @@ int MemoryObject::exportMemoryFd(vk::ExternalMemoryHandleTypeFlagBits type)
     vk::MemoryGetFdInfoKHR memFdInfo;
     memFdInfo.memory = deviceMemory();
     memFdInfo.handleType = type;
-    return m_device->getMemoryFdKHR(memFdInfo);
+    return m_device->getMemoryFdKHR(memFdInfo, dld());
 }
 
 #ifdef VK_USE_PLATFORM_WIN32_KHR
@@ -201,7 +203,7 @@ HANDLE MemoryObject::exportMemoryWin32(vk::ExternalMemoryHandleTypeFlagBits type
     vk::MemoryGetWin32HandleInfoKHR memWin32Info;
     memWin32Info.memory = deviceMemory();
     memWin32Info.handleType = type;
-    return m_device->getMemoryWin32HandleKHR(memWin32Info);
+    return m_device->getMemoryWin32HandleKHR(memWin32Info, dld());
 }
 #endif
 

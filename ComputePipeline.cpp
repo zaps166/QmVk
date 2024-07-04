@@ -65,7 +65,7 @@ void ComputePipeline::createPipeline()
         pipelineCreateInfo.flags = vk::PipelineCreateFlagBits::eDispatchBase;
     pipelineCreateInfo.stage = m_shaderModule->getPipelineShaderStageCreateInfo(specializationInfo);
     pipelineCreateInfo.layout = *m_pipelineLayout;
-    m_pipeline = m_device->createComputePipelineUnique(nullptr, pipelineCreateInfo).value;
+    m_pipeline = m_device->createComputePipelineUnique(nullptr, pipelineCreateInfo, nullptr, m_dld).value;
 }
 
 void ComputePipeline::setCustomSpecializationData(const vector<uint32_t> &data)
@@ -125,7 +125,8 @@ void ComputePipeline::recordCommandsCompute(
     commandBuffer->dispatch(
         groupCount.width,
         groupCount.height,
-        1
+        1,
+        m_dld
     );
 }
 void ComputePipeline::recordCommandsCompute(
@@ -144,7 +145,8 @@ void ComputePipeline::recordCommandsCompute(
         0,
         groupCount.width,
         groupCount.height,
-        1
+        1,
+        m_dld
     );
 }
 

@@ -39,7 +39,7 @@ void ShaderModule::init(const vector<uint32_t> &data)
     createInfo.codeSize = data.size() * sizeof(uint32_t);
     createInfo.pCode = data.data();
 
-    m_shaderModule = m_device->createShaderModuleUnique(createInfo);
+    m_shaderModule = m_device->createShaderModuleUnique(createInfo, nullptr, m_device->dld());
 }
 
 vk::PipelineShaderStageCreateInfo ShaderModule::getPipelineShaderStageCreateInfo(

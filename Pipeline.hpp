@@ -87,6 +87,7 @@ public:
 
 protected:
     const shared_ptr<Device> m_device;
+    const vk::DispatchLoaderDynamic &m_dld;
     const vk::ShaderStageFlags m_pushConstantsShaderStageFlags;
     const vk::PipelineStageFlags m_objectsPipelineStageFlags;
 

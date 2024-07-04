@@ -53,7 +53,7 @@ void DescriptorSetLayout::init()
     vk::DescriptorSetLayoutCreateInfo descriptorSetLayoutCreateInfo;
     descriptorSetLayoutCreateInfo.bindingCount = descriptorSetLayoutBindings.size();
     descriptorSetLayoutCreateInfo.pBindings = descriptorSetLayoutBindings.data();
-    m_descriptorSetLayout = m_device->createDescriptorSetLayoutUnique(descriptorSetLayoutCreateInfo);
+    m_descriptorSetLayout = m_device->createDescriptorSetLayoutUnique(descriptorSetLayoutCreateInfo, nullptr, m_device->dld());
 }
 
 }

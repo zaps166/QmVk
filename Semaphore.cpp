@@ -52,7 +52,7 @@ void Semaphore::init()
         exportCreateInfo.handleTypes = *m_handleType;
         createInfo.pNext = &exportCreateInfo;
     }
-    m_semaphore = m_device->createSemaphoreUnique(createInfo);
+    m_semaphore = m_device->createSemaphoreUnique(createInfo, nullptr, m_device->dld());
 }
 
 int Semaphore::exportFD()
@@ -60,7 +60,7 @@ int Semaphore::exportFD()
     vk::SemaphoreGetFdInfoKHR semaphoreGetFdInfo;
     semaphoreGetFdInfo.semaphore = *m_semaphore;
     semaphoreGetFdInfo.handleType = *m_handleType;
-    return m_device->getSemaphoreFdKHR(semaphoreGetFdInfo);
+    return m_device->getSemaphoreFdKHR(semaphoreGetFdInfo, m_device->dld());
 }
 
 #ifdef VK_USE_PLATFORM_WIN32_KHR
@@ -69,7 +69,7 @@ HANDLE Semaphore::exportWin32Handle()
     vk::SemaphoreGetWin32HandleInfoKHR semaphoreGetWin32HandleInfo;
     semaphoreGetWin32HandleInfo.semaphore = *m_semaphore;
     semaphoreGetWin32HandleInfo.handleType = *m_handleType;
-    return m_device->getSemaphoreWin32HandleKHR(semaphoreGetWin32HandleInfo);
+    return m_device->getSemaphoreWin32HandleKHR(semaphoreGetWin32HandleInfo, m_device->dld());
 }
 #endif
 

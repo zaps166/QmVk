@@ -56,7 +56,7 @@ void DescriptorPool::init()
     descriptorPoolCreateInfo.maxSets = m_max;
     descriptorPoolCreateInfo.poolSizeCount = descriptorPoolSizes.size();
     descriptorPoolCreateInfo.pPoolSizes = descriptorPoolSizes.data();
-    m_descriptorPool = device->createDescriptorPoolUnique(descriptorPoolCreateInfo);
+    m_descriptorPool = device->createDescriptorPoolUnique(descriptorPoolCreateInfo, nullptr, device->dld());
 }
 
 }

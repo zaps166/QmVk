@@ -68,7 +68,7 @@ void Sampler::init()
 
     if (m_ycbcrCreateInfo.format != vk::Format::eUndefined)
     {
-        m_samplerYcbcr = m_device->createSamplerYcbcrConversionKHRUnique(m_ycbcrCreateInfo);
+        m_samplerYcbcr = m_device->createSamplerYcbcrConversionKHRUnique(m_ycbcrCreateInfo, nullptr, m_device->dld());
 
         samplerYcbcrInfo.pNext = m_createInfo.pNext;
         m_createInfo.pNext = &samplerYcbcrInfo;
@@ -76,7 +76,7 @@ void Sampler::init()
         samplerYcbcrInfo.conversion = *m_samplerYcbcr;
     }
 
-    m_sampler = m_device->createSamplerUnique(m_createInfo);
+    m_sampler = m_device->createSamplerUnique(m_createInfo, nullptr, m_device->dld());
 
     m_createInfo.pNext = nullptr;
     m_ycbcrCreateInfo.pNext = nullptr;

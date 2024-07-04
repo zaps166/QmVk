@@ -44,6 +44,7 @@ private:
 
 public:
     inline shared_ptr<PhysicalDevice> physicalDevice() const;
+    inline const vk::DispatchLoaderDynamic &dld() const;
 
     inline const auto &enabledExtensions() const;
     inline bool hasExtension(const char *extensionName) const;
@@ -62,6 +63,7 @@ public:
 
 private:
     const shared_ptr<PhysicalDevice> m_physicalDevice;
+    const vk::DispatchLoaderDynamic &m_dld;
 
     unordered_set<string> m_enabledExtensions;
     bool m_hasYcbcr = false;
@@ -78,6 +80,10 @@ private:
 shared_ptr<PhysicalDevice> Device::physicalDevice() const
 {
     return m_physicalDevice;
+}
+const vk::DispatchLoaderDynamic &Device::dld() const
+{
+    return m_dld;
 }
 
 const auto &Device::enabledExtensions() const

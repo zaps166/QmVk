@@ -97,7 +97,7 @@ vk::ExternalMemoryProperties Image::getExternalMemoryProperties(
         return physicalDevice->getImageFormatProperties2KHR<
             vk::ImageFormatProperties2,
             vk::ExternalImageFormatProperties
-        >(imageFormatInfo).get<
+        >(imageFormatInfo, physicalDevice->dld()).get<
             vk::ExternalImageFormatProperties
         >().externalMemoryProperties;
     }
@@ -106,7 +106,7 @@ vk::ExternalMemoryProperties Image::getExternalMemoryProperties(
         return physicalDevice->getImageFormatProperties2<
             vk::ImageFormatProperties2,
             vk::ExternalImageFormatProperties
-        >(imageFormatInfo).get<
+        >(imageFormatInfo, physicalDevice->dld()).get<
             vk::ExternalImageFormatProperties
         >().externalMemoryProperties;
     }
@@ -264,11 +264,11 @@ Image::~Image()
 {
     unmap();
     for (auto &&imageView : m_imageViews)
-        m_device->destroyImageView(imageView);
+        m_device->destroyImageView(imageView, nullptr, dld());
     if (!m_externalImage)
     {
         for (auto &&image : m_images)
-            m_device->destroyImage(image);
+            m_device->destroyImage(image, nullptr, dld());
     }
 }
 
@@ -431,7 +431,7 @@ void Image::init(
         if (imageCreateInfoCallback)
             imageCreateInfoCallback(i, imageCreateInfo);
 
-        m_images[i] = m_device->createImage(imageCreateInfo);
+        m_images[i] = m_device->createImage(imageCreateInfo, nullptr, dld());
     }
 
     allocateAndBindMemory(memoryPropertyPreset, heap);
@@ -464,11 +464,11 @@ void Image::allocateAndBindMemory(MemoryPropertyPreset memoryPropertyPreset, uin
             imageMemoryRequirementsInfo2.image = m_images[0];
             imageMemoryRequirementsInfo2.pNext = &imagePlaneMemReqInfo;
 
-            memoryRequirements2 = m_device->getImageMemoryRequirements2KHR(imageMemoryRequirementsInfo2);
+            memoryRequirements2 = m_device->getImageMemoryRequirements2KHR(imageMemoryRequirementsInfo2, dld());
         }
         else
         {
-            memoryRequirements = m_device->getImageMemoryRequirements(m_images[i]);
+            memoryRequirements = m_device->getImageMemoryRequirements(m_images[i], dld());
         }
         const auto memoryRequirementsSize = aligned(memoryRequirements.size + paddingBytes, memoryRequirements.alignment);
 
@@ -490,11 +490,11 @@ void Image::allocateAndBindMemory(MemoryPropertyPreset memoryPropertyPreset, uin
         vk::BufferCreateInfo bufferCreateInfo;
         bufferCreateInfo.usage = vk::BufferUsageFlagBits::eUniformTexelBuffer | vk::BufferUsageFlagBits::eStorageTexelBuffer;
         bufferCreateInfo.size = m_memoryRequirements.size;
-        m_uniqueBuffer = m_device->createBufferUnique(bufferCreateInfo);
+        m_uniqueBuffer = m_device->createBufferUnique(bufferCreateInfo, nullptr, dld());
 
         m_memoryRequirements.alignment = max(
             m_memoryRequirements.alignment,
-            m_device->getBufferMemoryRequirements(*m_uniqueBuffer).alignment
+            m_device->getBufferMemoryRequirements(*m_uniqueBuffer, dld()).alignment
         );
         m_memoryRequirements.size = aligned(m_memoryRequirements.size, m_memoryRequirements.alignment);
     }
@@ -579,11 +579,11 @@ void Image::allocateAndBindMemory(MemoryPropertyPreset memoryPropertyPreset, uin
             bindImageMemInfos[i].memoryOffset = memoryOffsets[i];
             bindImageMemInfos[i].pNext = &bindImagePlaneMemInfos[i];
         }
-        m_device->bindImageMemory2KHR(bindImageMemInfos);
+        m_device->bindImageMemory2KHR(bindImageMemInfos, dld());
     }
     else for (uint32_t i = 0; i < m_numImages; ++i)
     {
-        m_device->bindImageMemory(m_images[i], deviceMemory(), memoryOffsets[i]);
+        m_device->bindImageMemory(m_images[i], deviceMemory(), memoryOffsets[i], dld());
     }
 }
 
@@ -594,7 +594,8 @@ void Image::finishImport(const vector<vk::DeviceSize> &offsets, vk::DeviceSize g
         m_device->bindImageMemory(
             m_images[i],
             deviceMemory(min<uint32_t>(i, deviceMemoryCount() - 1)),
-            offsets[i] + globalOffset
+            offsets[i] + globalOffset,
+            dld()
         );
     }
 }
@@ -603,7 +604,7 @@ void Image::recreateImageViews(vk::SamplerYcbcrConversion samperYcbcr)
 {
     for (auto &&imageView : m_imageViews)
     {
-        m_device->destroyImageView(imageView);
+        m_device->destroyImageView(imageView, nullptr, dld());
         imageView = nullptr;
     }
 
@@ -623,7 +624,7 @@ void Image::recreateImageViews(vk::SamplerYcbcrConversion samperYcbcr)
         imageViewCreateInfo.format = m_mainFormat;
         imageViewCreateInfo.subresourceRange = getImageSubresourceRange();
         imageViewCreateInfo.pNext = &samplerYcbcrInfo;
-        m_imageViews[0] = m_device->createImageView(imageViewCreateInfo);
+        m_imageViews[0] = m_device->createImageView(imageViewCreateInfo, nullptr, dld());
 
         m_samperYcbcr = samperYcbcr;
     }
@@ -639,7 +640,7 @@ void Image::recreateImageViews(vk::SamplerYcbcrConversion samperYcbcr)
             imageViewCreateInfo.viewType = vk::ImageViewType::e2D;
             imageViewCreateInfo.format = m_formats[i];
             imageViewCreateInfo.subresourceRange = getImageSubresourceRange(~0u, m_ycbcr ? i : ~0u);
-            m_imageViews[i] = m_device->createImageView(imageViewCreateInfo);
+            m_imageViews[i] = m_device->createImageView(imageViewCreateInfo, nullptr, dld());
         }
     }
 
@@ -708,7 +709,7 @@ void Image::importWin32Handle(
     imageSizes.resize(rawHandles.size());
     for (uint32_t i = 0; i < m_numImages; ++i)
     {
-        auto size = m_device->getImageMemoryRequirements(m_images[i]).size;
+        auto size = m_device->getImageMemoryRequirements(m_images[i], dld()).size;
         if (i < imageSizes.size())
             imageSizes[i] = size + globalOffset;
         else
@@ -747,7 +748,7 @@ void *Image::map(uint32_t plane)
         if (m_externalImport || m_externalImage)
             throw vk::LogicError("Can't map externally imported memory or image");
 
-        m_mapped = m_device->mapMemory(deviceMemory(), 0, memorySize());
+        m_mapped = m_device->mapMemory(deviceMemory(), 0, memorySize(), {}, dld());
     }
 
     if (plane == ~0u)
@@ -760,7 +761,7 @@ void Image::unmap()
     if (!m_mapped)
         return;
 
-    m_device->unmapMemory(deviceMemory());
+    m_device->unmapMemory(deviceMemory(), dld());
     m_mapped = nullptr;
 }
 
@@ -809,7 +810,8 @@ void Image::copyTo(
                 m_imageLayout,
                 dstImage->m_images[dstImage->m_ycbcr ? 0 : i],
                 dstImage->m_imageLayout,
-                region
+                region,
+                dld()
             );
         }
 
@@ -840,7 +842,8 @@ void Image::fetchSubresourceLayouts()
     {
         m_subresourceLayouts[i] = m_device->getImageSubresourceLayout(
             m_images[m_ycbcr ? 0 : i],
-            vk::ImageSubresource(getImageAspectFlagBits(m_ycbcr ? i : ~0u))
+            vk::ImageSubresource(getImageAspectFlagBits(m_ycbcr ? i : ~0u)),
+            dld()
         );
     }
 }
@@ -925,7 +928,8 @@ bool Image::maybeGenerateMipmaps(vk::CommandBuffer commandBuffer)
                 vk::ImageLayout::eTransferDstOptimal,
                 1,
                 &blit,
-                vk::Filter::eLinear
+                vk::Filter::eLinear,
+                dld()
             );
         }
 
@@ -1027,7 +1031,8 @@ void Image::pipelineBarrier(
             0,
             nullptr,
             1,
-            &barrier
+            &barrier,
+            dld()
         );
     }
 

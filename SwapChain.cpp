@@ -47,6 +47,7 @@ shared_ptr<SwapChain> SwapChain::create(CreateInfo &createInfo)
 
 SwapChain::SwapChain(CreateInfo &createInfo, Priv)
     : m_device(move(createInfo.device))
+    , m_dld(m_device->dld())
     , m_queue(move(createInfo.queue))
     , m_renderPass(move(createInfo.renderPass))
     , m_surface(move(createInfo.surface))
@@ -59,8 +60,8 @@ void SwapChain::init(CreateInfo &createInfo)
 {
     const auto physicalDevice = m_device->physicalDevice();
 
-    const auto surfaceCapabilities = physicalDevice->getSurfaceCapabilitiesKHR(m_surface);
-    const auto availPresentModes = physicalDevice->getSurfacePresentModesKHR(m_surface);
+    const auto surfaceCapabilities = physicalDevice->getSurfaceCapabilitiesKHR(m_surface, m_dld);
+    const auto availPresentModes = physicalDevice->getSurfacePresentModesKHR(m_surface, m_dld);
 
     m_size = (surfaceCapabilities.currentExtent.width == numeric_limits<uint32_t>::max())
         ? createInfo.fallbackSize
@@ -133,11 +134,11 @@ void SwapChain::init(CreateInfo &createInfo)
         vkCreateInfo.pNext = &surfaceFullScreenExclusiveInfo;
     }
 #endif
-    m_swapChain = m_device->createSwapchainKHRUnique(vkCreateInfo);
+    m_swapChain = m_device->createSwapchainKHRUnique(vkCreateInfo, nullptr, m_dld);
 
     m_oldSwapChain.reset();
 
-    const auto swapChainImages = m_device->getSwapchainImagesKHR(*m_swapChain);
+    const auto swapChainImages = m_device->getSwapchainImagesKHR(*m_swapChain, m_dld);
     for (auto &&swapChainImage : swapChainImages)
     {
         vk::ImageViewCreateInfo imageViewCreateInfo;
@@ -148,7 +149,7 @@ void SwapChain::init(CreateInfo &createInfo)
         imageViewCreateInfo.subresourceRange.aspectMask = vk::ImageAspectFlagBits::eColor;
         imageViewCreateInfo.subresourceRange.levelCount = 1;
         imageViewCreateInfo.subresourceRange.layerCount = 1;
-        m_swapChainImageViews.push_back(m_device->createImageViewUnique(imageViewCreateInfo));
+        m_swapChainImageViews.push_back(m_device->createImageViewUnique(imageViewCreateInfo, nullptr, m_dld));
 
         vk::FramebufferCreateInfo framebufferCreateInfo;
         framebufferCreateInfo.renderPass = *m_renderPass;
@@ -157,7 +158,7 @@ void SwapChain::init(CreateInfo &createInfo)
         framebufferCreateInfo.width = m_size.width;
         framebufferCreateInfo.height = m_size.height;
         framebufferCreateInfo.layers = 1;
-        m_frameBuffers.push_back(m_device->createFramebufferUnique(framebufferCreateInfo));
+        m_frameBuffers.push_back(m_device->createFramebufferUnique(framebufferCreateInfo, nullptr, m_dld));
     }
 
     m_imageAvailableSem = Semaphore::create(m_device);
@@ -185,7 +186,8 @@ uint32_t SwapChain::acquireNextImage(bool *suboptimal)
         numeric_limits<uint64_t>::max(),
 #endif
         *m_imageAvailableSem,
-        vk::Fence()
+        vk::Fence(),
+        m_dld
     );
     if (nextImageResult.result == vk::Result::eSuboptimalKHR)
     {
@@ -206,7 +208,7 @@ void SwapChain::present(uint32_t imageIdx, bool *suboptimal)
     presentInfo.swapchainCount = 1;
     presentInfo.pSwapchains = &*m_swapChain;
     presentInfo.pImageIndices = &imageIdx;
-    if (m_queue->presentKHR(presentInfo) == vk::Result::eSuboptimalKHR)
+    if (m_queue->presentKHR(presentInfo, m_dld) == vk::Result::eSuboptimalKHR)
     {
         if (suboptimal)
             *suboptimal = true;

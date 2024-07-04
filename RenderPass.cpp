@@ -60,7 +60,7 @@ void RenderPass::init(vk::ImageLayout finalLayout, bool clear)
     renderPassCreateInfo.pAttachments = &colorAttachment;
     renderPassCreateInfo.subpassCount = 1;
     renderPassCreateInfo.pSubpasses = &subpass;
-    m_renderPass = m_device->createRenderPassUnique(renderPassCreateInfo);
+    m_renderPass = m_device->createRenderPassUnique(renderPassCreateInfo, nullptr, m_device->dld());
 }
 
 }

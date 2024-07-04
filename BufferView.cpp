@@ -52,7 +52,7 @@ void BufferView::init()
     bufferViewCreateInfo.format = m_format;
     bufferViewCreateInfo.offset = m_offset;
     bufferViewCreateInfo.range = m_range;
-    m_bufferView = m_device->createBufferViewUnique(bufferViewCreateInfo);
+    m_bufferView = m_device->createBufferViewUnique(bufferViewCreateInfo, nullptr, dld());
 }
 
 void BufferView::copyTo(

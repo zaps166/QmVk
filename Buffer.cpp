@@ -146,14 +146,14 @@ void Buffer::init(const MemoryPropertyFlags *userMemoryPropertyFlags)
             bufferCreateInfo.pQueueFamilyIndices = enabledQueues.data();
         }
 
-        m_buffer = m_device->createBufferUnique(bufferCreateInfo);
+        m_buffer = m_device->createBufferUnique(bufferCreateInfo, nullptr, dld());
     }
 
-    m_memoryRequirements = m_device->getBufferMemoryRequirements(*this);
+    m_memoryRequirements = m_device->getBufferMemoryRequirements(*this, dld());
     if (userMemoryPropertyFlags && m_deviceMemory.empty())
         allocateMemory(*userMemoryPropertyFlags);
 
-    m_device->bindBufferMemory(*this, deviceMemory(), 0);
+    m_device->bindBufferMemory(*this, deviceMemory(), 0, dld());
 }
 
 void Buffer::copyTo(
@@ -191,7 +191,8 @@ void Buffer::copyTo(
             commandBuffer.copyBuffer(
                 *this,
                 *dstBuffer,
-                *bufferCopyIn
+                *bufferCopyIn,
+                dld()
             );
         }
         else
@@ -201,7 +202,8 @@ void Buffer::copyTo(
             commandBuffer.copyBuffer(
                 *this,
                 *dstBuffer,
-                bufferCopy
+                bufferCopy,
+                dld()
             );
         }
     };
@@ -236,7 +238,7 @@ void Buffer::fill(
             vk::PipelineStageFlagBits::eTransfer,
             vk::AccessFlagBits::eTransferWrite
         );
-        commandBuffer.fillBuffer(*m_buffer, offset, size, value);
+        commandBuffer.fillBuffer(*m_buffer, offset, size, value, dld());
     };
 
     if (externalCommandBuffer)
@@ -253,7 +255,7 @@ void Buffer::fill(
 void *Buffer::map()
 {
     if (!m_mapped)
-        m_mapped = m_device->mapMemory(deviceMemory(), 0, memorySize());
+        m_mapped = m_device->mapMemory(deviceMemory(), 0, memorySize(), {}, dld());
 
     return m_mapped;
 }
@@ -262,7 +264,7 @@ void Buffer::unmap()
     if (!m_mapped)
         return;
 
-    m_device->unmapMemory(deviceMemory());
+    m_device->unmapMemory(deviceMemory(), dld());
     m_mapped = nullptr;
 }
 
@@ -303,7 +305,8 @@ void Buffer::pipelineBarrier(
         1,
         &barrier,
         0,
-        nullptr
+        nullptr,
+        dld()
     );
 
     m_stage = dstStage;

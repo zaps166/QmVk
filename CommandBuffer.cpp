@@ -36,6 +36,7 @@ CommandBuffer::CommandBuffer(
     const shared_ptr<Queue> &queue,
     Priv)
     : m_queue(queue)
+    , m_dld(m_queue->dld())
 {}
 CommandBuffer::~CommandBuffer()
 {}
@@ -47,13 +48,13 @@ void CommandBuffer::init()
     vk::CommandPoolCreateInfo commandPoolCreateInfo;
     commandPoolCreateInfo.flags = vk::CommandPoolCreateFlagBits::eTransient | vk::CommandPoolCreateFlagBits::eResetCommandBuffer;
     commandPoolCreateInfo.queueFamilyIndex = m_queue->queueFamilyIndex();
-    m_commandPool = device->createCommandPoolUnique(commandPoolCreateInfo);
+    m_commandPool = device->createCommandPoolUnique(commandPoolCreateInfo, nullptr, dld());
 
     vk::CommandBufferAllocateInfo commandBufferAllocateInfo;
     commandBufferAllocateInfo.commandPool = *m_commandPool;
     commandBufferAllocateInfo.level = vk::CommandBufferLevel::ePrimary;
     commandBufferAllocateInfo.commandBufferCount = 1;
-    static_cast<vk::CommandBuffer &>(*this) = device->allocateCommandBuffers(commandBufferAllocateInfo)[0];
+    static_cast<vk::CommandBuffer &>(*this) = device->allocateCommandBuffers(commandBufferAllocateInfo, dld())[0];
 }
 
 void CommandBuffer::storeData(
@@ -88,10 +89,10 @@ void CommandBuffer::resetAndBegin()
 {
     if (m_resetNeeded)
     {
-        reset(vk::CommandBufferResetFlags());
+        reset(vk::CommandBufferResetFlags(), dld());
         resetStoredData();
     }
-    begin(vk::CommandBufferBeginInfo(vk::CommandBufferUsageFlagBits::eOneTimeSubmit));
+    begin(vk::CommandBufferBeginInfo(vk::CommandBufferUsageFlagBits::eOneTimeSubmit), dld());
     m_resetNeeded = true;
 }
 void CommandBuffer::endSubmitAndWait(
@@ -106,7 +107,7 @@ void CommandBuffer::endSubmitAndWait(
 {
     unique_lock<mutex> queueLock;
 
-    end();
+    end(dld());
 
     if (lock)
         queueLock = m_queue->lock();
