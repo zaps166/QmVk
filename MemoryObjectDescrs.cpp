@@ -56,8 +56,11 @@ void MemoryObjectDescrs::prepareObjects(
     unordered_map<MemoryObjectBase *, MemoryObjectDescr::Access> accessMap;
     for (auto &&memoryObjectDescr : *m_memoryObjects)
     {
-        for (auto &&memoryObject : memoryObjectDescr.m_objects)
+        for (auto &&memoryObjectWeak : memoryObjectDescr.m_objects)
         {
+            auto memoryObject = memoryObjectWeak.lock();
+            assert(memoryObject);
+
             auto it = accessMap.find(memoryObject.get());
             if (it == accessMap.end())
             {

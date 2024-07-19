@@ -15,9 +15,9 @@
 namespace QmVk {
 
 template<typename T>
-static vector<shared_ptr<MemoryObjectBase>> toMemoryObjectBaseVector(const vector<shared_ptr<T>> &inObjects)
+static vector<weak_ptr<MemoryObjectBase>> toMemoryObjectBaseVector(const vector<shared_ptr<T>> &inObjects)
 {
-    vector<shared_ptr<MemoryObjectBase>> objects;
+    vector<weak_ptr<MemoryObjectBase>> objects;
     objects.reserve(objects.size());
     for (auto &&inObject : inObjects)
         objects.push_back(inObject);
@@ -129,8 +129,11 @@ void MemoryObjectDescr::prepareObject(
 #ifndef QMVK_NO_GRAPHICS
     size_t descriptorInfosIdx = 0;
 #endif
-    for (auto &&object : m_objects)
+    for (auto &&objectWeak : m_objects)
     {
+        auto object = objectWeak.lock();
+        assert(object);
+
         switch (m_type)
         {
             case Type::Buffer:
@@ -175,8 +178,11 @@ void MemoryObjectDescr::finalizeObject(
     if (!genMipmapsOnWrite && !resetPipelineStageFlags)
         return;
 
-    for (auto &&object : m_objects)
+    for (auto &&objectWeak : m_objects)
     {
+        auto object = objectWeak.lock();
+        assert(object);
+
         switch (m_type)
         {
             case Type::Buffer:
@@ -233,8 +239,11 @@ MemoryObjectDescr::DescriptorTypeInfos MemoryObjectDescr::getBufferDescriptorTyp
     descriptorInfos.reserve(m_objects.size());
 
     size_t i = 0;
-    for (auto &&object : m_objects)
+    for (auto &&objectWeak : m_objects)
     {
+        auto object = objectWeak.lock();
+        assert(object);
+
         auto buffer = static_pointer_cast<Buffer>(object);
         auto type = (m_access == Access::Read)
             ? vk::DescriptorType::eUniformBuffer
@@ -300,8 +309,11 @@ MemoryObjectDescr::DescriptorTypeInfos MemoryObjectDescr::getImageDescriptorType
     if (samplerYcbcr && m_plane != ~0u)
         throw vk::LogicError("YCbCr descriptor must not have plane specified");
 
-    for (auto &&object : m_objects)
+    for (auto &&objectWeak : m_objects)
     {
+        auto object = objectWeak.lock();
+        assert(object);
+
         auto image = static_pointer_cast<Image>(object);
 
         if (!image->hasImageViews() || samplerYcbcr != image->samplerYcbcr())
@@ -351,8 +363,11 @@ MemoryObjectDescr::DescriptorTypeInfos MemoryObjectDescr::getBufferViewDescripto
     auto &descriptorInfos = descriptorTypeInfos.second;
     descriptorInfos.reserve(m_objects.size());
 
-    for (auto &&object : m_objects)
+    for (auto &&objectWeak : m_objects)
     {
+        auto object = objectWeak.lock();
+        assert(object);
+
         auto bufferView = static_pointer_cast<BufferView>(object);
         auto type = (m_access == Access::Read)
             ? vk::DescriptorType::eUniformTexelBuffer
@@ -373,10 +388,23 @@ MemoryObjectDescr::DescriptorTypeInfos MemoryObjectDescr::getBufferViewDescripto
 
 bool MemoryObjectDescr::operator ==(const MemoryObjectDescr &other) const
 {
+    auto compareObjects = [](const vector<weak_ptr<MemoryObjectBase>> &a, const vector<weak_ptr<MemoryObjectBase>> &b) {
+        const size_t size = a.size();
+        if (size != b.size())
+            return false;
+
+        for (size_t i = 0; i < size; ++i)
+        {
+            if (a[i].lock() != b[i].lock())
+                return false;
+        }
+
+        return true;
+    };
     bool ret =
            m_type == other.m_type
-        && m_objects == other.m_objects
         && m_access == other.m_access
+        && compareObjects(m_objects, other.m_objects)
 #ifndef QMVK_NO_GRAPHICS
         && m_sampler == other.m_sampler && m_plane == other.m_plane
 #endif

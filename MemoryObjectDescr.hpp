@@ -120,7 +120,7 @@ public:
 private:
     Type m_type;
     Access m_access;
-    vector<shared_ptr<MemoryObjectBase>> m_objects;
+    vector<weak_ptr<MemoryObjectBase>> m_objects;
 
 #ifndef QMVK_NO_GRAPHICS
     // Image
