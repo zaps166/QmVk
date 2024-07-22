@@ -48,6 +48,19 @@ vector<DescriptorInfo> MemoryObjectDescrs::fetchDescriptorInfos() const
     return descriptorInfos;
 }
 
+void MemoryObjectDescrs::iterateMemoryObjects(const Callback &callback) const
+{
+    for (auto &&memoryObjectDescr : *m_memoryObjects)
+    {
+        for (auto &&objectWeak : memoryObjectDescr.m_objects)
+        {
+            auto object = objectWeak.lock();
+            assert(object);
+            callback(object);
+        }
+    }
+}
+
 void MemoryObjectDescrs::prepareObjects(
     vk::CommandBuffer commandBuffer,
     vk::PipelineStageFlags pipelineStageFlags) const

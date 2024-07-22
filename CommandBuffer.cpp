@@ -16,7 +16,6 @@ namespace QmVk {
 
 struct CommandBuffer::StoredData
 {
-    unordered_set<MemoryObjectDescrs> memoryObjects;
     unordered_set<shared_ptr<DescriptorSet>> descriptorSets;
     unordered_set<shared_ptr<MemoryObjectBase>> memoryObjectsBase;
 };
@@ -64,8 +63,10 @@ void CommandBuffer::storeData(
     if (!m_storedData)
         m_storedData = make_unique<StoredData>();
 
-    m_storedData->memoryObjects.insert(memoryObjects);
     m_storedData->descriptorSets.insert(descriptorSet);
+    memoryObjects.iterateMemoryObjects([this](const shared_ptr<MemoryObjectBase> &object) {
+        m_storedData->memoryObjectsBase.insert(object);
+    });
 }
 void CommandBuffer::storeData(
     const shared_ptr<MemoryObjectBase> &memoryObjectBase)
@@ -80,7 +81,6 @@ void CommandBuffer::resetStoredData()
     if (!m_storedData)
         return;
 
-    m_storedData->memoryObjects.clear();
     m_storedData->descriptorSets.clear();
     m_storedData->memoryObjectsBase.clear();
 }

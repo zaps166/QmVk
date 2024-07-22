@@ -19,6 +19,8 @@ class QMVK_EXPORT MemoryObjectDescrs
     friend class hash<MemoryObjectDescrs>;
     friend class Pipeline;
 
+    using Callback = function<void(const shared_ptr<MemoryObjectBase> &)>;
+
 public:
     MemoryObjectDescrs();
     MemoryObjectDescrs(const initializer_list<MemoryObjectDescr> &memoryObjects);
@@ -30,6 +32,8 @@ public:
 
     vector<DescriptorType> fetchDescriptorTypes() const;
     vector<DescriptorInfo> fetchDescriptorInfos() const;
+
+    void iterateMemoryObjects(const Callback &callback) const;
 
 private:
     void prepareObjects(
