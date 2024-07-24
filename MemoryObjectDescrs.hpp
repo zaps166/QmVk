@@ -10,6 +10,8 @@
 
 #include "MemoryObjectDescr.hpp"
 
+#include <functional>
+
 namespace QmVk {
 
 using namespace std;

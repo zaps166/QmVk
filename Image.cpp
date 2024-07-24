@@ -15,7 +15,6 @@
 #   include "BufferView.hpp"
 #endif
 
-#include <functional>
 #include <cmath>
 
 namespace QmVk {
