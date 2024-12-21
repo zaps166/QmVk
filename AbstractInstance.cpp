@@ -106,7 +106,7 @@ uint32_t AbstractInstance::version()
     return ver;
 }
 
-vector<shared_ptr<PhysicalDevice>> AbstractInstance::enumeratePhysicalDevices(bool compatibleOnly)
+vector<shared_ptr<PhysicalDevice>> AbstractInstance::enumeratePhysicalDevices(bool compatibleOnly, bool sort)
 {
     const auto physicalDevices = [this] {
         const auto self = static_cast<vk::Instance *>(this);
@@ -143,7 +143,7 @@ vector<shared_ptr<PhysicalDevice>> AbstractInstance::enumeratePhysicalDevices(bo
     if (physicalDeviceInstances.empty())
         throw vk::InitializationFailedError("No compatible devices found");
 
-    if (physicalDeviceInstances.size() > 1)
+    if (sort && physicalDeviceInstances.size() > 1)
         sortPhysicalDevices(physicalDeviceInstances);
 
     return physicalDeviceInstances;

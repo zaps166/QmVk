@@ -49,7 +49,7 @@ public:
     inline const auto &enabledExtensions() const;
     inline bool checkExtension(const char *extension) const;
 
-    vector<shared_ptr<PhysicalDevice>> enumeratePhysicalDevices(bool compatibleOnly);
+    vector<shared_ptr<PhysicalDevice>> enumeratePhysicalDevices(bool compatibleOnly, bool sort = true);
 
     shared_ptr<Device> createDevice(
         const shared_ptr<PhysicalDevice> &physicalDevice,
