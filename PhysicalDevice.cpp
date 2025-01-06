@@ -316,7 +316,8 @@ PhysicalDevice::MemoryType PhysicalDevice::findMemoryType(
     uint32_t memoryTypeBits,
     uint32_t heap) const
 {
-    MemoryType result;
+    using MemoryTypeResult = pair<MemoryType, bool>;
+    MemoryTypeResult result;
 
     auto memoryProperties = getMemoryProperties(dld());
 #ifdef QMVK_APPLY_MEMORY_PROPERTIES_QUIRKS
@@ -335,7 +336,7 @@ PhysicalDevice::MemoryType PhysicalDevice::findMemoryType(
         const auto required = memoryPropertyFlags.required;
         if ((currMemoryPropertyFlags & required) == required)
         {
-            const MemoryType currResult = {i, currMemoryPropertyFlags};
+            const MemoryTypeResult currResult = {{i, currMemoryPropertyFlags}, true};
             bool doBreak = false;
 
             const auto optional = memoryPropertyFlags.optional;
@@ -387,7 +388,7 @@ PhysicalDevice::MemoryType PhysicalDevice::findMemoryType(
     if (!result.second)
         throw vk::InitializationFailedError("Cannot find specified memory type");
 
-    return result;
+    return result.first;
 }
 PhysicalDevice::MemoryType PhysicalDevice::findMemoryType(
     uint32_t memoryTypeBits) const
