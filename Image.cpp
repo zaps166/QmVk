@@ -130,8 +130,7 @@ shared_ptr<Image> Image::createOptimal(
         storage,
         false,
         false,
-        exportMemoryTypes,
-        Priv()
+        exportMemoryTypes
     );
     image->init(MemoryPropertyPreset::PreferNoHostAccess, heap);
     return image;
@@ -157,8 +156,7 @@ shared_ptr<Image> Image::createLinear(
         storage,
         false,
         false,
-        exportMemoryTypes,
-        Priv()
+        exportMemoryTypes
     );
     image->init(memoryPropertyPreset, heap);
     return image;
@@ -182,8 +180,7 @@ shared_ptr<Image> Image::createExternalImport(
         false,
         true,
         false,
-        exportMemoryTypes,
-        Priv()
+        exportMemoryTypes
     );
     image->init({}, ~0u, imageCreateInfoCallback);
     return image;
@@ -207,8 +204,7 @@ shared_ptr<Image> Image::createFromImage(
         false,
         false,
         true,
-        vk::ExternalMemoryHandleTypeFlags(),
-        Priv()
+        vk::ExternalMemoryHandleTypeFlags()
     );
     if (image->m_numImages != vkImages.size())
         throw vk::LogicError("Number of images doesn't match");
@@ -229,8 +225,7 @@ Image::Image(
     bool storage,
     bool externalImport,
     bool externalImage,
-    vk::ExternalMemoryHandleTypeFlags exportMemoryTypes,
-    Priv)
+    vk::ExternalMemoryHandleTypeFlags exportMemoryTypes)
     : MemoryObject(device, exportMemoryTypes)
     , m_wantedSize(size)
     , m_wantedPaddingHeight(paddingHeight)

@@ -23,7 +23,6 @@ class BufferView;
 class QMVK_EXPORT Image : public MemoryObject, public enable_shared_from_this<Image>
 {
     friend class MemoryObjectDescr;
-    struct Priv {};
 
 public:
     enum class MemoryPropertyPreset
@@ -107,8 +106,7 @@ public:
         bool storage,
         bool externalImport,
         bool externalImage,
-        vk::ExternalMemoryHandleTypeFlags exportMemoryTypes,
-        Priv
+        vk::ExternalMemoryHandleTypeFlags exportMemoryTypes
     );
     ~Image();
 

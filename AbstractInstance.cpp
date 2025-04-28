@@ -132,8 +132,7 @@ vector<shared_ptr<PhysicalDevice>> AbstractInstance::enumeratePhysicalDevices(bo
     {
         auto physicalDevice = make_shared<PhysicalDevice>(
             shared_from_this(),
-            vkPhysicalDevice,
-            PhysicalDevice::Priv()
+            vkPhysicalDevice
         );
         physicalDevice->init();
         if (!compatibleOnly || isCompatibleDevice(physicalDevice))

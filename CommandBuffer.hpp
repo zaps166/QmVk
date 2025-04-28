@@ -24,7 +24,6 @@ class Queue;
 
 class QMVK_EXPORT CommandBuffer : public vk::CommandBuffer
 {
-    struct Priv {};
     struct StoredData;
 
 public:
@@ -38,8 +37,7 @@ public:
 
 public:
     CommandBuffer(
-        const shared_ptr<Queue> &queue,
-        Priv
+        const shared_ptr<Queue> &queue
     );
     ~CommandBuffer();
 

@@ -14,11 +14,11 @@ namespace QmVk {
 
 shared_ptr<GraphicsPipeline> GraphicsPipeline::create(CreateInfo &createInfo)
 {
-    auto graphicsPipeline = make_shared<GraphicsPipeline>(createInfo, Priv());
+    auto graphicsPipeline = make_shared<GraphicsPipeline>(createInfo);
     return graphicsPipeline;
 }
 
-GraphicsPipeline::GraphicsPipeline(CreateInfo &createInfo, Priv)
+GraphicsPipeline::GraphicsPipeline(CreateInfo &createInfo)
     : Pipeline(createInfo.device, vk::ShaderStageFlagBits::eAllGraphics, vk::PipelineStageFlagBits::eFragmentShader, createInfo.pushConstantsSize)
     , m_vertexShaderModule(move(createInfo.vertexShaderModule))
     , m_fragmentShaderModule(move(createInfo.fragmentShaderModule))

@@ -15,16 +15,14 @@ shared_ptr<DescriptorSet> DescriptorSet::create(
     const shared_ptr<DescriptorPool> &descriptorPool)
 {
     auto descriptor = make_shared<DescriptorSet>(
-        descriptorPool,
-        Priv()
+        descriptorPool
     );
     descriptor->init();
     return descriptor;
 }
 
 DescriptorSet::DescriptorSet(
-    const shared_ptr<DescriptorPool> &descriptorPool,
-    Priv)
+    const shared_ptr<DescriptorPool> &descriptorPool)
     : m_descriptorPool(descriptorPool)
 {}
 DescriptorSet::~DescriptorSet()

@@ -21,8 +21,6 @@ class Device;
 
 class QMVK_EXPORT Queue : public vk::Queue
 {
-    struct Priv {};
-
 public:
     static shared_ptr<Queue> create(
         const shared_ptr<Device> &device,
@@ -34,8 +32,7 @@ public:
     Queue(
         const shared_ptr<Device> &device,
         uint32_t queueFamilyIndex,
-        uint32_t queueIndex,
-        Priv
+        uint32_t queueIndex
     );
     ~Queue();
 

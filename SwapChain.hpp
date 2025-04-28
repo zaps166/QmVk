@@ -23,8 +23,6 @@ class Semaphore;
 
 class QMVK_EXPORT SwapChain
 {
-    struct Priv {};
-
 public:
     struct CreateInfo
     {
@@ -53,7 +51,7 @@ public:
     static shared_ptr<SwapChain> create(CreateInfo &createInfo);
 
 public:
-    SwapChain(CreateInfo &createInfo, Priv);
+    SwapChain(CreateInfo &createInfo);
     ~SwapChain();
 
 private:

@@ -18,8 +18,6 @@ class ShaderModule;
 
 class QMVK_EXPORT ComputePipeline final : public Pipeline
 {
-    struct Priv {};
-
 public:
     static shared_ptr<ComputePipeline> create(
         const shared_ptr<Device> &device,
@@ -33,8 +31,7 @@ public:
         const shared_ptr<Device> &device,
         const shared_ptr<ShaderModule> &shaderModule,
         uint32_t pushConstantsSize,
-        bool dispatchBase,
-        Priv
+        bool dispatchBase
     );
     ~ComputePipeline();
 

@@ -26,13 +26,9 @@ class Queue;
 class QMVK_EXPORT Device : public vk::Device, public enable_shared_from_this<Device>
 {
     friend class PhysicalDevice;
-    struct Priv {};
 
 public:
-    Device(
-        const shared_ptr<PhysicalDevice> &physicalDevice,
-        Priv
-    );
+    Device(const shared_ptr<PhysicalDevice> &physicalDevice);
     ~Device();
 
 private:

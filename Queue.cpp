@@ -17,8 +17,7 @@ shared_ptr<Queue> Queue::create(
     auto queue = make_shared<Queue>(
         device,
         m_queueFamilyIndex,
-        m_queueIndex,
-        Priv()
+        m_queueIndex
     );
     queue->init();
     return queue;
@@ -27,8 +26,7 @@ shared_ptr<Queue> Queue::create(
 Queue::Queue(
     const shared_ptr<Device> &device,
     uint32_t queueFamilyIndex,
-    uint32_t queueIndex,
-    Priv)
+    uint32_t queueIndex)
     : m_device(device)
     , m_dld(m_device->dld())
     , m_queueFamilyIndex(queueFamilyIndex)

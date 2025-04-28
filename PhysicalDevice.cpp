@@ -15,8 +15,7 @@ namespace QmVk {
 
 PhysicalDevice::PhysicalDevice(
         const shared_ptr<AbstractInstance> &instance,
-        vk::PhysicalDevice physicalDevice,
-        Priv)
+        vk::PhysicalDevice physicalDevice)
     : vk::PhysicalDevice(physicalDevice)
     , m_instance(instance)
     , m_dld(m_instance->dld())
@@ -178,8 +177,7 @@ shared_ptr<Device> PhysicalDevice::createDevice(
     const vector<pair<uint32_t, uint32_t>> &queuesFamily)
 {
     auto device = make_shared<Device>(
-        shared_from_this(),
-        Device::Priv()
+        shared_from_this()
     );
     device->init(features, extensions, queuesFamily);
     return device;

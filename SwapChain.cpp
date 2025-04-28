@@ -40,12 +40,12 @@ vk::Format SwapChain::getSurfaceFormat(
 
 shared_ptr<SwapChain> SwapChain::create(CreateInfo &createInfo)
 {
-    auto swapChain = make_shared<SwapChain>(createInfo, Priv());
+    auto swapChain = make_shared<SwapChain>(createInfo);
     swapChain->init(createInfo);
     return swapChain;
 }
 
-SwapChain::SwapChain(CreateInfo &createInfo, Priv)
+SwapChain::SwapChain(CreateInfo &createInfo)
     : m_device(move(createInfo.device))
     , m_dld(m_device->dld())
     , m_queue(move(createInfo.queue))

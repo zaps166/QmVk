@@ -17,8 +17,7 @@ shared_ptr<RenderPass> RenderPass::create(
 {
     auto renderPass = make_shared<RenderPass>(
         device,
-        format,
-        Priv()
+        format
     );
     renderPass->init(finalLayout, clear);
     return renderPass;
@@ -26,8 +25,7 @@ shared_ptr<RenderPass> RenderPass::create(
 
 RenderPass::RenderPass(
     const shared_ptr<Device> &device,
-    vk::Format format,
-    Priv)
+    vk::Format format)
     : m_device(device)
     , m_format(format)
 {}

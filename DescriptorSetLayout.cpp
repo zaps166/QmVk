@@ -15,8 +15,7 @@ shared_ptr<DescriptorSetLayout> DescriptorSetLayout::create(
 {
     auto descriptorSetLayout = make_shared<DescriptorSetLayout>(
         device,
-        descriptorTypes,
-        Priv()
+        descriptorTypes
     );
     descriptorSetLayout->init();
     return descriptorSetLayout;
@@ -24,8 +23,7 @@ shared_ptr<DescriptorSetLayout> DescriptorSetLayout::create(
 
 DescriptorSetLayout::DescriptorSetLayout(
     const shared_ptr<Device> &device,
-    const vector<DescriptorType> &descriptorTypes,
-    Priv)
+    const vector<DescriptorType> &descriptorTypes)
     : m_device(device)
     , m_descriptorTypes(descriptorTypes)
 {

@@ -27,7 +27,6 @@ class Device;
 class QMVK_EXPORT PhysicalDevice : public vk::PhysicalDevice, public enable_shared_from_this<PhysicalDevice>
 {
     friend class AbstractInstance;
-    struct Priv {};
 
 public:
     using MemoryType = pair<uint32_t, vk::MemoryPropertyFlags>;
@@ -53,8 +52,7 @@ public:
 public:
     PhysicalDevice(
         const shared_ptr<AbstractInstance> &instance,
-        vk::PhysicalDevice physicalDevice,
-        Priv
+        vk::PhysicalDevice physicalDevice
     );
     ~PhysicalDevice();
 

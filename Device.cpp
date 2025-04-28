@@ -13,9 +13,7 @@
 
 namespace QmVk {
 
-Device::Device(
-    const shared_ptr<PhysicalDevice> &physicalDevice,
-    Priv)
+Device::Device(const shared_ptr<PhysicalDevice> &physicalDevice)
     : m_physicalDevice(physicalDevice)
     , m_dld(m_physicalDevice->dld())
 {}

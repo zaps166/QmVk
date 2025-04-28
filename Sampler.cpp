@@ -17,8 +17,7 @@ shared_ptr<Sampler> Sampler::create(
     auto sampler = make_shared<Sampler>(
         device,
         createInfo,
-        ycbcrCreateInfo,
-        Priv()
+        ycbcrCreateInfo
     );
     sampler->init();
     return sampler;
@@ -43,8 +42,7 @@ shared_ptr<Sampler> Sampler::createClampToEdge(
     auto sampler = make_shared<Sampler>(
         device,
         createInfo,
-        ycbcrCreateInfo,
-        Priv()
+        ycbcrCreateInfo
     );
     sampler->init();
     return sampler;
@@ -53,8 +51,7 @@ shared_ptr<Sampler> Sampler::createClampToEdge(
 Sampler::Sampler(
     const shared_ptr<Device> &device,
     const vk::SamplerCreateInfo &createInfo,
-    const vk::SamplerYcbcrConversionCreateInfo &ycbcrCreateInfo,
-    Priv)
+    const vk::SamplerYcbcrConversionCreateInfo &ycbcrCreateInfo)
     : m_device(device)
     , m_createInfo(createInfo)
     , m_ycbcrCreateInfo(ycbcrCreateInfo)

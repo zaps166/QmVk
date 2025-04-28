@@ -24,8 +24,7 @@ shared_ptr<ComputePipeline> ComputePipeline::create(
         device,
         shaderModule,
         pushConstantsSize,
-        dispatchBase,
-        Priv()
+        dispatchBase
     );
     return computePipeline;
 }
@@ -34,8 +33,7 @@ ComputePipeline::ComputePipeline(
     const shared_ptr<Device> &device,
     const shared_ptr<ShaderModule> &shaderModule,
     uint32_t pushConstantsSize,
-    bool dispatchBase,
-    Priv)
+    bool dispatchBase)
     : Pipeline(device, vk::ShaderStageFlagBits::eCompute, vk::PipelineStageFlagBits::eComputeShader, pushConstantsSize)
     , m_shaderModule(shaderModule)
     , m_dispatchBase(dispatchBase)

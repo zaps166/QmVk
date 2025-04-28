@@ -20,8 +20,6 @@ class Device;
 
 class QMVK_EXPORT Sampler
 {
-    struct Priv {};
-
 public:
     static shared_ptr<Sampler> create(
         const shared_ptr<Device> &device,
@@ -38,8 +36,7 @@ public:
     Sampler(
         const shared_ptr<Device> &device,
         const vk::SamplerCreateInfo &createInfo,
-        const vk::SamplerYcbcrConversionCreateInfo &ycbcrCreateInfo,
-        Priv
+        const vk::SamplerYcbcrConversionCreateInfo &ycbcrCreateInfo
     );
     ~Sampler();
 

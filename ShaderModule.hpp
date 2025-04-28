@@ -20,8 +20,6 @@ class Device;
 
 class QMVK_EXPORT ShaderModule
 {
-    struct Priv {};
-
 public:
     static shared_ptr<ShaderModule> create(
         const shared_ptr<Device> &device,
@@ -32,8 +30,7 @@ public:
 public:
     ShaderModule(
         const shared_ptr<Device> &device,
-        vk::ShaderStageFlagBits stage,
-        Priv
+        vk::ShaderStageFlagBits stage
     );
     ~ShaderModule();
 

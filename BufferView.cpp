@@ -20,8 +20,7 @@ shared_ptr<BufferView> BufferView::create(
         buffer,
         format,
         offset,
-        range,
-        Priv()
+        range
     );
     bufferView->init();
     return bufferView;
@@ -31,8 +30,7 @@ BufferView::BufferView(
     const shared_ptr<Buffer> &buffer,
     vk::Format format,
     vk::DeviceSize offset,
-    vk::DeviceSize range,
-    Priv)
+    vk::DeviceSize range)
     : MemoryObjectBase(buffer->device())
     , m_buffer(buffer)
     , m_format(format)

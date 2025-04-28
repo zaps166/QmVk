@@ -20,8 +20,6 @@ class Device;
 
 class QMVK_EXPORT Semaphore
 {
-    struct Priv {};
-
 public:
     static shared_ptr<Semaphore> create(
         const shared_ptr<Device> &device
@@ -34,8 +32,7 @@ public:
 public:
     Semaphore(
         const shared_ptr<Device> &device,
-        vk::ExternalSemaphoreHandleTypeFlagBits *handleType,
-        Priv
+        vk::ExternalSemaphoreHandleTypeFlagBits *handleType
     );
     ~Semaphore();
 

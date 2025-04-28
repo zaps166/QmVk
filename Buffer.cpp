@@ -20,8 +20,7 @@ shared_ptr<Buffer> Buffer::create(
     auto buffer = make_shared<Buffer>(
         device,
         size,
-        usage,
-        Buffer::Priv()
+        usage
     );
     buffer->init(&memoryPropertyFlags);
     return buffer;
@@ -102,8 +101,7 @@ shared_ptr<Buffer> Buffer::createFromDeviceMemory(
     auto buffer = make_shared<Buffer>(
         device,
         size,
-        usage,
-        Buffer::Priv()
+        usage
     );
     buffer->m_memoryPropertyFlags = memoryPropertyFlags;
     buffer->m_deviceMemory.push_back(deviceMemory);
@@ -117,8 +115,7 @@ shared_ptr<Buffer> Buffer::createFromDeviceMemory(
 Buffer::Buffer(
     const shared_ptr<Device> &device,
     vk::DeviceSize size,
-    vk::BufferUsageFlags usage,
-    Priv)
+    vk::BufferUsageFlags usage)
     : MemoryObject(device)
     , m_size(size)
     , m_usage(usage)

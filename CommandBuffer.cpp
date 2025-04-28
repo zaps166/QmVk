@@ -24,16 +24,14 @@ shared_ptr<CommandBuffer> CommandBuffer::create(
     const shared_ptr<Queue> &queue)
 {
     auto commandBuffer = make_shared<CommandBuffer>(
-        queue,
-        Priv()
+        queue
     );
     commandBuffer->init();
     return commandBuffer;
 }
 
 CommandBuffer::CommandBuffer(
-    const shared_ptr<Queue> &queue,
-    Priv)
+    const shared_ptr<Queue> &queue)
     : m_queue(queue)
     , m_dld(m_queue->dld())
 {}

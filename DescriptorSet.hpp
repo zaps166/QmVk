@@ -21,8 +21,6 @@ class Device;
 
 class QMVK_EXPORT DescriptorSet
 {
-    struct Priv {};
-
 public:
     static shared_ptr<DescriptorSet> create(
         const shared_ptr<DescriptorPool> &descriptorPool
@@ -30,8 +28,7 @@ public:
 
 public:
     DescriptorSet(
-        const shared_ptr<DescriptorPool> &descriptorPool,
-        Priv
+        const shared_ptr<DescriptorPool> &descriptorPool
     );
     ~DescriptorSet();
 

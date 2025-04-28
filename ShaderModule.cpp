@@ -16,8 +16,7 @@ shared_ptr<ShaderModule> ShaderModule::create(
 {
     auto shaderModuleCreateInfo = make_shared<ShaderModule>(
         device,
-        stage,
-        Priv()
+        stage
     );
     shaderModuleCreateInfo->init(data);
     return shaderModuleCreateInfo;
@@ -25,8 +24,7 @@ shared_ptr<ShaderModule> ShaderModule::create(
 
 ShaderModule::ShaderModule(
     const shared_ptr<Device> &device,
-    vk::ShaderStageFlagBits stage,
-    Priv)
+    vk::ShaderStageFlagBits stage)
     : m_device(device)
     , m_stage(stage)
 {}

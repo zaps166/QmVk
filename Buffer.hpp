@@ -19,7 +19,6 @@ class QMVK_EXPORT Buffer : public MemoryObject, public enable_shared_from_this<B
     Buffer(const Buffer &) = delete;
 
     friend class MemoryObjectDescr;
-    struct Priv {};
 
 public:
     static shared_ptr<Buffer> create(
@@ -58,8 +57,7 @@ public:
     Buffer(
         const shared_ptr<Device> &device,
         vk::DeviceSize size,
-        vk::BufferUsageFlags usage,
-        Priv
+        vk::BufferUsageFlags usage
     );
     ~Buffer();
 

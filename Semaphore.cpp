@@ -14,8 +14,7 @@ shared_ptr<Semaphore> Semaphore::create(
 {
     auto semaphore = make_shared<Semaphore>(
         device,
-        nullptr,
-        Priv()
+        nullptr
     );
     semaphore->init();
     return semaphore;
@@ -26,8 +25,7 @@ shared_ptr<Semaphore> Semaphore::createExport(
 {
     auto semaphore = make_shared<Semaphore>(
         device,
-        &handleType,
-        Priv()
+        &handleType
     );
     semaphore->init();
     return semaphore;
@@ -35,8 +33,7 @@ shared_ptr<Semaphore> Semaphore::createExport(
 
 Semaphore::Semaphore(
     const shared_ptr<Device> &device,
-    vk::ExternalSemaphoreHandleTypeFlagBits *handleType,
-    Priv)
+    vk::ExternalSemaphoreHandleTypeFlagBits *handleType)
     : m_device(device)
     , m_handleType(handleType ? make_unique<vk::ExternalSemaphoreHandleTypeFlagBits>(*handleType) : nullptr)
 {}

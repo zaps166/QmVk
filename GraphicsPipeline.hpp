@@ -20,8 +20,6 @@ class CommandBuffer;
 
 class QMVK_EXPORT GraphicsPipeline final : public Pipeline
 {
-    struct Priv {};
-
 public:
     struct CreateInfo
     {
@@ -44,7 +42,7 @@ public:
     static shared_ptr<GraphicsPipeline> create(CreateInfo &createInfo);
 
 public:
-    GraphicsPipeline(CreateInfo &createInfo, Priv);
+    GraphicsPipeline(CreateInfo &createInfo);
     ~GraphicsPipeline();
 
 private:

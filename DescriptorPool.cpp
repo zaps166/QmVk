@@ -16,8 +16,7 @@ shared_ptr<DescriptorPool> DescriptorPool::create(
 {
     auto descriptorPool = make_shared<DescriptorPool>(
         descriptorSetLayout,
-        max,
-        Priv()
+        max
     );
     descriptorPool->init();
     return descriptorPool;
@@ -25,8 +24,7 @@ shared_ptr<DescriptorPool> DescriptorPool::create(
 
 DescriptorPool::DescriptorPool(
     const shared_ptr<DescriptorSetLayout> &descriptorSetLayout,
-    uint32_t max,
-    Priv)
+    uint32_t max)
     : m_descriptorSetLayout(descriptorSetLayout)
     , m_max(max)
 {

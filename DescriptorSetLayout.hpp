@@ -20,8 +20,6 @@ class Device;
 
 class QMVK_EXPORT DescriptorSetLayout
 {
-    struct Priv {};
-
 public:
     static shared_ptr<DescriptorSetLayout> create(
         const shared_ptr<Device> &device,
@@ -31,8 +29,7 @@ public:
 public:
     DescriptorSetLayout(
         const shared_ptr<Device> &device,
-        const vector<DescriptorType> &descriptorTypes,
-        Priv
+        const vector<DescriptorType> &descriptorTypes
     );
     ~DescriptorSetLayout();
 

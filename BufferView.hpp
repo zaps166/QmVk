@@ -19,8 +19,6 @@ class Buffer;
 
 class QMVK_EXPORT BufferView : public MemoryObjectBase
 {
-    struct Priv {};
-
 public:
     static shared_ptr<BufferView> create(
         const shared_ptr<Buffer> &buffer,
@@ -34,8 +32,7 @@ public:
         const shared_ptr<Buffer> &buffer,
         vk::Format format,
         vk::DeviceSize offset,
-        vk::DeviceSize range,
-        Priv
+        vk::DeviceSize range
     );
     ~BufferView();
 

@@ -20,8 +20,6 @@ class Device;
 
 class QMVK_EXPORT RenderPass
 {
-    struct Priv {};
-
 public:
     static shared_ptr<RenderPass> create(
         const shared_ptr<Device> &device,
@@ -33,8 +31,7 @@ public:
 public:
     RenderPass(
         const shared_ptr<Device> &device,
-        vk::Format format,
-        Priv
+        vk::Format format
     );
     ~RenderPass();
 
