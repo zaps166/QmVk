@@ -17,6 +17,9 @@ endif()
 if(NOT QMVK_TARGET_ENV)
     set(QMVK_TARGET_ENV "vulkan1.0" CACHE INTERNAL "")
 endif()
+if(NOT QMVK_LIBRARY_TYPE)
+    set(QMVK_LIBRARY_TYPE OBJECT CACHE INTERNAL "")
+endif()
 
 macro(qmvk_add_shader SHADER_SOURCE_FILE)
     set(EXTRA_ARGS ${ARGN})
@@ -91,7 +94,7 @@ if(QMVK_NO_GRAPHICS)
     )
 endif()
 
-add_library(${PROJECT_NAME} OBJECT
+add_library(${PROJECT_NAME} ${QMVK_LIBRARY_TYPE}
     ${QMVK_VULKAN_HDR}
     ${QMVK_VULKAN_SRC}
 )
