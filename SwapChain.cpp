@@ -159,20 +159,21 @@ void SwapChain::init(CreateInfo &createInfo)
         framebufferCreateInfo.height = m_size.height;
         framebufferCreateInfo.layers = 1;
         m_frameBuffers.push_back(m_device->createFramebufferUnique(framebufferCreateInfo, nullptr, m_dld));
+
+        m_renderFinishedSem.push_back(Semaphore::create(m_device));
     }
 
     m_imageAvailableSem = Semaphore::create(m_device);
-    m_renderFinishedSem = Semaphore::create(m_device);
 }
 
-vk::SubmitInfo SwapChain::getSubmitInfo() const
+vk::SubmitInfo SwapChain::getSubmitInfo(uint32_t imageIdx) const
 {
     vk::SubmitInfo submitInfo;
     submitInfo.waitSemaphoreCount = 1;
     submitInfo.pWaitSemaphores = *m_imageAvailableSem;
     submitInfo.pWaitDstStageMask = &g_waitStage;
     submitInfo.signalSemaphoreCount = 1;
-    submitInfo.pSignalSemaphores = *m_renderFinishedSem;
+    submitInfo.pSignalSemaphores = *m_renderFinishedSem.at(imageIdx);
     return submitInfo;
 }
 
@@ -204,7 +205,7 @@ void SwapChain::present(uint32_t imageIdx, bool *suboptimal)
 {
     vk::PresentInfoKHR presentInfo;
     presentInfo.waitSemaphoreCount = 1;
-    presentInfo.pWaitSemaphores = *m_renderFinishedSem;
+    presentInfo.pWaitSemaphores = *m_renderFinishedSem.at(imageIdx);
     presentInfo.swapchainCount = 1;
     presentInfo.pSwapchains = &*m_swapChain;
     presentInfo.pImageIndices = &imageIdx;

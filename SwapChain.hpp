@@ -64,7 +64,7 @@ public:
 
     inline vk::Framebuffer frameBuffer(uint32_t idx) const;
 
-    vk::SubmitInfo getSubmitInfo() const;
+    vk::SubmitInfo getSubmitInfo(uint32_t imageIdx) const;
 
     uint32_t acquireNextImage(bool *suboptimal = nullptr);
     void present(uint32_t imageIdx, bool *suboptimal = nullptr);
@@ -88,8 +88,8 @@ private:
     vector<vk::UniqueImageView> m_swapChainImageViews;
     vector<vk::UniqueFramebuffer> m_frameBuffers;
 
+    vector<shared_ptr<Semaphore>> m_renderFinishedSem;
     shared_ptr<Semaphore> m_imageAvailableSem;
-    shared_ptr<Semaphore> m_renderFinishedSem;
 };
 
 /* Inline implementation */
