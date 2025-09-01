@@ -37,7 +37,7 @@ protected:
 
 public:
     inline shared_ptr<Device> device() const;
-    inline const vk::DispatchLoaderDynamic &dld() const;
+    inline const vk::detail::DispatchLoaderDynamic &dld() const;
 
     template<typename T>
     inline T *customData();
@@ -46,7 +46,7 @@ public:
 protected:
     const shared_ptr<Device> m_device;
 private:
-    const vk::DispatchLoaderDynamic &m_dld;
+    const vk::detail::DispatchLoaderDynamic &m_dld;
 
 protected:
     unique_ptr<CustomData> m_customData;
@@ -64,7 +64,7 @@ shared_ptr<Device> MemoryObjectBase::device() const
 {
     return m_device;
 }
-const vk::DispatchLoaderDynamic &MemoryObjectBase::dld() const
+const vk::detail::DispatchLoaderDynamic &MemoryObjectBase::dld() const
 {
     return m_dld;
 }

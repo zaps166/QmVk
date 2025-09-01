@@ -96,7 +96,7 @@ public:
     );
 
     inline shared_ptr<AbstractInstance> instance() const;
-    inline const vk::DispatchLoaderDynamic &dld() const;
+    inline const vk::detail::DispatchLoaderDynamic &dld() const;
 
 #ifdef QMVK_APPLY_MEMORY_PROPERTIES_QUIRKS
     void applyMemoryPropertiesQuirks(vk::PhysicalDeviceMemoryProperties &props) const;
@@ -129,7 +129,7 @@ public:
 
 private:
     const shared_ptr<AbstractInstance> m_instance;
-    const vk::DispatchLoaderDynamic &m_dld;
+    const vk::detail::DispatchLoaderDynamic &m_dld;
 
     unordered_set<string> m_extensionProperties;
 
@@ -217,7 +217,7 @@ shared_ptr<AbstractInstance> PhysicalDevice::instance() const
 {
     return m_instance;
 }
-const vk::DispatchLoaderDynamic &PhysicalDevice::dld() const
+const vk::detail::DispatchLoaderDynamic &PhysicalDevice::dld() const
 {
     return m_dld;
 }

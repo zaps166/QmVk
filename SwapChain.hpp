@@ -73,7 +73,7 @@ public:
 
 private:
     const shared_ptr<Device> m_device;
-    const vk::DispatchLoaderDynamic &m_dld;
+    const vk::detail::DispatchLoaderDynamic &m_dld;
     const shared_ptr<Queue> m_queue;
     const shared_ptr<RenderPass> m_renderPass;
     const vk::SurfaceKHR m_surface;

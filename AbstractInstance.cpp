@@ -13,14 +13,14 @@ PFN_vkGetInstanceProcAddr AbstractInstance::loadVulkanLibrary(const string &vulk
 {
     try
     {
-        return setVulkanLibrary(make_shared<vk::DynamicLoader>(vulkanLibrary));
+        return setVulkanLibrary(make_shared<vk::detail::DynamicLoader>(vulkanLibrary));
     }
     catch (const runtime_error &e)
     {
         throw vk::InitializationFailedError(e.what());
     }
 }
-PFN_vkGetInstanceProcAddr AbstractInstance::setVulkanLibrary(const shared_ptr<vk::DynamicLoader> &dl)
+PFN_vkGetInstanceProcAddr AbstractInstance::setVulkanLibrary(const shared_ptr<vk::detail::DynamicLoader> &dl)
 {
     m_dl = dl;
 

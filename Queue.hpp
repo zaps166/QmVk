@@ -41,7 +41,7 @@ private:
 
 public:
     inline shared_ptr<Device> device() const;
-    inline const vk::DispatchLoaderDynamic &dld() const;
+    inline const vk::detail::DispatchLoaderDynamic &dld() const;
 
     inline uint32_t queueFamilyIndex() const;
     inline uint32_t queueIndex() const;
@@ -53,7 +53,7 @@ public:
 
 private:
     const shared_ptr<Device> m_device;
-    const vk::DispatchLoaderDynamic &m_dld;
+    const vk::detail::DispatchLoaderDynamic &m_dld;
     const uint32_t m_queueFamilyIndex;
     const uint32_t m_queueIndex;
 
@@ -69,7 +69,7 @@ shared_ptr<Device> Queue::device() const
 {
     return m_device;
 }
-const vk::DispatchLoaderDynamic &Queue::dld() const
+const vk::detail::DispatchLoaderDynamic &Queue::dld() const
 {
     return m_dld;
 }
