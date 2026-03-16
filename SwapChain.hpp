@@ -66,6 +66,8 @@ public:
 
     vk::SubmitInfo getSubmitInfo(uint32_t imageIdx) const;
 
+    void setHdrMetadata(const vk::HdrMetadataEXT &hdrMetadata);
+
     uint32_t acquireNextImage(bool *suboptimal = nullptr);
     void present(uint32_t imageIdx, bool *suboptimal = nullptr);
 

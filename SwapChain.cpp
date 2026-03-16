@@ -177,6 +177,12 @@ vk::SubmitInfo SwapChain::getSubmitInfo(uint32_t imageIdx) const
     return submitInfo;
 }
 
+void SwapChain::setHdrMetadata(const vk::HdrMetadataEXT &hdrMetadata)
+{
+    assert(m_device->hasExtension(VK_EXT_HDR_METADATA_EXTENSION_NAME));
+    m_device->setHdrMetadataEXT(1, &*m_swapChain, &hdrMetadata, m_dld);
+}
+
 uint32_t SwapChain::acquireNextImage(bool *suboptimal)
 {
     const auto nextImageResult = m_device->acquireNextImageKHR(
