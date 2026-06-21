@@ -1,21 +1,16 @@
 // SPDX-License-Identifier: MIT
 /*
    QmVk - simple Vulkan library created for QMPlay2
-   Copyright (C) 2020-2025 Błażej Szczygieł
+   Copyright (C) 2020-2026 Błażej Szczygieł
 */
 
 #pragma once
 
-#include "QmVkExport.hpp"
+#include "QmVkCommon.hpp"
 
 #include <vulkan/vulkan.hpp>
 
-#include <memory>
-#include <mutex>
-
 namespace QmVk {
-
-using namespace std;
 
 class Device;
 

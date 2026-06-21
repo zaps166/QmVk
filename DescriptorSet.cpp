@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 /*
    QmVk - simple Vulkan library created for QMPlay2
-   Copyright (C) 2020-2025 Błażej Szczygieł
+   Copyright (C) 2020-2026 Błażej Szczygieł
 */
 
 #include "DescriptorSet.hpp"
@@ -41,7 +41,7 @@ void DescriptorSet::init()
     descriptorSetAllocateInfo.descriptorPool = *m_descriptorPool;
     descriptorSetAllocateInfo.descriptorSetCount = 1;
     descriptorSetAllocateInfo.pSetLayouts = *descriptorSetLayout;
-    m_descriptorSet = move(device->allocateDescriptorSetsUnique(descriptorSetAllocateInfo, device->dld())[0]);
+    m_descriptorSet = std::move(device->allocateDescriptorSetsUnique(descriptorSetAllocateInfo, device->dld())[0]);
 }
 
 void DescriptorSet::updateDescriptorInfos(const vector<DescriptorInfo> &descriptorInfos)

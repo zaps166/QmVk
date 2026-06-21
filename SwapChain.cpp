@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 /*
    QmVk - simple Vulkan library created for QMPlay2
-   Copyright (C) 2020-2025 Błażej Szczygieł
+   Copyright (C) 2020-2026 Błażej Szczygieł
 */
 
 #include "SwapChain.hpp"
@@ -46,12 +46,12 @@ shared_ptr<SwapChain> SwapChain::create(CreateInfo &createInfo)
 }
 
 SwapChain::SwapChain(CreateInfo &createInfo)
-    : m_device(move(createInfo.device))
+    : m_device(std::move(createInfo.device))
     , m_dld(m_device->dld())
-    , m_queue(move(createInfo.queue))
-    , m_renderPass(move(createInfo.renderPass))
-    , m_surface(move(createInfo.surface))
-    , m_oldSwapChain(move(createInfo.oldSwapChain))
+    , m_queue(std::move(createInfo.queue))
+    , m_renderPass(std::move(createInfo.renderPass))
+    , m_surface(std::move(createInfo.surface))
+    , m_oldSwapChain(std::move(createInfo.oldSwapChain))
 {}
 SwapChain::~SwapChain()
 {}
@@ -224,7 +224,7 @@ void SwapChain::present(uint32_t imageIdx, bool *suboptimal)
 
 vk::UniqueSwapchainKHR SwapChain::take()
 {
-    return move(m_swapChain);
+    return std::move(m_swapChain);
 }
 
 }

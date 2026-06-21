@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.16)
-project(QmVk)
+project(QmVk LANGUAGES CXX)
 
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 set(CMAKE_INCLUDE_CURRENT_DIR OFF)
@@ -99,12 +99,10 @@ add_library(${PROJECT_NAME} ${QMVK_LIBRARY_TYPE}
     ${QMVK_VULKAN_SRC}
 )
 
-if(QMVK_USE_PCH)
-    target_precompile_headers(${PROJECT_NAME}
-        PRIVATE
-        ${QMVK_VULKAN_HDR}
-    )
-endif()
+target_precompile_headers(${PROJECT_NAME}
+    PRIVATE
+    "QmVkCommon.hpp"
+)
 
 target_include_directories(
     ${PROJECT_NAME}

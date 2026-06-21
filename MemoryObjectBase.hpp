@@ -1,20 +1,14 @@
 // SPDX-License-Identifier: MIT
 /*
    QmVk - simple Vulkan library created for QMPlay2
-   Copyright (C) 2020-2025 Błażej Szczygieł
+   Copyright (C) 2020-2026 Błażej Szczygieł
 */
 
 #pragma once
 
-#include "QmVkExport.hpp"
-
-#include <vulkan/vulkan.hpp>
-
-#include <memory>
+#include "QmVkCommon.hpp"
 
 namespace QmVk {
-
-using namespace std;
 
 class Device;
 
@@ -76,7 +70,7 @@ T *MemoryObjectBase::customData()
 }
 void MemoryObjectBase::setCustomData(unique_ptr<CustomData> &&customData)
 {
-    m_customData = move(customData);
+    m_customData = std::move(customData);
 }
 
 }

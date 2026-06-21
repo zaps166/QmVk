@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 /*
    QmVk - simple Vulkan library created for QMPlay2
-   Copyright (C) 2020-2025 Błażej Szczygieł
+   Copyright (C) 2020-2026 Błażej Szczygieł
 */
 
 #include "GraphicsPipeline.hpp"
@@ -20,12 +20,12 @@ shared_ptr<GraphicsPipeline> GraphicsPipeline::create(CreateInfo &createInfo)
 
 GraphicsPipeline::GraphicsPipeline(CreateInfo &createInfo)
     : Pipeline(createInfo.device, vk::ShaderStageFlagBits::eAllGraphics, vk::PipelineStageFlagBits::eFragmentShader, createInfo.pushConstantsSize)
-    , m_vertexShaderModule(move(createInfo.vertexShaderModule))
-    , m_fragmentShaderModule(move(createInfo.fragmentShaderModule))
-    , m_renderPass(move(createInfo.renderPass))
+    , m_vertexShaderModule(std::move(createInfo.vertexShaderModule))
+    , m_fragmentShaderModule(std::move(createInfo.fragmentShaderModule))
+    , m_renderPass(std::move(createInfo.renderPass))
     , m_size(createInfo.size)
-    , m_vertexBindingDescrs(move(createInfo.vertexBindingDescrs))
-    , m_vertexAttrDescrs(move(createInfo.vertexAttrDescrs))
+    , m_vertexBindingDescrs(std::move(createInfo.vertexBindingDescrs))
+    , m_vertexAttrDescrs(std::move(createInfo.vertexAttrDescrs))
 {
     if (createInfo.colorBlendAttachment)
     {

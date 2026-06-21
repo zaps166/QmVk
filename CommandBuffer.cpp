@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 /*
    QmVk - simple Vulkan library created for QMPlay2
-   Copyright (C) 2020-2025 Błażej Szczygieł
+   Copyright (C) 2020-2026 Błażej Szczygieł
 */
 
 #include "CommandBuffer.hpp"
@@ -9,8 +9,6 @@
 #include "Queue.hpp"
 #include "DescriptorSet.hpp"
 #include "MemoryObjectDescrs.hpp"
-
-#include <unordered_set>
 
 namespace QmVk {
 
@@ -96,7 +94,7 @@ void CommandBuffer::resetAndBegin()
 void CommandBuffer::endSubmitAndWait(
     vk::SubmitInfo &&submitInfo)
 {
-    endSubmitAndWait(true, nullptr, move(submitInfo));
+    endSubmitAndWait(true, nullptr, std::move(submitInfo));
 }
 void CommandBuffer::endSubmitAndWait(
     bool lock,
@@ -112,7 +110,7 @@ void CommandBuffer::endSubmitAndWait(
 
     submitInfo.commandBufferCount = 1;
     submitInfo.pCommandBuffers = &*this;
-    m_queue->submitCommandBuffer(move(submitInfo));
+    m_queue->submitCommandBuffer(std::move(submitInfo));
 
     if (callback)
         callback();

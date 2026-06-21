@@ -1,14 +1,10 @@
 // SPDX-License-Identifier: MIT
 /*
    QmVk - simple Vulkan library created for QMPlay2
-   Copyright (C) 2020-2025 Błażej Szczygieł
+   Copyright (C) 2020-2026 Błażej Szczygieł
 */
 
 #include "MemoryObjectDescrs.hpp"
-
-#ifndef NDEBUG
-#   include <unordered_map>
-#endif
 
 namespace QmVk {
 

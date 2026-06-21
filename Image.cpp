@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 /*
    QmVk - simple Vulkan library created for QMPlay2
-   Copyright (C) 2020-2025 Błażej Szczygieł
+   Copyright (C) 2020-2026 Błażej Szczygieł
 */
 
 #include "Image.hpp"
@@ -14,8 +14,6 @@
 #   include "Buffer.hpp"
 #   include "BufferView.hpp"
 #endif
-
-#include <cmath>
 
 namespace QmVk {
 
@@ -210,7 +208,7 @@ shared_ptr<Image> Image::createFromImage(
         throw vk::LogicError("Number of images doesn't match");
     if (mipLevels > 1)
         image->m_mipLevels = mipLevels;
-    image->m_images = move(vkImages);
+    image->m_images = std::move(vkImages);
     image->init({}, ~0u);
     return image;
 }
