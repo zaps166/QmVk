@@ -903,11 +903,20 @@ bool Image::maybeGenerateMipmaps(vk::CommandBuffer commandBuffer)
             if (mipHeight > 1)
                 mipHeight /= 2;
 
+            const int32_t srcBlitWidth = (mipPrevWidth > 1 && (mipPrevWidth & 1))
+                ? mipPrevWidth - 1
+                : mipPrevWidth
+            ;
+            const int32_t srcBlitHeight = (mipPrevHeight > 1 && (mipPrevHeight & 1))
+                ? mipPrevHeight - 1
+                : mipPrevHeight
+            ;
+
             vk::ImageBlit blit;
             blit.srcSubresource.aspectMask = vk::ImageAspectFlagBits::eColor;
             blit.srcSubresource.mipLevel = l - 1;
             blit.srcSubresource.layerCount = 1;
-            blit.srcOffsets[1] = vk::Offset3D(mipPrevWidth, mipPrevHeight, 1);
+            blit.srcOffsets[1] = vk::Offset3D(srcBlitWidth, srcBlitHeight, 1);
             blit.dstSubresource.aspectMask = vk::ImageAspectFlagBits::eColor;
             blit.dstSubresource.mipLevel = l;
             blit.dstSubresource.layerCount = 1;
